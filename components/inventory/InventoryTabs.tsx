@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { NewBadge } from "@/components/ui/NewBadge";
 import { RARITY_LABEL, RARITY_STARS } from "@/lib/domain/types";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
+import { itemIconSrc } from "@/lib/domain/itemIcons";
 import type { InventoryItemRow } from "@/lib/game/inventoryData";
 import type { MyCharacter } from "@/lib/game/myCharacters";
 import { LootActions } from "@/components/inventory/LootActions";
@@ -85,7 +87,11 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
               <Card key={item.id} className="relative flex flex-col items-center gap-1 !p-2.5 text-center">
                 {item.isNew && <NewBadge className="absolute right-1.5 top-1.5" />}
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-sky)] text-[11px] text-[var(--color-navy-soft)]">
-                  {RARITY_STARS[item.rarity]}
+                  {itemIconSrc(item.sku) ? (
+                    <Image src={itemIconSrc(item.sku)!} alt="" width={48} height={48} unoptimized style={{ width: "80%", height: "80%", objectFit: "contain" }} />
+                  ) : (
+                    RARITY_STARS[item.rarity]
+                  )}
                 </div>
                 <p className="line-clamp-1 text-[11px] font-bold text-[var(--color-navy)]">{item.name}</p>
                 <p className="text-[9px] text-[var(--color-navy-soft)]">

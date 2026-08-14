@@ -3,6 +3,7 @@ import type { ItemRarity } from "@/lib/domain/types";
 
 export interface InventoryItemRow {
   id: string;
+  sku: string | null;
   name: string;
   category: string;
   subcategory: string | null;
@@ -25,7 +26,7 @@ export async function getInventoryItems(): Promise<{ isDemo: boolean; items: Inv
 
     const { data: rows } = await supabase
       .from("inventory_items")
-      .select("id, quantity, acquired_at, item_catalog(name, category, subcategory, rarity, source_label)")
+      .select("id, quantity, acquired_at, item_catalog(sku, name, category, subcategory, rarity, source_label)")
       .eq("household_id", membership.household_id)
       .order("acquired_at", { ascending: false });
 
@@ -35,6 +36,7 @@ export async function getInventoryItems(): Promise<{ isDemo: boolean; items: Inv
       const catalog = Array.isArray(r.item_catalog) ? r.item_catalog[0] : r.item_catalog;
       return {
         id: r.id,
+        sku: catalog?.sku ?? null,
         name: catalog?.name ?? "이름 없는 아이템",
         category: catalog?.category ?? "special",
         subcategory: catalog?.subcategory ?? null,

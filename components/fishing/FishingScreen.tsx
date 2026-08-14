@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RARITY_LABEL } from "@/lib/domain/types";
+import { itemIconSrc } from "@/lib/domain/itemIcons";
 import type { FishingData } from "@/lib/game/fishingData";
 
 function formatRemaining(ms: number): string {
@@ -21,7 +23,7 @@ export function FishingScreen({ data }: { data: FishingData }) {
   const [now, setNow] = useState(() => Date.now());
   const [starting, setStarting] = useState(false);
   const [claiming, setClaiming] = useState(false);
-  const [result, setResult] = useState<{ name: string; rarity: string; quantity: number }[] | null>(null);
+  const [result, setResult] = useState<{ sku: string | null; name: string; rarity: string; quantity: number }[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -88,7 +90,10 @@ export function FishingScreen({ data }: { data: FishingData }) {
               <p className="text-[12px] text-[var(--color-navy-soft)]">아무것도 낚이지 않았어요.</p>
             ) : (
               result.map((r, i) => (
-                <div key={i} className="rounded-2xl bg-white px-3 py-2 shadow-[0_4px_14px_rgba(36,54,90,0.08)]">
+                <div key={i} className="flex flex-col items-center gap-1 rounded-2xl bg-white px-3 py-2 shadow-[0_4px_14px_rgba(36,54,90,0.08)]">
+                  {itemIconSrc(r.sku) && (
+                    <Image src={itemIconSrc(r.sku)!} alt="" width={40} height={40} unoptimized style={{ width: 40, height: 40, objectFit: "contain" }} />
+                  )}
                   <p className="text-[12px] font-bold text-[var(--color-navy)]">{r.name}</p>
                   <p className="text-[10px] text-[var(--color-navy-soft)]">
                     {RARITY_LABEL[r.rarity as keyof typeof RARITY_LABEL] ?? r.rarity} · x{r.quantity}

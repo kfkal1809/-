@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   if (session.state === "claimed") {
     const { data: existingLoot } = await service
       .from("fishing_loot")
-      .select("quantity, item_catalog(name, rarity)")
+      .select("quantity, item_catalog(sku, name, rarity)")
       .eq("session_id", sessionId);
     return NextResponse.json({ alreadyClaimed: true, loot: formatLoot(existingLoot) });
   }
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   if (!claimedRows?.length) {
     const { data: existingLoot } = await service
       .from("fishing_loot")
-      .select("quantity, item_catalog(name, rarity)")
+      .select("quantity, item_catalog(sku, name, rarity)")
       .eq("session_id", sessionId);
     return NextResponse.json({ alreadyClaimed: true, loot: formatLoot(existingLoot) });
   }
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 
   const { data: lootWithNames } = await service
     .from("fishing_loot")
-    .select("quantity, item_catalog(name, rarity)")
+    .select("quantity, item_catalog(sku, name, rarity)")
     .eq("session_id", sessionId);
 
   return NextResponse.json({ alreadyClaimed: false, loot: formatLoot(lootWithNames) });
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
 function formatLoot(rows: { quantity: number; item_catalog: unknown }[] | null) {
   return (rows ?? []).map((r) => {
     const catalog = Array.isArray(r.item_catalog) ? r.item_catalog[0] : r.item_catalog;
-    const c = catalog as { name?: string; rarity?: string } | null;
-    return { name: c?.name ?? "아이템", rarity: c?.rarity ?? "common", quantity: r.quantity };
+    const c = catalog as { sku?: string; name?: string; rarity?: string } | null;
+    return { sku: c?.sku ?? null, name: c?.name ?? "아이템", rarity: c?.rarity ?? "common", quantity: r.quantity };
   });
 }
