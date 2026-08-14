@@ -1,12 +1,13 @@
 # 진행 상황 기록 (세션이 끊겨도 여기서 이어감)
 
-마지막 갱신: 작업 중 (Stage 1 디자인 에셋 반영 진행 중)
+마지막 갱신: 작업 중 (지나가는 선박 랜덤 조우 이벤트 시스템 QA 마무리 단계)
 
 ## 지금까지 완료된 큰 단위
 
 - **Sprint 1~4** (골격/꾸미기/소셜/게임경제): 전부 완료, 커밋됨. 상세는 `README.md` 상단 참고.
 - **회사명 변경**: `(주)해녀쉽핑` → `(주)해녀해운` 전체 반영 완료 (코드 전수 검색 확인함, 잔여 없음).
-- **디자인 에셋 Stage 1** (진행 중, 아래 체크리스트 참고).
+- **디자인 에셋 Stage 1**: 완료, 커밋/푸시됨.
+- **지나가는 선박 랜덤 조우 이벤트 시스템**: 구현 완료 (아래 섹션 참고), 커밋 전 최종 QA 중.
 
 ## 디자인 에셋 Stage 1 체크리스트
 
@@ -36,13 +37,49 @@
       (오프닝/홈/귀금속점/혼인신고/갑판/(주)해녀해운/선내식당/본뿌리/리리양곱창 — 전부 정상 렌더,
       콘솔 에러 없음, 회사명 리네임 반영 확인)
 
+## 지나가는 선박 랜덤 조우 이벤트 시스템 (완료)
+
+- **데이터 스키마**: `supabase/migrations/0005_ship_events.sql`의 `ship_events` 테이블
+  (household_id, event_date, slot_index, ship_type_key, spawned_at, expires_at, status,
+  reward_cash, reward_catalog_item_id, reward_item_qty). RLS는 읽기만 허용, 생성/판정은
+  service_role 서버 라우트 전용(기존 fishing_sessions 패턴과 동일).
+- **선종 7종 설정**: `lib/domain/shipEvents.ts`의 `SHIP_TYPES` 배열 하나로 전부 관리(스폰
+  가중치 container=25/bulk=20/tanker=18/car_carrier=15/chemical=10/lng=8/vlcc=4 = 합 100,
+  색상, hullShape, 현금 보상 범위, 아이템 드랍 확률, 카탈로그 subcategory). 코드 어디에도
+  선종별 if/switch 분기가 없고, 스폰·보상·렌더링 로직은 전부 이 설정을 데이터로 읽는다.
+- **스케줄링**: 크론 없이 폴링 시점에 lazy-spawn. `lib/game/shipEventEngine.ts`가
+  household+날짜 시드 기반 결정적 랜덤으로 하루 스폰 횟수(2~3회)와 각 슬롯 시간(09~23시
+  KST, 최소 90분 간격)을 계산하고, 폴링 때 그 시각이 지났으면 그 자리에서 1건만 생성한다.
+  같은 선종이 연달아 나오지 않도록 직전 스폰 선종을 제외하고 가중치 뽑기.
+- **API**: `/api/ship-events/status`(GET, 폴링·lazy-spawn), `/api/ship-events/claim`(POST,
+  조건부 UPDATE로 중복 수령 방지), `/api/ship-events/debug-spawn`(POST, QA 전용·운영
+  빌드에서는 404). 현금 보상은 기존 `apply_wallet_transaction` RPC로, 아이템 보상은 기존
+  `inventory_items` 테이블에 그대로 적립 — 새 지갑/재화 시스템을 만들지 않음.
+- **논스트레스 설계**: 그레이스 기간(6시간) 동안 수령하지 않아도 사라지지 않고, 기간이
+  지나면 서버가 조용히 자동 적립 후 `notifications`에 안내를 남긴다. 보상을 놓쳐도 잃지 않음.
+- **보상 아이템**: `supabase/seed.sql`에 선종별 테마 아이템 14종 추가(`item_catalog`,
+  subcategory=`ship_container`/`ship_bulk`/`ship_tanker`/`ship_car_carrier`/`ship_chemical`/
+  `ship_lng`/`ship_vlcc`), 대부분 선실에 배치 가능한 keepsake.
+- **비주얼**: `components/ships/ShipSprite.tsx` — 선종 7종을 위한 단일 제네릭 SVG
+  컴포넌트(hullShape 한 값으로만 갑판 디테일 분기, 색상은 설정값). 실제 업로드 에셋이 없는
+  신규 시스템이라 기존 캐릭터 스프라이트와 같은 벡터 방식 사용.
+- **연출**: `components/ships/ShipEventOverlay.tsx` — `(game)` 레이아웃에 전역 마운트되어
+  어느 화면에서든 보인다. 배가 수평선에서 등장해 가로지름(7초 애니메이션) → 이벤트 배너
+  드롭다운 → 보상 상자가 bob 애니메이션과 함께 우하단에 고정 → 탭하면 바텀시트로 보상
+  확인 후 수령. `localStorage`에 마지막으로 본 이벤트 id를 저장해, 이미 본 이벤트는
+  새로고침해도 진입 애니메이션을 다시 재생하지 않고 바로 상자 상태로 보여준다.
+- **QA 디버그 트리거**: 개발 빌드(NODE_ENV !== production)에서만 좌하단에 작은
+  "DEV: 선박 스폰" 버튼이 보이며 즉시 스폰 가능. 운영 빌드에서는 버튼도 안 보이고
+  API도 404. 서버 판정값(NODE_ENV)만으로 게이팅해 하이드레이션 불일치 없음.
+- **검증**: `lib/game/shipEventEngine.ts`의 순수 함수(가중치 뽑기/스케줄/보상 범위)를
+  10000회 시뮬레이션으로 분포·간격·anti-streak·보상 범위 확인 완료. 이 샌드박스에는
+  Supabase가 연결되어 있지 않아 실제 스폰→수령 API 왕복은 라이브로 확인하지 못했고,
+  이는 배포 후 최우선 확인 필요 사항으로 아래에 남겨둠.
+
 ## 다음에 할 일 (우선순위 순)
 
-1. Stage 1 커밋 + 푸시
-2. **지나가는 선박 랜덤 조우 이벤트 시스템** (사용자가 신규 요청, 상세 스펙 대화 로그 참고) —
-   데이터 스키마 → spawn/cooldown/claim API → 선종별 보상풀 → SVG 선박 에셋(7종) → 화면 연출 →
-   dev debug trigger → QA. 완료 후 사용자가 요청한 9개 항목 형식으로 별도 보고 필요.
-5. **Stage 2** (더 큰 작업): 캐릭터를 벡터 절차적 렌더링에서 레이어 합성(헤어/의상/모자/소품 PNG 레이어)
+1. 지나가는 선박 이벤트 시스템 커밋 + 푸시
+2. **Stage 2** (더 큰 작업): 캐릭터를 벡터 절차적 렌더링에서 레이어 합성(헤어/의상/모자/소품 PNG 레이어)
    방식으로 재설계, `public/images/reference-sheets/sheet-01~21.png`에서 개별 아이템 크롭,
    item_catalog 매핑, 낚시/가구 아이템 아이콘 개별 적용.
 
@@ -54,6 +91,11 @@
   (동적 데이터 때문에 불가피했다고 판단했음).
 - 혼인신고서는 아직 실제 입력/서명 기능 없이 이미지 미리보기 + 안내문구만 있음 (원래도 스텁이었음,
   Sprint 5에서 실제 기능 예정).
+- 선박 스프라이트는 실제 업로드된 일러스트가 없어 다른 시스템(캐릭터)과 같은 벡터 SVG로
+  제작함 — 나중에 사용자가 실제 선박 일러스트를 주면 `ShipSprite` 자리를 이미지로 교체 가능.
+- 선박 이벤트의 실시간 스폰→수령 전 과정은 이 환경에 Supabase가 연결되어 있지 않아
+  브라우저로 끝까지 실행해보지 못했음(로직은 시뮬레이션으로 검증). 실제 배포 환경에서
+  1순위로 확인 필요.
 
 ## 알려진 기술 부채 / TODO
 

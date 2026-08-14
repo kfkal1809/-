@@ -135,6 +135,26 @@ insert into public.item_catalog (sku, name, description, category, subcategory, 
 on conflict (sku) do nothing;
 
 -- =========================================================
+-- 지나가는 선박 랜덤 조우 이벤트 — 선종별 테마 보상 아이템
+-- =========================================================
+insert into public.item_catalog (sku, name, description, category, subcategory, rarity, buy_price, sell_price, placeable, source_label, active) values
+  ('ship_container_postcard', '세계 각국 기념 엽서', '컨테이너선이 놓고 간 이국적인 엽서', 'keepsake', 'ship_container', 'common', 0, 2, true, '지나가는 선박', true),
+  ('ship_container_model', '미니 컨테이너 모형', '알록달록한 미니어처 컨테이너', 'keepsake', 'ship_container', 'rare', 0, 4, true, '지나가는 선박', true),
+  ('ship_bulk_grain_sack', '곡물 자루 미니어처', '벌크선이 나눠준 앙증맞은 곡물 자루', 'keepsake', 'ship_bulk', 'common', 0, 2, true, '지나가는 선박', true),
+  ('ship_bulk_wheat_pot', '밀 화분', '벌크선에서 받은 작은 밀 화분', 'keepsake', 'ship_bulk', 'rare', 0, 4, true, '지나가는 선박', true),
+  ('ship_tanker_model', '미니 탱커선 모형', '탱커선이 두고 간 정교한 모형', 'keepsake', 'ship_tanker', 'rare', 0, 5, true, '지나가는 선박', true),
+  ('ship_tanker_fuel_coupon', '연료 쿠폰', '탱커선 선원이 건넨 기념 쿠폰', 'keepsake', 'ship_tanker', 'common', 0, 3, false, '지나가는 선박', true),
+  ('ship_car_carrier_sports_car', '미니어처 스포츠카', '카캐리선에서 떨어진 반짝이는 미니카', 'keepsake', 'ship_car_carrier', 'rare', 0, 5, true, '지나가는 선박', true),
+  ('ship_car_carrier_classic_car', '미니어처 클래식카', '카캐리선의 클래식카 미니어처', 'keepsake', 'ship_car_carrier', 'epic', 0, 7, true, '지나가는 선박', true),
+  ('ship_chemical_beaker', '실험 비커 소품', '케미컬선 연구원이 준 작은 비커', 'keepsake', 'ship_chemical', 'common', 0, 3, true, '지나가는 선박', true),
+  ('ship_chemical_rainbow_vial', '무지개 시약병', '오묘한 빛깔의 시약병', 'keepsake', 'ship_chemical', 'epic', 0, 7, true, '지나가는 선박', true),
+  ('ship_lng_blue_gem', '푸른 보석 원석', 'LNG선의 푸른 탱크를 닮은 원석', 'keepsake', 'ship_lng', 'epic', 0, 8, true, '지나가는 선박', true),
+  ('ship_lng_tank_model', 'LNG 탱크 모형', '둥근 LNG 탱크 미니어처', 'keepsake', 'ship_lng', 'rare', 0, 6, true, '지나가는 선박', true),
+  ('ship_vlcc_golden_anchor', '황금 닻 장식', 'VLCC 선장이 선물한 귀한 장식', 'keepsake', 'ship_vlcc', 'legendary', 0, 12, true, '지나가는 선박', true),
+  ('ship_vlcc_model', '초대형 선박 모형', 'VLCC의 위용을 담은 정밀 모형', 'keepsake', 'ship_vlcc', 'epic', 0, 9, true, '지나가는 선박', true)
+on conflict (sku) do nothing;
+
+-- =========================================================
 -- 본뿌리 상품 진열
 -- =========================================================
 insert into public.store_products (store_id, catalog_item_id, sort_order)
