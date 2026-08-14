@@ -18,7 +18,7 @@ export default function OpeningPage() {
       <div className="absolute left-[6%] top-[6%] h-10 w-20 rounded-full bg-white/80 blur-[1px]" />
       <div className="absolute right-[8%] top-[10%] h-8 w-16 rounded-full bg-white/70 blur-[1px]" />
 
-      <main className="relative z-10 mx-auto flex w-full max-w-[460px] flex-1 flex-col items-center px-6 pt-14 text-center">
+      <main className="relative z-10 mx-auto flex w-full max-w-[460px] flex-1 flex-col items-center justify-center px-6 pb-10 text-center">
         <p className="text-sm font-bold tracking-wide text-[var(--color-navy-soft)]">{SHIP_NAME}에 오신 것을 환영합니다</p>
         <h1 className="mt-2 text-[28px] font-extrabold leading-tight text-[var(--color-navy)]">
           {APP_NAME}

@@ -16,8 +16,12 @@ export function VoyageInfoCard({ voyage }: { voyage: HomeVoyageCard }) {
             <p className="text-[10px] text-[var(--color-navy-soft)]">{voyage.haenyeoRole}</p>
           </div>
           <div className="mb-8 text-[var(--color-coral)]" aria-hidden>
-            <svg width="18" height="14" viewBox="0 0 24 18">
-              <path d="M2 9 C7 2, 17 2, 22 9 C17 16, 7 16, 2 9 Z" fill="currentColor" opacity={0.85} />
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path
+                d="M12 20.3c-.3 0-.6-.1-.8-.3C7.6 17 3 12.9 3 8.8 3 6.1 5.1 4 7.7 4c1.7 0 3.2.9 4.1 2.3C12.7 4.9 14.2 4 15.9 4 18.5 4 20.6 6.1 20.6 8.8c0 4.1-4.6 8.2-8.2 11.2-.2.2-.5.3-.8.3z"
+                fill="currentColor"
+                opacity={0.85}
+              />
             </svg>
           </div>
           <div className="flex flex-col items-center">
