@@ -1,15 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
+import { trySupabase } from "@/lib/supabase/safeQuery";
 import { Card } from "@/components/ui/Card";
+
+interface EventDetail {
+  title: string;
+  body: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  image_asset: string | null;
+}
 
 export default async function EventDetailPage({ params }: PageProps<"/shipping/events/[eventId]">) {
   const { eventId } = await params;
-  const supabase = await createClient();
-  const { data: event } = await supabase
-    .from("posts")
-    .select("title, body, start_at, end_at, image_asset")
-    .eq("id", eventId)
-    .eq("type", "event")
-    .maybeSingle();
+  const event = await trySupabase(async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("posts")
+      .select("title, body, start_at, end_at, image_asset")
+      .eq("id", eventId)
+      .eq("type", "event")
+      .maybeSingle();
+    return data;
+  }, null as EventDetail | null);
 
   if (!event) {
     return (

@@ -9,7 +9,11 @@ export type OutfitStyle =
   | "child_overalls"
   | "chef"
   | "cardigan"
-  | "tank";
+  | "tank"
+  | "dress"
+  | "sweatshirt"
+  | "pajama"
+  | "hoodie";
 export type HatStyle = "captain" | "chef" | "hardhat" | "none";
 export type AccessoryStyle = "wrench" | "tablet" | "none";
 

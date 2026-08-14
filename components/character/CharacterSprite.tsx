@@ -172,6 +172,52 @@ function Outfit({
           <path d={`M ${cx - 14} ${torsoTop + 4} L ${cx} ${torsoTop + 16} L ${cx + 14} ${torsoTop + 4}`} fill="none" stroke={accent} strokeWidth="5" strokeLinejoin="round" />
         </>
       );
+    case "dress":
+      return (
+        <>
+          <path
+            d={`M ${left + 6} ${torsoTop} q ${torsoW / 2 - 6} -8 ${torsoW - 12} 0
+                L ${left + torsoW + 10} ${torsoTop + torsoH + 16}
+                Q ${cx} ${torsoTop + torsoH + 30} ${left - 10} ${torsoTop + torsoH + 16} Z`}
+            fill={color}
+            stroke={NAVY}
+            strokeWidth="3"
+            strokeLinejoin="round"
+          />
+          <path d={`M ${cx - 12} ${torsoTop + 2} L ${cx} ${torsoTop + 14} L ${cx + 12} ${torsoTop + 2}`} fill="none" stroke={accent} strokeWidth="5" strokeLinejoin="round" />
+        </>
+      );
+    case "sweatshirt":
+      return (
+        <>
+          <rect x={left} y={torsoTop} width={torsoW} height={torsoH} rx={torsoW / 2.2} fill={color} stroke={NAVY} strokeWidth="3" />
+          <ellipse cx={cx} cy={torsoTop + 4} rx={14} ry={6} fill={accent} opacity={0.9} />
+          <path d={`M ${left + 4} ${torsoTop + torsoH - 10} q 10 10 20 0`} fill="none" stroke={accent} strokeWidth="3" opacity={0.8} />
+          <path d={`M ${left + torsoW - 24} ${torsoTop + torsoH - 10} q 10 10 20 0`} fill="none" stroke={accent} strokeWidth="3" opacity={0.8} />
+        </>
+      );
+    case "pajama":
+      return (
+        <>
+          <rect x={left} y={torsoTop} width={torsoW} height={torsoH} rx={torsoW / 2.4} fill={color} stroke={NAVY} strokeWidth="3" />
+          {[0.25, 0.5, 0.75].map((fx) =>
+            [0.35, 0.7].map((fy) => (
+              <circle key={`${fx}-${fy}`} cx={left + torsoW * fx} cy={torsoTop + torsoH * fy} r={2.6} fill={accent} opacity={0.85} />
+            ))
+          )}
+          <path d={`M ${cx - 14} ${torsoTop + 3} L ${cx} ${torsoTop + 13} L ${cx + 14} ${torsoTop + 3}`} fill="none" stroke={accent} strokeWidth="4" strokeLinejoin="round" />
+        </>
+      );
+    case "hoodie":
+      return (
+        <>
+          <path d={`M ${cx - 20} ${torsoTop - 10} q 20 -14 40 0 q 4 10 -4 16 q -16 -8 -32 0 q -8 -6 -4 -16 Z`} fill={color} stroke={NAVY} strokeWidth="2.5" />
+          <rect x={left} y={torsoTop} width={torsoW} height={torsoH} rx={torsoW / 2.3} fill={color} stroke={NAVY} strokeWidth="3" />
+          <circle cx={cx - 5} cy={torsoTop + 10} r={1.8} fill={accent} />
+          <circle cx={cx + 5} cy={torsoTop + 10} r={1.8} fill={accent} />
+          <path d={`M ${cx - 5} ${torsoTop + 10} q 5 8 10 0`} fill="none" stroke={accent} strokeWidth="1.6" />
+        </>
+      );
     default:
       return <rect x={left} y={torsoTop} width={torsoW} height={torsoH} rx={torsoW / 2.4} fill={color} stroke={NAVY} strokeWidth="3" />;
   }

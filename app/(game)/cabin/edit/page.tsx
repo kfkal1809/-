@@ -1,10 +1,19 @@
-import { SpaceStub } from "@/components/ui/SpaceStub";
+import { getCabinEditData } from "@/lib/game/cabinEditData";
+import { CabinEditor } from "@/components/cabin/CabinEditor";
+import { Card } from "@/components/ui/Card";
 
-export default function CabinEditPage() {
-  return (
-    <SpaceStub
-      title="방꾸미기"
-      description="가구를 드래그로 옮기고, 크기를 바꾸고, 회전시키는 편집 도구는 다음 업데이트에서 만나요. 지금은 본뿌리·낚시터 등에서 모은 아이템이 선실에 자동으로 놓여요."
-    />
-  );
+export default async function CabinEditPage() {
+  const data = await getCabinEditData();
+
+  if (!data.canEdit || !data.spaceId) {
+    return (
+      <div className="px-4 pt-5">
+        <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
+          아직 우리 선실이 만들어지지 않았어요. 가입을 완료해주세요.
+        </Card>
+      </div>
+    );
+  }
+
+  return <CabinEditor spaceId={data.spaceId} initialPlaced={data.placed} initialUnplaced={data.unplaced} />;
 }

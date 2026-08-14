@@ -1,14 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
+import { trySupabase } from "@/lib/supabase/safeQuery";
 import { Card } from "@/components/ui/Card";
 import { SuggestionForm } from "@/components/shipping/SuggestionForm";
 
+interface SuggestionRow {
+  id: string;
+  title: string;
+  body: string | null;
+  status: string | null;
+  admin_reply: string | null;
+  created_at: string;
+}
+
 export default async function SuggestionsPage() {
-  const supabase = await createClient();
-  const { data: mine } = await supabase
-    .from("posts")
-    .select("id, title, body, status, admin_reply, created_at")
-    .eq("type", "suggestion")
-    .order("created_at", { ascending: false });
+  const mine = await trySupabase(async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("posts")
+      .select("id, title, body, status, admin_reply, created_at")
+      .eq("type", "suggestion")
+      .order("created_at", { ascending: false });
+    return data ?? [];
+  }, [] as SuggestionRow[]);
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">

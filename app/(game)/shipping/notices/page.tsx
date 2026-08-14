@@ -1,15 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
+import { trySupabase } from "@/lib/supabase/safeQuery";
 import { Card } from "@/components/ui/Card";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
 
+interface NoticeRow {
+  id: string;
+  title: string;
+  body: string | null;
+  pinned: boolean;
+  created_at: string;
+}
+
 export default async function NoticesPage() {
-  const supabase = await createClient();
-  const { data: notices } = await supabase
-    .from("posts")
-    .select("id, title, body, pinned, created_at")
-    .eq("type", "notice")
-    .order("pinned", { ascending: false })
-    .order("created_at", { ascending: false });
+  const notices = await trySupabase(async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("posts")
+      .select("id, title, body, pinned, created_at")
+      .eq("type", "notice")
+      .order("pinned", { ascending: false })
+      .order("created_at", { ascending: false });
+    return data ?? [];
+  }, [] as NoticeRow[]);
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-5">

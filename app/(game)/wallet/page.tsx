@@ -23,29 +23,33 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default async function WalletPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
   let balance = 0;
   let transactions: { id: string; amount: number; type: string; created_at: string }[] = [];
 
-  if (user) {
-    const { data: membership } = await supabase.from("household_users").select("household_id").eq("user_id", user.id).maybeSingle();
-    if (membership) {
-      const [{ data: wallet }, { data: txs }] = await Promise.all([
-        supabase.from("wallets").select("cached_balance").eq("household_id", membership.household_id).maybeSingle(),
-        supabase
-          .from("wallet_transactions")
-          .select("id, amount, type, created_at")
-          .eq("household_id", membership.household_id)
-          .order("created_at", { ascending: false })
-          .limit(30),
-      ]);
-      balance = wallet?.cached_balance ?? 0;
-      transactions = txs ?? [];
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { data: membership } = await supabase.from("household_users").select("household_id").eq("user_id", user.id).maybeSingle();
+      if (membership) {
+        const [{ data: wallet }, { data: txs }] = await Promise.all([
+          supabase.from("wallets").select("cached_balance").eq("household_id", membership.household_id).maybeSingle(),
+          supabase
+            .from("wallet_transactions")
+            .select("id, amount, type, created_at")
+            .eq("household_id", membership.household_id)
+            .order("created_at", { ascending: false })
+            .limit(30),
+        ]);
+        balance = wallet?.cached_balance ?? 0;
+        transactions = txs ?? [];
+      }
     }
+  } catch {
+    // Supabase 미연결 상태에서도 화면은 빈 상태로 렌더링한다.
   }
 
   return (

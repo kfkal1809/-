@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { trySupabase } from "@/lib/supabase/safeQuery";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { haenyeoPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
@@ -7,17 +8,65 @@ import { daysSinceKstDate } from "@/lib/game/kst";
 
 const RELATION_LABEL: Record<string, string> = { dating: "연애중", engaged: "약혼", married: "부부" };
 
+interface BoardingPassData {
+  character: {
+    id: string;
+    kind: string;
+    nickname: string;
+    department: string | null;
+    appearance_json: CharacterAppearance;
+    household_id: string;
+  };
+  household: { relation_status: string | null; game_marriage_status: string | null } | null;
+  householdMates: { nickname: string; kind: string }[];
+  boardedDays: number | null;
+  signoffDays: number | null;
+}
+
 export default async function BoardingPassPage({ params }: PageProps<"/boarding-pass/[characterId]">) {
   const { characterId } = await params;
-  const supabase = await createClient();
 
-  const { data: character } = await supabase
-    .from("characters")
-    .select("id, kind, nickname, department, appearance_json, household_id")
-    .eq("id", characterId)
-    .maybeSingle();
+  const result = await trySupabase(async () => {
+    const supabase = await createClient();
 
-  if (!character) {
+    const { data: character } = await supabase
+      .from("characters")
+      .select("id, kind, nickname, department, appearance_json, household_id")
+      .eq("id", characterId)
+      .maybeSingle();
+
+    if (!character) return null;
+
+    const { data: household } = await supabase
+      .from("households")
+      .select("relation_status, game_marriage_status")
+      .eq("id", character.household_id)
+      .maybeSingle();
+
+    const { data: householdMates } = await supabase
+      .from("characters")
+      .select("nickname, kind")
+      .eq("household_id", character.household_id)
+      .neq("id", character.id)
+      .neq("kind", "child");
+
+    let boardedDays: number | null = null;
+    let signoffDays: number | null = null;
+    if (character.kind === "haenam") {
+      const { data: voyage } = await supabase
+        .from("voyages")
+        .select("boarded_at, expected_signoff_at")
+        .eq("haenam_character_id", character.id)
+        .eq("active", true)
+        .maybeSingle();
+      if (voyage?.boarded_at) boardedDays = daysSinceKstDate(voyage.boarded_at);
+      if (voyage?.expected_signoff_at) signoffDays = -daysSinceKstDate(voyage.expected_signoff_at);
+    }
+
+    return { character, household, householdMates: householdMates ?? [], boardedDays, signoffDays } as BoardingPassData;
+  }, null as BoardingPassData | null);
+
+  if (!result) {
     return (
       <div className="px-4 pt-5">
         <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
@@ -27,34 +76,9 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
     );
   }
 
-  const { data: household } = await supabase
-    .from("households")
-    .select("relation_status, game_marriage_status")
-    .eq("id", character.household_id)
-    .maybeSingle();
-
-  const { data: householdMates } = await supabase
-    .from("characters")
-    .select("nickname, kind")
-    .eq("household_id", character.household_id)
-    .neq("id", character.id)
-    .neq("kind", "child");
-
+  const { character, household, householdMates, boardedDays, signoffDays } = result;
   const roleLabel =
     character.kind === "haenyeo" ? "해녀" : character.kind === "child" ? "새싹" : character.department === "engine" ? "해남(기관사)" : "해남(항해사)";
-
-  let boardedDays: number | null = null;
-  let signoffDays: number | null = null;
-  if (character.kind === "haenam") {
-    const { data: voyage } = await supabase
-      .from("voyages")
-      .select("boarded_at, expected_signoff_at")
-      .eq("haenam_character_id", character.id)
-      .eq("active", true)
-      .maybeSingle();
-    if (voyage?.boarded_at) boardedDays = daysSinceKstDate(voyage.boarded_at);
-    if (voyage?.expected_signoff_at) signoffDays = -daysSinceKstDate(voyage.expected_signoff_at);
-  }
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-6">

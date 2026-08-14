@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Card } from "@/components/ui/Card";
 import { NewBadge } from "@/components/ui/NewBadge";
 import { RARITY_LABEL, RARITY_STARS } from "@/lib/domain/types";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
 import type { InventoryItemRow } from "@/lib/game/inventoryData";
+import type { MyCharacter } from "@/lib/game/myCharacters";
+
+const EQUIP_CATEGORIES = new Set(["hair", "outfit", "hat", "accessory"]);
 
 const TABS = [
   { key: "outfit", label: "옷" },
@@ -23,9 +27,30 @@ function matchesTab(item: InventoryItemRow, tabKey: (typeof TABS)[number]["key"]
   return item.category === "special";
 }
 
-export function InventoryTabs({ items }: { items: InventoryItemRow[] }) {
+export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow[]; myCharacters: MyCharacter[] }) {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("outfit");
+  const [openPickerId, setOpenPickerId] = useState<string | null>(null);
+  const [equipping, setEquipping] = useState<string | null>(null);
+  const [equippedMsg, setEquippedMsg] = useState<string | null>(null);
   const filtered = items.filter((i) => matchesTab(i, tab));
+
+  async function handleEquip(inventoryItemId: string, characterId: string, characterName: string) {
+    setEquipping(inventoryItemId);
+    try {
+      const res = await fetch("/api/character/equip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId, inventoryItemId }),
+      });
+      if (!res.ok) throw new Error("failed");
+      setEquippedMsg(`${characterName}에게 착용했어요!`);
+      setOpenPickerId(null);
+    } catch {
+      setEquippedMsg("착용에 실패했어요.");
+    } finally {
+      setEquipping(null);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-3">
@@ -43,24 +68,65 @@ export function InventoryTabs({ items }: { items: InventoryItemRow[] }) {
         ))}
       </div>
 
+      {equippedMsg && <p className="text-center text-[12px] font-bold text-[var(--color-navy)]">{equippedMsg}</p>}
+
       {filtered.length === 0 ? (
         <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
           {EMPTY_STATE_COPY.inventory}
         </Card>
       ) : (
         <div className="grid grid-cols-3 gap-2.5">
-          {filtered.map((item) => (
-            <Card key={item.id} className="relative flex flex-col items-center gap-1 !p-2.5 text-center">
-              {item.isNew && <NewBadge className="absolute right-1.5 top-1.5" />}
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-sky)] text-[11px] text-[var(--color-navy-soft)]">
-                {RARITY_STARS[item.rarity]}
-              </div>
-              <p className="line-clamp-1 text-[11px] font-bold text-[var(--color-navy)]">{item.name}</p>
-              <p className="text-[9px] text-[var(--color-navy-soft)]">
-                {RARITY_LABEL[item.rarity]} · x{item.quantity}
-              </p>
-            </Card>
-          ))}
+          {filtered.map((item) => {
+            const equipable = EQUIP_CATEGORIES.has(item.category) && myCharacters.length > 0;
+            const placeable = item.category === "furniture";
+            return (
+              <Card key={item.id} className="relative flex flex-col items-center gap-1 !p-2.5 text-center">
+                {item.isNew && <NewBadge className="absolute right-1.5 top-1.5" />}
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-sky)] text-[11px] text-[var(--color-navy-soft)]">
+                  {RARITY_STARS[item.rarity]}
+                </div>
+                <p className="line-clamp-1 text-[11px] font-bold text-[var(--color-navy)]">{item.name}</p>
+                <p className="text-[9px] text-[var(--color-navy-soft)]">
+                  {RARITY_LABEL[item.rarity]} · x{item.quantity}
+                </p>
+
+                {equipable && (
+                  <div className="mt-1 w-full">
+                    {openPickerId === item.id ? (
+                      <div className="flex flex-wrap justify-center gap-1">
+                        {myCharacters.map((c) => (
+                          <button
+                            key={c.id}
+                            onClick={() => handleEquip(item.id, c.id, c.nickname)}
+                            disabled={equipping === item.id}
+                            className="rounded-full bg-[var(--color-mint)] px-2 py-1 text-[10px] font-bold text-[var(--color-navy)]"
+                          >
+                            {c.nickname}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setOpenPickerId(item.id)}
+                        className="w-full rounded-full bg-[var(--color-sky)] py-1 text-[10px] font-bold text-[var(--color-navy)]"
+                      >
+                        착용
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {placeable && (
+                  <Link
+                    href="/cabin/edit"
+                    className="mt-1 w-full rounded-full bg-[var(--color-sky)] py-1 text-[10px] font-bold text-[var(--color-navy)]"
+                  >
+                    선실에 배치
+                  </Link>
+                )}
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

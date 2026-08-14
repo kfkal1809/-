@@ -1,15 +1,28 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { trySupabase } from "@/lib/supabase/safeQuery";
 import { Card } from "@/components/ui/Card";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
 
+interface EventRow {
+  id: string;
+  title: string;
+  body: string | null;
+  start_at: string | null;
+  end_at: string | null;
+  status: string | null;
+}
+
 export default async function EventsListPage() {
-  const supabase = await createClient();
-  const { data: events } = await supabase
-    .from("posts")
-    .select("id, title, body, start_at, end_at, status")
-    .eq("type", "event")
-    .order("start_at", { ascending: false });
+  const events = await trySupabase(async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("posts")
+      .select("id, title, body, start_at, end_at, status")
+      .eq("type", "event")
+      .order("start_at", { ascending: false });
+    return data ?? [];
+  }, [] as EventRow[]);
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-5">

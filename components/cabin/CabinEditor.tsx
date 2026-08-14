@@ -1,0 +1,204 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
+import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
+
+let tempIdCounter = 0;
+
+export function CabinEditor({
+  spaceId,
+  initialPlaced,
+  initialUnplaced,
+}: {
+  spaceId: string | null;
+  initialPlaced: PlacedFurniture[];
+  initialUnplaced: UnplacedFurniture[];
+}) {
+  const router = useRouter();
+  const roomRef = useRef<HTMLDivElement>(null);
+  const [placed, setPlaced] = useState(initialPlaced);
+  const [unplaced, setUnplaced] = useState(initialUnplaced);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  function updateSelected(patch: Partial<PlacedFurniture>) {
+    setPlaced((prev) => prev.map((p) => (p.id === selectedId ? { ...p, ...patch } : p)));
+  }
+
+  function handlePointerMove(e: React.PointerEvent) {
+    if (!draggingId || !roomRef.current) return;
+    const rect = roomRef.current.getBoundingClientRect();
+    const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    setPlaced((prev) => prev.map((p) => (p.id === draggingId ? { ...p, x, y } : p)));
+  }
+
+  function addFromBag(item: UnplacedFurniture) {
+    const maxZ = placed.reduce((max, p) => Math.max(max, p.zIndex), 0);
+    const newItem: PlacedFurniture = {
+      id: `new:${tempIdCounter++}`,
+      inventoryItemId: item.inventoryItemId,
+      name: item.name,
+      x: 0.5,
+      y: 0.5,
+      scale: 1,
+      rotation: 0,
+      flipX: false,
+      zIndex: maxZ + 1,
+    };
+    setPlaced((prev) => [...prev, newItem]);
+    setUnplaced((prev) => prev.filter((u) => u.inventoryItemId !== item.inventoryItemId));
+    setSelectedId(newItem.id);
+  }
+
+  function removeSelected() {
+    const item = placed.find((p) => p.id === selectedId);
+    if (!item) return;
+    setPlaced((prev) => prev.filter((p) => p.id !== selectedId));
+    setUnplaced((prev) => [...prev, { inventoryItemId: item.inventoryItemId, name: item.name }]);
+    setSelectedId(null);
+  }
+
+  function bringForward() {
+    const maxZ = placed.reduce((max, p) => Math.max(max, p.zIndex), 0);
+    updateSelected({ zIndex: maxZ + 1 });
+  }
+
+  function sendBackward() {
+    const minZ = placed.reduce((min, p) => Math.min(min, p.zIndex), 0);
+    updateSelected({ zIndex: minZ - 1 });
+  }
+
+  async function handleSave() {
+    if (!spaceId) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/cabin/save-layout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          spaceId,
+          items: placed.map((p) => ({
+            inventoryItemId: p.inventoryItemId,
+            x: p.x,
+            y: p.y,
+            scale: p.scale,
+            rotation: p.rotation,
+            flipX: p.flipX,
+            zIndex: p.zIndex,
+          })),
+        }),
+      });
+      if (!res.ok) throw new Error("failed");
+      setMessage("저장했어요!");
+      router.refresh();
+    } catch {
+      setMessage("저장에 실패했어요. 다시 시도해주세요.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const selected = placed.find((p) => p.id === selectedId) ?? null;
+
+  return (
+    <div className="flex flex-col gap-4 px-4 pt-5">
+      <div className="flex items-center justify-between">
+        <h1 className="text-lg font-extrabold text-[var(--color-navy)]">방꾸미기</h1>
+        <Button tone="coral" onClick={handleSave} disabled={saving || !spaceId} className="!px-4 !py-2 text-[13px]">
+          {saving ? "저장 중..." : "저장"}
+        </Button>
+      </div>
+      {message && <p className="text-center text-[12px] font-bold text-[var(--color-navy)]">{message}</p>}
+
+      <div
+        ref={roomRef}
+        onPointerMove={handlePointerMove}
+        onPointerUp={() => setDraggingId(null)}
+        onPointerLeave={() => setDraggingId(null)}
+        className="relative aspect-[4/5] w-full touch-none overflow-hidden rounded-[28px] border-2 border-white bg-gradient-to-b from-[#fff6e8] to-[#ffe9cf] shadow-[0_6px_20px_rgba(36,54,90,0.10)]"
+      >
+        <div className="absolute left-1/2 top-4 h-14 w-14 -translate-x-1/2 rounded-full border-4 border-white/80 bg-[#bfe6ff]" />
+
+        {[...placed]
+          .sort((a, b) => a.zIndex - b.zIndex)
+          .map((item) => (
+            <button
+              key={item.id}
+              onPointerDown={(e) => {
+                e.preventDefault();
+                setSelectedId(item.id);
+                setDraggingId(item.id);
+              }}
+              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+              style={{
+                left: `${item.x * 100}%`,
+                top: `${item.y * 100}%`,
+                transform: `translate(-50%, -50%) rotate(${item.rotation}deg) scaleX(${item.flipX ? -1 : 1}) scale(${item.scale})`,
+              }}
+            >
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl text-[10px] font-bold shadow ${
+                  selectedId === item.id ? "bg-[var(--color-sky-new)] text-white" : "bg-white/90 text-[var(--color-navy)]"
+                }`}
+              >
+                {item.name.slice(0, 2)}
+              </div>
+            </button>
+          ))}
+      </div>
+
+      {selected && (
+        <Card className="flex flex-wrap items-center justify-between gap-2 !p-3">
+          <p className="text-[12px] font-bold text-[var(--color-navy)]">{selected.name}</p>
+          <div className="flex flex-wrap gap-1.5">
+            <IconBtn onClick={() => updateSelected({ rotation: selected.rotation - 15 })}>↺</IconBtn>
+            <IconBtn onClick={() => updateSelected({ rotation: selected.rotation + 15 })}>↻</IconBtn>
+            <IconBtn onClick={() => updateSelected({ flipX: !selected.flipX })}>⇋</IconBtn>
+            <IconBtn onClick={() => updateSelected({ scale: Math.max(0.5, selected.scale - 0.1) })}>−</IconBtn>
+            <IconBtn onClick={() => updateSelected({ scale: Math.min(1.8, selected.scale + 0.1) })}>+</IconBtn>
+            <IconBtn onClick={bringForward}>앞으로</IconBtn>
+            <IconBtn onClick={sendBackward}>뒤로</IconBtn>
+            <IconBtn onClick={removeSelected} danger>
+              가방으로
+            </IconBtn>
+          </div>
+        </Card>
+      )}
+
+      <div>
+        <p className="mb-2 text-[13px] font-extrabold text-[var(--color-navy)]">가방에서 배치하기</p>
+        {unplaced.length === 0 ? (
+          <p className="text-[12px] text-[var(--color-navy-soft)]">배치할 수 있는 아이템이 모두 방에 놓여 있어요.</p>
+        ) : (
+          <div className="grid grid-cols-3 gap-2">
+            {unplaced.map((item) => (
+              <button key={item.inventoryItemId} onClick={() => addFromBag(item)}>
+                <Card className="!p-2.5 text-center text-[11px] font-bold text-[var(--color-navy)]">{item.name}</Card>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function IconBtn({ children, onClick, danger }: { children: React.ReactNode; onClick: () => void; danger?: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-full px-2.5 py-1.5 text-[11px] font-bold ${
+        danger ? "bg-[var(--color-danger)]/10 text-[var(--color-danger)]" : "bg-[var(--color-sky)] text-[var(--color-navy)]"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}

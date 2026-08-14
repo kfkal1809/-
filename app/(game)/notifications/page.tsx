@@ -1,16 +1,30 @@
 import { createClient } from "@/lib/supabase/server";
+import { trySupabase } from "@/lib/supabase/safeQuery";
 import { Card } from "@/components/ui/Card";
 import { GameIcon } from "@/components/icons/GameIcon";
 
-export default async function NotificationsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+interface NotificationRow {
+  id: string;
+  title: string;
+  body: string | null;
+  read_at: string | null;
+  created_at: string;
+}
 
-  const { data: notifications } = user
-    ? await supabase.from("notifications").select("id, title, body, read_at, created_at").eq("user_id", user.id).order("created_at", { ascending: false })
-    : { data: [] };
+export default async function NotificationsPage() {
+  const notifications = await trySupabase(async () => {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return [];
+    const { data } = await supabase
+      .from("notifications")
+      .select("id, title, body, read_at, created_at")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    return data ?? [];
+  }, [] as NotificationRow[]);
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-5">

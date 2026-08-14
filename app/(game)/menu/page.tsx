@@ -1,19 +1,19 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { trySupabase } from "@/lib/supabase/safeQuery";
 import { GameIcon } from "@/components/icons/GameIcon";
 import { SignOutButton } from "@/components/menu/SignOutButton";
 
 export default async function MenuPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let myCharacterId: string | null = null;
-  if (user) {
+  const myCharacterId = await trySupabase(async () => {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
     const { data } = await supabase.from("character_managers").select("character_id").eq("user_id", user.id).limit(1).maybeSingle();
-    myCharacterId = data?.character_id ?? null;
-  }
+    return data?.character_id ?? null;
+  }, null as string | null);
 
   const items = [
     { href: myCharacterId ? `/boarding-pass/${myCharacterId}` : "/voyage", label: "나의 승선확인증", icon: "book" as const },

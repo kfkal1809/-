@@ -1,13 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
+import { trySupabase } from "@/lib/supabase/safeQuery";
 import { Card } from "@/components/ui/Card";
 import { GameIcon } from "@/components/icons/GameIcon";
 
 export default async function HallOfFamePage() {
-  const supabase = await createClient();
-  const { data: records } = await supabase
-    .from("hall_of_fame")
-    .select("id, category, title, description, occurred_at")
-    .order("occurred_at", { ascending: false });
+  const records = await trySupabase(async () => {
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("hall_of_fame")
+      .select("id, category, title, description, occurred_at")
+      .order("occurred_at", { ascending: false });
+    return data ?? [];
+  }, [] as { id: string; category: string; title: string; description: string | null; occurred_at: string }[]);
 
   return (
     <div className="flex flex-col gap-3 px-4 pt-5">
