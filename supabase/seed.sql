@@ -7,7 +7,7 @@
 insert into public.spaces (id, type, slug, name, background_asset, promo_text) values
   (gen_random_uuid(), 'deck', 'deck', '갑판 광장', 'deck_main', null),
   (gen_random_uuid(), 'mess', 'mess-room', '선내식당', 'mess_room', '오늘도 기깔나게 해드릴게요.'),
-  (gen_random_uuid(), 'shipping', 'shipping', '(주)해녀쉽핑', 'shipping_office', '의견을 남겨주세요. 최고의 서비스로 모시겠습니다.'),
+  (gen_random_uuid(), 'shipping', 'shipping', '(주)해녀해운', 'shipping_office', '의견을 남겨주세요. 최고의 서비스로 모시겠습니다.'),
   (gen_random_uuid(), 'hall', 'hall-of-fame', '명예의 전당', 'hall_of_fame', null),
   (gen_random_uuid(), 'jewelry', 'jewelry', '귀금속점', 'jewelry_shop', null);
 

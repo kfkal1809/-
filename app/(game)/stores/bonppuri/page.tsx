@@ -1,5 +1,4 @@
 import { SpaceStub } from "@/components/ui/SpaceStub";
-import { NPC_APPEARANCE } from "@/lib/domain/characterPresets";
 import { NPCS, BONPPURI_WORK_TASKS } from "@/lib/domain/constants";
 import { getStoreProducts } from "@/lib/game/storeData";
 import { StoreProductGrid } from "@/components/store/StoreProductGrid";
@@ -16,7 +15,8 @@ export default async function BonppuriPage() {
         npcName={npc.name}
         npcTitle={npc.title}
         npcLine={npc.line}
-        npcAppearance={NPC_APPEARANCE.mami}
+        npcId="mami"
+        bgId="bonppuri"
         description="시들지 않는 꽃과 화병은 선실에 영구히 놓을 수 있는 감성 사치품이에요."
       />
       <div className="px-4">

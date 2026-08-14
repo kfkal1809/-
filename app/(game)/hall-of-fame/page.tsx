@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { trySupabase } from "@/lib/supabase/safeQuery";
 import { Card } from "@/components/ui/Card";
@@ -16,6 +17,10 @@ export default async function HallOfFamePage() {
   return (
     <div className="flex flex-col gap-3 px-4 pt-5">
       <h1 className="text-lg font-extrabold text-[var(--color-navy)]">명예의 전당</h1>
+
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[26px] border-2 border-white shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
+        <Image src="/images/backgrounds/hall-of-fame.jpg" alt="" fill unoptimized style={{ objectFit: "cover" }} />
+      </div>
 
       {!records?.length ? (
         <Card tone="cream" className="flex flex-col items-center gap-2 py-10 text-center">

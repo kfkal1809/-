@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
@@ -123,11 +124,8 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
         <h1 className="text-lg font-extrabold text-[var(--color-navy)]">갑판 광장</h1>
       </div>
 
-      <div className="relative mx-4 mt-3 h-40 shrink-0 overflow-hidden rounded-[24px] border-2 border-white bg-gradient-to-b from-[#8fd6f7] to-[#5fb8e8]">
-        <svg className="absolute inset-x-0 bottom-0 h-12 w-full" viewBox="0 0 400 48" preserveAspectRatio="none">
-          <path d="M0 16 Q100 0 200 16 T400 16 V48 H0 Z" fill="#4fb6e6" />
-        </svg>
-        <div className="absolute left-6 top-5 h-6 w-6 rounded-full border-4 border-white/80" />
+      <div className="relative mx-4 mt-3 h-44 shrink-0 overflow-hidden rounded-[24px] border-2 border-white shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
+        <Image src="/images/backgrounds/deck.jpg" alt="" fill unoptimized style={{ objectFit: "cover" }} />
 
         {onlineOthers.length === 0 ? (
           <p className="absolute bottom-14 left-1/2 -translate-x-1/2 rounded-full bg-white/85 px-4 py-1.5 text-[12px] font-bold text-[var(--color-navy)]">

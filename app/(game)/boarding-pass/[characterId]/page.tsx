@@ -80,47 +80,83 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
   const roleLabel =
     character.kind === "haenyeo" ? "해녀" : character.kind === "child" ? "새싹" : character.department === "engine" ? "해남(기관사)" : "해남(항해사)";
 
+  const rows: { label: string; value: string }[] = [
+    { label: "성명", value: character.nickname },
+    { label: "직책", value: roleLabel },
+    { label: "관계", value: household?.relation_status ? RELATION_LABEL[household.relation_status] : "-" },
+    { label: "함께 승선", value: householdMates.length > 0 ? householdMates.map((m) => m.nickname).join(", ") : "-" },
+  ];
+  if (character.kind === "haenam") {
+    rows.push({ label: "승선", value: boardedDays !== null ? `D+${boardedDays}` : "-" });
+    rows.push({ label: "하선", value: signoffDays !== null ? `D-${signoffDays}` : "-" });
+  }
+
   return (
-    <div className="flex flex-col gap-4 px-4 pt-6">
-      <div className="rounded-[28px] border-2 border-[var(--color-gold)] bg-[var(--color-cream)] p-5 shadow-[0_8px_24px_rgba(36,54,90,0.12)]">
-        <div className="flex items-center justify-between">
-          <p className="text-[11px] font-bold tracking-widest text-[var(--color-gold-deep)]">해연결호 승선확인증</p>
-          <span className="rounded-full border-2 border-[var(--color-gold)] px-2 py-0.5 text-[9px] font-extrabold text-[var(--color-gold-deep)]">
-            (주)해녀쉽핑 승선확인
-          </span>
+    <div className="flex flex-col items-center gap-4 px-4 pt-6">
+      <div
+        className="relative w-full max-w-[360px] border-[3px] border-[#24365a] bg-[var(--color-cream)] px-6 pb-6 pt-5 shadow-[0_10px_28px_rgba(36,54,90,0.18)]"
+        style={{
+          borderRadius: "22px",
+          clipPath:
+            "polygon(0 18px, 18px 18px, 18px 0, calc(100% - 18px) 0, calc(100% - 18px) 18px, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 18px calc(100% - 18px), 0 calc(100% - 18px))",
+        }}
+      >
+        <div
+          className="pointer-events-none absolute inset-[6px]"
+          style={{
+            borderRadius: "16px",
+            border: "1.5px dashed #9fb3d1",
+          }}
+        />
+
+        <div className="relative flex flex-col items-center pt-2 text-center">
+          <svg width="26" height="20" viewBox="0 0 26 20" className="text-[#24365a]">
+            <path
+              d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </svg>
+          <h1 className="mt-1 text-[22px] font-extrabold tracking-wide text-[#24365a]">승선확인증</h1>
+          <p className="mt-0.5 text-[10px] font-bold tracking-[0.2em] text-[var(--color-tab-active)]">BOARDING CERTIFICATE</p>
         </div>
 
-        <div className="mt-4 flex items-center gap-4">
-          <CharacterSprite appearance={(character.appearance_json as CharacterAppearance) ?? haenyeoPreset()} size={96} />
-          <div>
-            <p className="text-xl font-extrabold text-[var(--color-navy)]">{character.nickname}</p>
-            <p className="text-[11px] text-[var(--color-navy-soft)]">{roleLabel}</p>
-            {household?.relation_status && (
-              <p className="mt-1 text-[11px] font-bold text-[var(--color-coral)]">{RELATION_LABEL[household.relation_status]}</p>
-            )}
+        <div className="relative mt-4 flex items-center gap-4">
+          <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#24365a] bg-gradient-to-b from-[#bfe6ff] to-[#eaf6ff]">
+            <CharacterSprite appearance={(character.appearance_json as CharacterAppearance) ?? haenyeoPreset()} size={90} />
           </div>
+          <dl className="flex-1 text-[12px]">
+            {rows.map((r) => (
+              <div key={r.label} className="flex items-baseline gap-2 border-b border-dotted border-[#9fb3d1] py-1">
+                <dt className="w-14 shrink-0 font-bold text-[#24365a]">{r.label}</dt>
+                <dd className="truncate text-[#24365a]">{r.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        {householdMates && householdMates.length > 0 && (
-          <p className="mt-3 text-[12px] text-[var(--color-navy-soft)]">
-            함께 승선 중: {householdMates.map((m) => m.nickname).join(", ")}
+        <p className="relative mt-5 text-center text-[12px] leading-relaxed text-[#24365a]">
+          위 사람은 (주)해녀해운 선박에
+          <br />
+          승선하였음을 확인합니다.
+        </p>
+
+        <div className="relative mt-4 flex items-center justify-between">
+          <p className="text-[11px] text-[var(--color-navy-soft)]">
+            {new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
           </p>
-        )}
-
-        {character.kind === "haenam" && (
-          <div className="mt-4 flex justify-between rounded-2xl bg-white/70 p-3">
-            <div className="text-center">
-              <p className="text-[10px] font-bold text-[var(--color-navy-soft)]">승선</p>
-              <p className="text-[15px] font-extrabold text-[var(--color-coral)]">{boardedDays !== null ? `D+${boardedDays}` : "-"}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] font-bold text-[var(--color-navy-soft)]">하선</p>
-              <p className="text-[15px] font-extrabold text-[var(--color-tab-active)]">{signoffDays !== null ? `D-${signoffDays}` : "-"}</p>
-            </div>
+          <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[var(--color-danger)] text-center">
+            <span className="text-[10px] font-extrabold leading-tight text-[var(--color-danger)]">
+              주)
+              <br />
+              해녀해운
+            </span>
           </div>
-        )}
+        </div>
 
-        <p className="mt-4 text-center text-[10px] text-[var(--color-navy-soft)]">
+        <p className="relative mt-3 text-center text-[10px] text-[var(--color-navy-soft)]">
           혼인신고 {household?.game_marriage_status === "married" ? "완료" : "미완료"}
         </p>
       </div>

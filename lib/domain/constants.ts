@@ -26,7 +26,7 @@ export const NPCS: NpcInfo[] = [
     id: "arab",
     name: "아랍",
     title: "선주",
-    space: "(주)해녀쉽핑",
+    space: "(주)해녀해운",
     line: "의견을 남겨주세요. 최고의 서비스로 모시겠습니다.",
   },
   {
@@ -68,7 +68,7 @@ export const HOME_MENU: HomeMenuItem[] = [
   { key: "mess", label: "선내식당", href: "/mess-room", icon: "chef" },
   { key: "bonppuri", label: "본뿌리", href: "/stores/bonppuri", icon: "flower" },
   { key: "liri", label: "리리양곱창", href: "/stores/liri-gopchang", icon: "gopchang" },
-  { key: "shipping", label: "(주)해녀쉽핑", href: "/shipping", icon: "company" },
+  { key: "shipping", label: "(주)해녀해운", href: "/shipping", icon: "company" },
   { key: "hof", label: "명예의 전당", href: "/hall-of-fame", icon: "trophy" },
 ];
 

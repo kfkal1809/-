@@ -1,7 +1,8 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { haenyeoPreset, haenamDeckPreset, haenamEnginePreset } from "@/lib/domain/characterPresets";
-import { APP_NAME, SHIP_NAME } from "@/lib/domain/constants";
+import { SHIP_NAME } from "@/lib/domain/constants";
 
 export default function OpeningPage() {
   return (
@@ -20,9 +21,16 @@ export default function OpeningPage() {
 
       <main className="relative z-10 mx-auto flex w-full max-w-[460px] flex-1 flex-col items-center justify-center px-6 pb-10 text-center">
         <p className="text-sm font-bold tracking-wide text-[var(--color-navy-soft)]">{SHIP_NAME}에 오신 것을 환영합니다</p>
-        <h1 className="mt-2 text-[28px] font-extrabold leading-tight text-[var(--color-navy)]">
-          {APP_NAME}
-        </h1>
+        <Image
+          src="/images/misc/logo-wordmark.png"
+          alt="해기사와 연인들의 항해일지"
+          width={732}
+          height={346}
+          unoptimized
+          priority
+          className="mt-3 w-full max-w-[300px]"
+          style={{ height: "auto" }}
+        />
 
         <div className="mt-8 flex items-end justify-center gap-1">
           <div className="animate-floaty" style={{ animationDelay: "0s" }}>
