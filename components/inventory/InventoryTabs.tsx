@@ -8,6 +8,7 @@ import { RARITY_LABEL, RARITY_STARS } from "@/lib/domain/types";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
 import type { InventoryItemRow } from "@/lib/game/inventoryData";
 import type { MyCharacter } from "@/lib/game/myCharacters";
+import { LootActions } from "@/components/inventory/LootActions";
 
 const EQUIP_CATEGORIES = new Set(["hair", "outfit", "hat", "accessory"]);
 
@@ -79,6 +80,7 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
           {filtered.map((item) => {
             const equipable = EQUIP_CATEGORIES.has(item.category) && myCharacters.length > 0;
             const placeable = item.category === "furniture";
+            const isLoot = item.category === "keepsake" && ["fish", "lost", "trash", "legend"].includes(item.subcategory ?? "");
             return (
               <Card key={item.id} className="relative flex flex-col items-center gap-1 !p-2.5 text-center">
                 {item.isNew && <NewBadge className="absolute right-1.5 top-1.5" />}
@@ -124,6 +126,8 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
                     선실에 배치
                   </Link>
                 )}
+
+                {isLoot && <LootActions inventoryItemId={item.id} subcategory={item.subcategory} />}
               </Card>
             );
           })}
