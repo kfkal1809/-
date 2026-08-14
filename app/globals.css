@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+:root {
+  /* Backgrounds — clear pastel, never sepia/yellowed */
+  --color-sky: #eaf6ff;
+  --color-sky-deep: #cdeaff;
+  --color-aqua: #e2f8f3;
+  --color-cream: #fffaf0;
+  --color-surface: #ffffff;
+
+  /* Accents */
+  --color-coral: #ff9a8b;
+  --color-coral-deep: #ff7f6b;
+  --color-mint: #8fe3c6;
+  --color-mint-deep: #5fd1ac;
+  --color-gold: #f4c978;
+  --color-gold-deep: #e9b256;
+
+  /* Text */
+  --color-navy: #24365a;
+  --color-navy-soft: #5b6b8c;
+  --color-line: #22304d;
+
+  /* System */
+  --color-sky-new: #4fc3f7;
+  --color-tab-active: #2f6fed;
+  --color-tab-inactive: #aebcd6;
+  --color-danger: #ff6f6f;
+
+  --shadow-soft: 0 4px 14px rgba(36, 54, 90, 0.08);
+  --shadow-card: 0 6px 20px rgba(36, 54, 90, 0.10);
+  --radius-blob: 28px;
+}
+
+@theme inline {
+  --color-sky: var(--color-sky);
+  --color-sky-deep: var(--color-sky-deep);
+  --color-aqua: var(--color-aqua);
+  --color-cream: var(--color-cream);
+  --color-surface: var(--color-surface);
+  --color-coral: var(--color-coral);
+  --color-coral-deep: var(--color-coral-deep);
+  --color-mint: var(--color-mint);
+  --color-mint-deep: var(--color-mint-deep);
+  --color-gold: var(--color-gold);
+  --color-gold-deep: var(--color-gold-deep);
+  --color-navy: var(--color-navy);
+  --color-navy-soft: var(--color-navy-soft);
+  --color-line: var(--color-line);
+  --color-sky-new: var(--color-sky-new);
+  --color-tab-active: var(--color-tab-active);
+  --color-tab-inactive: var(--color-tab-inactive);
+  --color-danger: var(--color-danger);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+}
+
+html {
+  background: var(--color-sky);
+}
+
+body {
+  background: var(--color-sky);
+  color: var(--color-navy);
+  font-family: var(--font-body, "Pretendard Variable"), -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.animate-floaty {
+  animation: floaty 3.2s ease-in-out infinite;
+}
+
+@keyframes bob-sea {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-4px) rotate(0.5deg); }
+}
+.animate-bob {
+  animation: bob-sea 4s ease-in-out infinite;
+}
+
+@keyframes sparkle-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-sparkle {
+  animation: sparkle-pop 0.4s ease-out;
+}

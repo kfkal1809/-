@@ -1,0 +1,122 @@
+import { NextResponse } from "next/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
+import { getMyHouseholdId } from "@/lib/game/household";
+import { WELCOME_GRANT_AMOUNT } from "@/lib/domain/constants";
+
+const DEFAULT_FURNITURE_LAYOUT: { sku: string; x: number; y: number; rotation?: number }[] = [
+  { sku: "furniture_bed", x: 0.24, y: 0.62 },
+  { sku: "furniture_desk", x: 0.72, y: 0.58 },
+  { sku: "furniture_chair", x: 0.72, y: 0.74 },
+  { sku: "furniture_fridge", x: 0.9, y: 0.5 },
+  { sku: "furniture_porthole", x: 0.5, y: 0.22 },
+  { sku: "furniture_lamp", x: 0.12, y: 0.3 },
+  { sku: "furniture_rug", x: 0.42, y: 0.82 },
+];
+
+// 기획서 3.6: household/cabin/wallet 생성 + $20 웰컴 그랜트 + 기본 아이템 지급을 한 번에 처리.
+// idempotency_key로 중복 온보딩 시 $20 재지급을 막는다.
+export async function POST() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+
+  const service = createServiceClient();
+  const householdId = await getMyHouseholdId(service, user.id);
+  if (!householdId) return NextResponse.json({ error: "no_household" }, { status: 400 });
+
+  const idempotencyKey = `welcome_grant:${householdId}`;
+  const { data: existingGrant } = await service
+    .from("wallet_transactions")
+    .select("id")
+    .eq("idempotency_key", idempotencyKey)
+    .maybeSingle();
+
+  let { data: cabin } = await service
+    .from("spaces")
+    .select("id")
+    .eq("household_id", householdId)
+    .eq("type", "cabin")
+    .maybeSingle();
+
+  if (!cabin) {
+    const { data: newCabin, error: cabinError } = await service
+      .from("spaces")
+      .insert({ type: "cabin", household_id: householdId, name: "우리 선실", owner_user_id: user.id })
+      .select("id")
+      .single();
+    if (cabinError) return NextResponse.json({ error: cabinError.message }, { status: 500 });
+    cabin = newCabin;
+
+    const { data: furnitureCatalog } = await service
+      .from("item_catalog")
+      .select("id, sku")
+      .in("sku", DEFAULT_FURNITURE_LAYOUT.map((f) => f.sku));
+
+    for (const layout of DEFAULT_FURNITURE_LAYOUT) {
+      const item = furnitureCatalog?.find((c) => c.sku === layout.sku);
+      if (!item) continue;
+      const { data: invItem } = await service
+        .from("inventory_items")
+        .insert({ household_id: householdId, catalog_item_id: item.id, quantity: 1 })
+        .select("id")
+        .single();
+      if (invItem) {
+        await service.from("space_items").insert({
+          space_id: cabin.id,
+          inventory_item_id: invItem.id,
+          catalog_item_id: item.id,
+          x: layout.x,
+          y: layout.y,
+          rotation: layout.rotation ?? 0,
+        });
+      }
+    }
+  }
+
+  if (existingGrant) {
+    const { data: wallet } = await service.from("wallets").select("cached_balance").eq("household_id", householdId).maybeSingle();
+    return NextResponse.json({ already: true, balance: wallet?.cached_balance ?? 0 });
+  }
+
+  const { data: characters } = await service
+    .from("characters")
+    .select("kind, department")
+    .eq("household_id", householdId);
+
+  const subcategories = new Set<string>();
+  for (const c of characters ?? []) {
+    if (c.kind === "haenyeo") subcategories.add("haenyeo");
+    if (c.kind === "haenam") subcategories.add(c.department === "engine" ? "haenam_engine" : "haenam_deck");
+    if (c.kind === "child") subcategories.add("child");
+  }
+
+  if (subcategories.size > 0) {
+    const { data: starterItems } = await service
+      .from("item_catalog")
+      .select("id")
+      .eq("source_label", "기본 지급")
+      .in("subcategory", Array.from(subcategories));
+
+    if (starterItems?.length) {
+      await service
+        .from("inventory_items")
+        .insert(starterItems.map((item) => ({ household_id: householdId, catalog_item_id: item.id, quantity: 1 })));
+    }
+  }
+
+  const { data: rpcResult, error: rpcError } = await service.rpc("apply_wallet_transaction", {
+    p_household_id: householdId,
+    p_amount: WELCOME_GRANT_AMOUNT,
+    p_type: "welcome_grant",
+    p_idempotency_key: idempotencyKey,
+    p_metadata: { label: "신규 승선자 보급 선용금" },
+    p_created_by: user.id,
+  });
+
+  if (rpcError) return NextResponse.json({ error: rpcError.message }, { status: 500 });
+
+  const row = Array.isArray(rpcResult) ? rpcResult[0] : rpcResult;
+  return NextResponse.json({ already: false, balance: row?.balance ?? WELCOME_GRANT_AMOUNT, grant: WELCOME_GRANT_AMOUNT });
+}
