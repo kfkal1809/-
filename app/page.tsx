@@ -46,9 +46,6 @@ export default function OpeningPage() {
           >
             해연결호 승선하기
           </Link>
-          <p className="mt-3 text-xs text-[var(--color-navy-soft)]">
-            해연결 단톡방 구성원과 그 연인만 승선할 수 있어요
-          </p>
         </div>
       </main>
 
