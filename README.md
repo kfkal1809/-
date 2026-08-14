@@ -26,9 +26,16 @@
 - [x] 가방에서 바로 착용·배치로 연결되는 액션 버튼
 - [x] Supabase 미연결 상태에서 500 대신 빈 상태로 표시되도록 전체 서버 페이지 점검 (`lib/supabase/safeQuery.ts`)
 
-### 다음 — Sprint 3 (소셜)
+### Sprint 3 — 소셜 (완료)
 
-- [ ] 갑판 실시간 Presence/채팅, 가게 알바/구매, 자동낚시, 커플링/혼인신고는 세계관 톤의 스텁 상태 (다음 스프린트에서 기능 구현)
+- [x] 갑판 Presence — Supabase Realtime presence 채널(`deck:main`)로 현재 접속자 캐릭터를 실시간 표시
+- [x] 갑판 실시간 채팅 — `chat_messages` INSERT를 postgres_changes로 구독, 전송은 RLS로 보호된 브라우저 클라이언트 직접 insert
+- [x] @멘션 자동완성 — 현재 접속자 닉네임 기준 필터링, 캐릭터 클릭 시 승선확인증/태그 액션
+- [x] `chat_messages`를 Realtime publication에 추가하는 마이그레이션(`0004_realtime.sql`)
+
+### 다음 — Sprint 4 (게임경제)
+
+- [ ] 자동낚시(4h/8h), 가게 알바/구매, 선내식당 랜덤보상, 커플링/혼인신고는 세계관 톤의 스텁 상태 (다음 스프린트에서 기능 구현)
 
 ## 로컬 개발
 
