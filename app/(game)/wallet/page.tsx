@@ -1,7 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/Card";
 import { GameIcon } from "@/components/icons/GameIcon";
 import { CURRENCY_DISCLAIMER } from "@/lib/domain/constants";
+import { grantDailyInterest } from "@/lib/game/interest";
 
 const TYPE_LABEL: Record<string, string> = {
   welcome_grant: "신규 승선자 보급 선용금",
@@ -25,6 +26,7 @@ const TYPE_LABEL: Record<string, string> = {
 export default async function WalletPage() {
   let balance = 0;
   let transactions: { id: string; amount: number; type: string; created_at: string }[] = [];
+  let newInterest: number | null = null;
 
   try {
     const supabase = await createClient();
@@ -35,6 +37,9 @@ export default async function WalletPage() {
     if (user) {
       const { data: membership } = await supabase.from("household_users").select("household_id").eq("user_id", user.id).maybeSingle();
       if (membership) {
+        const service = createServiceClient();
+        newInterest = await grantDailyInterest(service, membership.household_id, user.id);
+
         const [{ data: wallet }, { data: txs }] = await Promise.all([
           supabase.from("wallets").select("cached_balance").eq("household_id", membership.household_id).maybeSingle(),
           supabase
@@ -63,6 +68,11 @@ export default async function WalletPage() {
         </div>
         <GameIcon name="coin" size={54} />
       </Card>
+      {newInterest !== null && (
+        <p className="text-center text-[12px] font-bold text-[var(--color-mint-deep)]">
+          오늘의 선내 외화이자 +${newInterest.toFixed(2)} 적립됐어요!
+        </p>
+      )}
       <p className="text-center text-[11px] text-[var(--color-navy-soft)]">{CURRENCY_DISCLAIMER}</p>
 
       <div className="flex flex-col gap-2">

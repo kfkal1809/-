@@ -46,7 +46,9 @@
 - [x] 커플링 구매(귀금속점) → 혼인신고서 구매(귀금속점에서 반지 보유 확인) → 양쪽 서명 →
   자동으로 명예의 전당 등재까지 실제 동작하는 플로우로 구현(`app/api/jewelry/buy-ring`,
   `app/api/marriage/{buy-document,sign}`, `components/marriage/MarriageFlow.tsx`)
-- [ ] 카카오 오픈채팅 출석 인증, 환율 재미요소, 공동금고 이자는 아직 스텁 상태
+- [x] 공동금고(선내 외화이자) — 지갑 페이지 방문 시 하루 1회, 잔액의 0.5%($0.1~$3)를 자동
+  적립(`lib/game/interest.ts`, idempotency_key로 중복 지급 방지)
+- [ ] 카카오 오픈채팅 출석 인증, 환율 재미요소는 아직 스텁 상태
 
 ## 로컬 개발
 
