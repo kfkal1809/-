@@ -48,7 +48,9 @@
   `app/api/marriage/{buy-document,sign}`, `components/marriage/MarriageFlow.tsx`)
 - [x] 공동금고(선내 외화이자) — 지갑 페이지 방문 시 하루 1회, 잔액의 0.5%($0.1~$3)를 자동
   적립(`lib/game/interest.ts`, idempotency_key로 중복 지급 방지)
-- [ ] 카카오 오픈채팅 출석 인증, 환율 재미요소는 아직 스텁 상태
+- [x] 환율 재미요소 — "오늘의 선상 환율" 표시(`lib/game/fxRate.ts`, 날짜 시드 기반 결정적
+  값, `fx_rates` 테이블에 하루 1건 지연 삽입, 실제 외부 API 호출 없음)
+- [ ] 카카오 오픈채팅 출석 인증은 아직 스텁 상태(실제 카카오 앱 등록·웹훅 연동 필요)
 
 ## 로컬 개발
 

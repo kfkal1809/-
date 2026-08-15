@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { GameIcon } from "@/components/icons/GameIcon";
 import { CURRENCY_DISCLAIMER } from "@/lib/domain/constants";
 import { grantDailyInterest } from "@/lib/game/interest";
+import { getTodayFxRate } from "@/lib/game/fxRate";
 
 const TYPE_LABEL: Record<string, string> = {
   welcome_grant: "신규 승선자 보급 선용금",
@@ -27,6 +28,7 @@ export default async function WalletPage() {
   let balance = 0;
   let transactions: { id: string; amount: number; type: string; created_at: string }[] = [];
   let newInterest: number | null = null;
+  let fxRate: number | null = null;
 
   try {
     const supabase = await createClient();
@@ -39,6 +41,7 @@ export default async function WalletPage() {
       if (membership) {
         const service = createServiceClient();
         newInterest = await grantDailyInterest(service, membership.household_id, user.id);
+        fxRate = await getTodayFxRate(service);
 
         const [{ data: wallet }, { data: txs }] = await Promise.all([
           supabase.from("wallets").select("cached_balance").eq("household_id", membership.household_id).maybeSingle(),
@@ -73,6 +76,19 @@ export default async function WalletPage() {
           오늘의 선내 외화이자 +${newInterest.toFixed(2)} 적립됐어요!
         </p>
       )}
+
+      {fxRate !== null && (
+        <div className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-2.5">
+          <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">오늘의 선상 환율</p>
+          <p className="text-[12px] font-extrabold text-[var(--color-navy)]">
+            $1 = ₩{fxRate.toLocaleString("ko-KR")}
+            <span className="ml-2 font-normal text-[var(--color-navy-soft)]">
+              (내 선용금 ≈ ₩{Math.round(balance * fxRate).toLocaleString("ko-KR")})
+            </span>
+          </p>
+        </div>
+      )}
+
       <p className="text-center text-[11px] text-[var(--color-navy-soft)]">{CURRENCY_DISCLAIMER}</p>
 
       <div className="flex flex-col gap-2">
