@@ -35,6 +35,9 @@ export const ITEM_ICON_SKUS = new Set([
   "fish_crab",
   "lost_mug",
   "lost_boarding_pass",
+  "child_outfit_hoodie",
+  "child_outfit_overalls",
+  "child_outfit_dress",
 ]);
 
 export function itemIconSrc(sku: string | null | undefined): string | null {
