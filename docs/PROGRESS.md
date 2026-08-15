@@ -1,7 +1,7 @@
 # 진행 상황 기록 (세션이 끊겨도 여기서 이어감)
 
-마지막 갱신: 작업 중 (Stage 2 — 낚시/가구/본뿌리 아이콘 적용 완료, 사용자가 헤어/의상
-투명 레이어를 직접 그려서 전달 예정 — 그 전까지 다른 Stage 2 항목 계속 진행 중)
+마지막 갱신: 작업 중 (사용자가 캐릭터 베이스 체형 + 헤어/의상 그림을 준비해서 전달 예정 —
+그 사이 Sprint 5(커플/외부연동) 착수함)
 
 ## 지금까지 완료된 큰 단위
 
@@ -9,9 +9,10 @@
 - **회사명 변경**: `(주)해녀쉽핑` → `(주)해녀해운` 전체 반영 완료 (코드 전수 검색 확인함, 잔여 없음).
 - **디자인 에셋 Stage 1**: 완료, 커밋/푸시됨.
 - **지나가는 선박 랜덤 조우 이벤트 시스템**: 완료, 커밋/푸시됨.
-- **Stage 2 (아이템 아이콘 적용)**: 낚시 결과물 16종 + 선실 가구 8종 + 본뿌리 꽃 7종 = 31개
-  적용 완료(아래 섹션). **사용자가 캐릭터 헤어/의상 투명 레이어를 직접 그려서 전달하기로 함**
-  — 도착하면 레이어 합성 작업 재개.
+- **Stage 2 (아이템 아이콘 적용)**: 총 55개 아이콘 적용 완료(아래 섹션). **사용자가 캐릭터
+  베이스 체형 + 헤어/의상을 직접 그려서 전달하기로 함(비율/정렬은 내가 맞추기로 함)** —
+  도착 대기 중.
+- **Sprint 5 — 커플링/혼인신고 실기능**: 완료, 커밋/푸시됨(아래 섹션).
 
 ## 디자인 에셋 Stage 1 체크리스트
 
@@ -144,6 +145,29 @@
   상품 이미지 표시(없으면 기존 GameIcon "flower"로 폴백 — liri-gopchang 등 다른 상점은 영향 없음).
 - Mock 데이터로 인벤토리 탭/선실 에디터/상점 그리드를 렌더링해 아이콘·폴백 동작을 스크린샷으로
   확인함(실제 Supabase 데이터로는 이 샌드박스에 연결이 없어 끝까지 확인 못함 — 위와 동일한 한계).
+
+## Sprint 5 — 커플링/혼인신고 실기능 (완료)
+
+기존에 이미지 미리보기 + "다음 업데이트에서 열려요" 안내문구뿐이던 것을 실제로 동작하는
+플로우로 구현. 새 마이그레이션 없이 기존 스키마(`couple_events`, `households.game_marriage_
+status/game_married_at`, `hall_of_fame`)를 그대로 사용.
+
+- **귀금속점**(`app/api/jewelry/buy-ring`): 커플링 3종을 실제로 구매 가능 — 지갑 차감(
+  `apply_wallet_transaction`) + `inventory_items` 지급 + `couple_events`(type=ring_purchase)
+  기록. `RING_SETS`에 `sku` 필드 추가해 `RING_SETS.key`(wave_ring 등)와 카탈로그
+  `sku`(ring_wave 등) 네이밍 불일치를 연결.
+- **혼인신고서 구매**(`app/api/marriage/buy-document`): 커플링 보유 여부를 서버에서 재검증,
+  `households.game_marriage_status`를 조건부 UPDATE(none→pending_signature)로 잠가 중복
+  신청 방지, 결제 실패 시 상태 롤백.
+- **서명**(`app/api/marriage/sign`): 대기 중인 `couple_events`(marriage_request) 행의
+  `payload.signed_by` 배열에 본인 user_id 추가 → `household_users` 전원이 서명 완료되면
+  자동으로 `game_marriage_status='married'` + `hall_of_fame`에 "OO ♥ XX 혼인신고 완료" 등재.
+  승선확인증 페이지의 "혼인신고 완료/미완료" 표시는 코드 변경 없이 이 상태를 그대로 읽어감.
+- `lib/game/marriageData.ts`가 반지 보유·서명 현황·구성원 목록을 한 번에 조회하고,
+  `components/marriage/MarriageFlow.tsx`가 상태(반지없음/구매가능/서명대기/혼인완료) 4단계를
+  화면 하나로 표시. Mock 데이터로 4단계 전부 스크린샷 확인, build/lint 통과.
+- 실제 Supabase 연동으로 두 계정이 순서대로 서명하는 전체 왕복은 이 샌드박스에서 확인 못함
+  (다른 기능들과 동일한 한계) — 배포 후 확인 필요.
 
 ## 다음에 할 일 (우선순위 순)
 

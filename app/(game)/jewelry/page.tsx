@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { RING_SETS } from "@/lib/domain/constants";
 import { Card } from "@/components/ui/Card";
+import { RingBuyButton } from "@/components/jewelry/RingBuyButton";
 
 const RING_IMAGE: Record<string, string> = {
   wave_ring: "ring-wave",
@@ -32,9 +33,9 @@ export default function JewelryPage() {
             />
             <div className="flex-1">
               <p className="text-[13px] font-bold text-[var(--color-navy)]">{r.name}</p>
-              <p className="text-[11px] text-[var(--color-navy-soft)]">구매 기능은 다음 업데이트에서 열려요</p>
+              <p className="text-[11px] text-[var(--color-navy-soft)]">둘이 함께 맞추는 커플링이에요</p>
             </div>
-            <p className="text-[14px] font-extrabold text-[var(--color-coral)]">${r.price}</p>
+            <RingBuyButton sku={r.sku} price={r.price} />
           </Card>
         ))}
       </div>

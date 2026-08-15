@@ -139,9 +139,9 @@ export const BONPPURI_PRODUCTS = [
 ];
 
 export const RING_SETS = [
-  { key: "wave_ring", name: "파도 커플링", price: 25 },
-  { key: "shell_ring", name: "진주조개 커플링", price: 40 },
-  { key: "lighthouse_ring", name: "등대불빛 커플링", price: 60 },
+  { key: "wave_ring", sku: "ring_wave", name: "파도 커플링", price: 25 },
+  { key: "shell_ring", sku: "ring_shell", name: "진주조개 커플링", price: 40 },
+  { key: "lighthouse_ring", sku: "ring_lighthouse", name: "등대불빛 커플링", price: 60 },
 ];
 
 export const MARRIAGE_DOCUMENT_PRICE = 30;
