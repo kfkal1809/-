@@ -33,6 +33,8 @@ export const ITEM_ICON_SKUS = new Set([
   "bonppuri_premium_bouquet",
   "bonppuri_season_deco",
   "fish_crab",
+  "lost_mug",
+  "lost_boarding_pass",
 ]);
 
 export function itemIconSrc(sku: string | null | undefined): string | null {
