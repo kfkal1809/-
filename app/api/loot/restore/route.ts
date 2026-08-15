@@ -100,11 +100,18 @@ export async function POST(request: Request) {
     });
     message = `깜짝 용돈 $${cashReward}을 발견했어요!`;
   } else if (outcome === "photo") {
-    const { data: photo } = await service.from("item_catalog").select("id, name, rarity").eq("sku", "restore_photo_fragment").maybeSingle();
-    if (photo) {
-      await service.from("inventory_items").insert({ household_id: householdId, catalog_item_id: photo.id, quantity: 1 });
-      itemReward = { name: photo.name, rarity: photo.rarity };
-      message = `${photo.name}을(를) 찾았어요.`;
+    // restore_old_phone_fixed는 headline+휴대폰 전용이라 여기 풀에서는 제외한다.
+    const { data: restoredPool } = await service
+      .from("item_catalog")
+      .select("id, name, rarity")
+      .eq("subcategory", "restored")
+      .neq("sku", "restore_old_phone_fixed")
+      .eq("active", true);
+    const pick = (restoredPool ?? [])[Math.floor(Math.random() * (restoredPool?.length ?? 1))];
+    if (pick) {
+      await service.from("inventory_items").insert({ household_id: householdId, catalog_item_id: pick.id, quantity: 1 });
+      itemReward = { name: pick.name, rarity: pick.rarity };
+      message = `${pick.name}을(를) 찾았어요.`;
     }
   } else if (outcome === "headline") {
     if (isPhone) {

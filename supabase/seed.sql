@@ -117,6 +117,9 @@ insert into public.item_catalog (sku, name, description, category, subcategory, 
   ('legend_signoff_doc', '하선확정문서', '전설 등급 수집품', 'keepsake', 'legend', 'legendary', 0, 20, false, '낚시터', true),
   ('legend_soon_note', '전설의 곧 입항해 메모', '전설 등급 수집품', 'keepsake', 'legend', 'legendary', 0, 20, false, '낚시터', true),
   ('legend_ship_souvenir', '희귀 선박 기념품', '전설 등급 수집품', 'keepsake', 'legend', 'legendary', 0, 20, false, '낚시터', true),
+  ('legend_compass', '선장님의 나침반', '전설 등급 수집품', 'keepsake', 'legend', 'legendary', 0, 20, false, '낚시터', true),
+  ('legend_golden_anchor', '황금 닻 장식', '전설 등급 수집품', 'keepsake', 'legend', 'legendary', 0, 20, false, '낚시터', true),
+  ('legend_shell_jewel', '빛나는 조개 보석함', '전설 등급 수집품', 'keepsake', 'legend', 'legendary', 0, 20, false, '낚시터', true),
   -- 조리 결과물 (선내식당 조리하기 보상)
   ('dish_sashimi', '회용 생선', '신선하게 손질한 회', 'keepsake', 'dish', 'rare', 0, 3, false, '선내식당', true),
   ('dish_grilled', '구이용 생선', '노릇하게 구운 생선', 'keepsake', 'dish', 'common', 0, 2, false, '선내식당', true),
@@ -127,6 +130,11 @@ insert into public.item_catalog (sku, name, description, category, subcategory, 
   -- 분실물 복원 결과물
   ('restore_photo_fragment', '사진 조각', '복원하다 찾은 사진 조각', 'keepsake', 'restored', 'rare', 0, 2, false, '분실물 복원', true),
   ('restore_old_phone_fixed', '복원한 휴대폰', '해남이가 떨어뜨렸던 휴대폰을 고쳤다. 선실 책상에 놓을 수 있다', 'furniture', 'restored', 'epic', 0, 8, true, '분실물 복원', true),
+  ('restore_radio', '낡은 라디오', '복원해서 되살린 라디오. 선실에 놓을 수 있다', 'furniture', 'restored', 'rare', 0, 5, true, '분실물 복원', true),
+  ('restore_camera', '카메라', '복원해서 되살린 카메라. 선실에 놓을 수 있다', 'furniture', 'restored', 'rare', 0, 5, true, '분실물 복원', true),
+  ('restore_frame', '오래된 액자', '복원해서 되살린 액자. 선실에 놓을 수 있다', 'furniture', 'restored', 'rare', 0, 4, true, '분실물 복원', true),
+  ('restore_ship_model', '배 모형 조각', '복원해서 되살린 배 모형. 선실에 놓을 수 있다', 'furniture', 'restored', 'epic', 0, 7, true, '분실물 복원', true),
+  ('restore_mailbox', '우편함 조각', '복원해서 되살린 우편함. 선실에 놓을 수 있다', 'furniture', 'restored', 'rare', 0, 5, true, '분실물 복원', true),
   -- 커플링
   ('ring_wave', '파도 커플링', '커플링 세트', 'accessory', 'ring', 'rare', 25, 8, false, '귀금속점', true),
   ('ring_shell', '진주조개 커플링', '커플링 세트', 'accessory', 'ring', 'epic', 40, 14, false, '귀금속점', true),
@@ -150,8 +158,13 @@ insert into public.item_catalog (sku, name, description, category, subcategory, 
   ('ship_chemical_rainbow_vial', '무지개 시약병', '오묘한 빛깔의 시약병', 'keepsake', 'ship_chemical', 'epic', 0, 7, true, '지나가는 선박', true),
   ('ship_lng_blue_gem', '푸른 보석 원석', 'LNG선의 푸른 탱크를 닮은 원석', 'keepsake', 'ship_lng', 'epic', 0, 8, true, '지나가는 선박', true),
   ('ship_lng_tank_model', 'LNG 탱크 모형', '둥근 LNG 탱크 미니어처', 'keepsake', 'ship_lng', 'rare', 0, 6, true, '지나가는 선박', true),
-  ('ship_vlcc_golden_anchor', '황금 닻 장식', 'VLCC 선장이 선물한 귀한 장식', 'keepsake', 'ship_vlcc', 'legendary', 0, 12, true, '지나가는 선박', true),
-  ('ship_vlcc_model', '초대형 선박 모형', 'VLCC의 위용을 담은 정밀 모형', 'keepsake', 'ship_vlcc', 'epic', 0, 9, true, '지나가는 선박', true)
+  ('ship_vlcc_golden_anchor', '황금 닻 브로치', 'VLCC 선장이 선물한 귀한 장식', 'keepsake', 'ship_vlcc', 'legendary', 0, 12, true, '지나가는 선박', true),
+  ('ship_vlcc_model', '초대형 선박 모형', 'VLCC의 위용을 담은 정밀 모형', 'keepsake', 'ship_vlcc', 'epic', 0, 9, true, '지나가는 선박', true),
+  -- 선실 장식(현창/벽지) — 기존 선박 이벤트 보상풀 재사용, 새 메커니즘 없음
+  ('ship_vlcc_porthole_sunset', '노을 현창', 'VLCC가 두고 간 노을빛 현창', 'furniture', 'ship_vlcc', 'epic', 0, 9, true, '지나가는 선박', true),
+  ('ship_lng_porthole_night', '밤바다 현창', 'LNG선이 두고 간 별빛 밤바다 현창', 'furniture', 'ship_lng', 'epic', 0, 9, true, '지나가는 선박', true),
+  ('ship_bulk_wallpaper_cloud', '구름 벽지', '벌크선이 나눠준 포근한 구름 벽지', 'furniture', 'ship_bulk', 'rare', 0, 5, true, '지나가는 선박', true),
+  ('ship_tanker_wallpaper_wave', '파도 벽지', '탱커선이 두고 간 파도무늬 벽지', 'furniture', 'ship_tanker', 'rare', 0, 5, true, '지나가는 선박', true)
 on conflict (sku) do nothing;
 
 -- =========================================================

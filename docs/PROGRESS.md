@@ -106,19 +106,31 @@
    (아래 참고). sheet-15(새싹 마스터시트)와 sheet-18(해녀 마스터시트)도 확인했는데, 헤어는
    여기도 전부 "얼굴+헤어" 완성 일러스트라 위 1번 결론(레이어 합성 불가)이 그대로 적용됨.
    다만 새싹 시트의 "의상 아이템"/"가방·소품" 섹션은 마네킹 없이 옷만 딱 떠 있는 형태라
-   인벤토리 미리보기용으로 바로 쓸 수 있었음. 미반영 상태로 다음 패스 후보로 남은 것:
-   sheet-17의 복원/전설 아이템(라벨이 카탈로그 sku와 정확히 1:1 매칭되지 않아 건너뜀 — 새
-   sku를 만들지, 기존 아이템에 맞출지 결정 필요), sheet-16의 나머지(현창 변형 2종/벽지 2종 —
-   카탈로그에 대응 sku 없음), sheet-15의 새싹 신발/양말/가방/소품(카탈로그에 대응 sku 없음).
+   인벤토리 미리보기용으로 바로 쓸 수 있었음. **복원템/전설템/현창·벽지도 사용자 확인 후
+   새 item_catalog row로 추가해 전부 적용 완료(아래 참고).** 여전히 남은 것: sheet-15의
+   새싹 신발/양말/가방/소품(카탈로그에 대응 sku 없고, 새싹은 낚시/선박이벤트 같은 획득
+   경로가 없어 어디서 얻는 아이템으로 만들지부터 정해야 함 — 보류).
 
-## 이번에 적용한 것: 낚시/가구/본뿌리 아이콘 31종
+## 이번에 적용한 것: 아이템 아이콘 총 55종
 
-- `public/images/items/`에 31개 PNG — sheet-17(낚시 16종) + sheet-16(가구 8종:
-  furniture_bed/desk/chair/shelf/fridge/rug/porthole/stand_light) + sheet-13(본뿌리 7종:
-  bonppuri_season_bouquet/peony_bouquet/mini_vase/peony_vase/wedding_bouquet/
-  premium_bouquet/season_deco). 좌표 기반 크롭 + 배경색 거리 기반 투명화 + 알파 bbox
-  트림(Stage 1 아이콘 파이프라인과 동일 기법), 헤더 칩/패널 테두리 bleed는 좌표 미세조정으로
-  대부분 제거(완전히 픽셀퍼펙트는 아니고 Stage 1과 동일한 수준의 사소한 잔여 있음).
+- `public/images/items/`에 55개 PNG:
+  - sheet-17: 낚시 물고기 5 + 분실물 6 + 쓰레기 5 + 복원가능아이템 5 + 전설템 5 = 26
+  - sheet-02/03(알파채널 있는 시트, 배경제거 불필요): 대게, 머그컵, 탑승권 = 3
+  - sheet-16: 가구 8(bed/desk/chair/shelf/fridge/rug/porthole/stand_light) +
+    현창변형 2(노을/밤바다) + 벽지 2(구름/파도) = 12
+  - sheet-13: 본뿌리 꽃 7
+  - sheet-15: 새싹 의상(인벤토리 미리보기용) 3
+  - 좌표 기반 크롭 + 배경색 거리 기반 투명화 + 알파 bbox 트림(Stage 1 아이콘 파이프라인과
+    동일 기법), 헤더 칩/패널 테두리 bleed는 좌표 미세조정으로 대부분 제거(완전 픽셀퍼펙트는
+    아니고 Stage 1과 동일한 수준의 사소한 잔여 있음).
+- **신규 item_catalog 항목 12개 추가**(사용자 확인 후 진행): 복원템 5종(restore_radio/
+  camera/frame/ship_model/mailbox — 전부 선실 배치 가능), 전설템 3종(legend_compass/
+  golden_anchor/shell_jewel), 현창·벽지 4종(ship_vlcc_porthole_sunset/ship_lng_porthole_
+  night/ship_bulk_wallpaper_cloud/ship_tanker_wallpaper_wave — **새 메커니즘을 만들지 않고
+  기존 선박 이벤트 보상풀에 자연스럽게 편입**시킴). `app/api/loot/restore/route.ts`의
+  "사진 조각" 성공 분기를 subcategory='restored' 전체 랜덤 뽑기로 확장해 새 복원템 5종이
+  실제로 나오도록 연결. 기존 `ship_vlcc_golden_anchor`와 이름이 겹치던 것은 "황금 닻 브로치"로
+  바꿔 새 `legend_golden_anchor`("황금 닻 장식")와 구분되게 함.
 - `lib/domain/itemIcons.ts`: sku → 이미지 경로 매핑을 화이트리스트(Set)로 관리. 목록에 없는
   sku는 자동으로 기존 희귀도 배지 플레이스홀더/기본 GameIcon으로 폴백 — 깨진 이미지가 뜨지 않음.
 - `lib/game/inventoryData.ts`, `components/inventory/InventoryTabs.tsx`: 인벤토리 카드에
@@ -135,13 +147,12 @@
 
 ## 다음에 할 일 (우선순위 순)
 
-1. **사용자가 캐릭터 기본 체형(베이스 바디) + 헤어/의상 투명 레이어 PNG를 직접 그려서 전달
-   하기로 함** — 도착 대기 중. 도착하면: (a) 벡터 CharacterSprite를 이미지 합성 방식으로
-   교체, (b) 받은 베이스 체형 기준으로 헤어/의상 레이어가 들어갈 정확한 좌표를 사용자에게
-   회신, (c) item_catalog의 hair/outfit/hat/accessory 아이템들과 매핑.
-2. 여유가 되면 sheet-06/11(새싹 마네킹 의상 — sheet-15와 다른 앵글), 남은 가구/현창 변형 검토
-3. sheet-17의 복원/전설 아이템, sheet-16의 현창 변형/벽지 — 새 item_catalog sku 추가할지
-   여부 사용자 확인 필요
+1. **사용자가 캐릭터 기본 체형(베이스 바디) + 헤어/의상을 직접 그려서 전달하기로 함**
+   (비율/정렬은 내가 맞춰주기로 함, 사용자가 캔버스 맞춰 그릴 필요 없음) — 도착 대기 중.
+   도착하면: (a) 벡터 CharacterSprite를 이미지 합성 방식으로 교체, (b) 이미지 리사이즈/
+   위치조정으로 비율 맞추기, (c) item_catalog의 hair/outfit/hat/accessory 아이템들과 매핑.
+2. 여유가 되면 sheet-15의 새싹 신발/양말/가방(획득 경로부터 결정 필요), sheet-06/11(새싹
+   마네킹 의상 — sheet-15와 다른 앵글) 검토
 
 ## 확인이 필요했지만 진행을 막지 않고 넘어간 것들 (나중에 사용자 확인용)
 

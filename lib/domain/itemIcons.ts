@@ -38,6 +38,20 @@ export const ITEM_ICON_SKUS = new Set([
   "child_outfit_hoodie",
   "child_outfit_overalls",
   "child_outfit_dress",
+  "restore_radio",
+  "restore_camera",
+  "restore_frame",
+  "restore_ship_model",
+  "restore_mailbox",
+  "legend_flight_ticket",
+  "legend_soon_note",
+  "legend_compass",
+  "legend_golden_anchor",
+  "legend_shell_jewel",
+  "ship_vlcc_porthole_sunset",
+  "ship_lng_porthole_night",
+  "ship_bulk_wallpaper_cloud",
+  "ship_tanker_wallpaper_wave",
 ]);
 
 export function itemIconSrc(sku: string | null | undefined): string | null {
