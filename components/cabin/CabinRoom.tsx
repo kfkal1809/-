@@ -1,8 +1,10 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { GameIcon } from "@/components/icons/GameIcon";
 import type { CabinData } from "@/lib/game/cabinData";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
+import { itemIconSrc } from "@/lib/domain/itemIcons";
 
 export function CabinRoom({ data }: { data: CabinData }) {
   return (
@@ -26,7 +28,11 @@ export function CabinRoom({ data }: { data: CabinData }) {
             style={{ left: `${item.x * 100}%`, top: `${item.y * 100}%`, transform: `translate(-50%, -50%) rotate(${item.rotation}deg)` }}
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/85 text-[10px] font-bold text-[var(--color-navy)] shadow">
-              {item.name.slice(0, 2)}
+              {itemIconSrc(item.sku) ? (
+                <Image src={itemIconSrc(item.sku)!} alt="" width={40} height={40} unoptimized style={{ width: "88%", height: "88%", objectFit: "contain" }} />
+              ) : (
+                item.name.slice(0, 2)
+              )}
             </div>
           </div>
         ))}

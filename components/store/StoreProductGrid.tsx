@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { GameIcon } from "@/components/icons/GameIcon";
+import { itemIconSrc } from "@/lib/domain/itemIcons";
 import type { StoreProduct } from "@/lib/game/storeData";
 
 export function StoreProductGrid({ storeSlug, products }: { storeSlug: string; products: StoreProduct[] }) {
@@ -41,7 +43,11 @@ export function StoreProductGrid({ storeSlug, products }: { storeSlug: string; p
       <div className="grid grid-cols-2 gap-2.5">
         {products.map((p) => (
           <Card key={p.catalogItemId} className="flex flex-col items-center gap-1.5 !p-3 text-center">
-            <GameIcon name="flower" size={44} />
+            {itemIconSrc(p.sku) ? (
+              <Image src={itemIconSrc(p.sku)!} alt="" width={56} height={56} unoptimized style={{ width: 56, height: 56, objectFit: "contain" }} />
+            ) : (
+              <GameIcon name="flower" size={44} />
+            )}
             <p className="text-[12px] font-bold text-[var(--color-navy)]">{p.name}</p>
             <button
               onClick={() => handleBuy(p)}

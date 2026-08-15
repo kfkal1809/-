@@ -11,6 +11,7 @@ export interface CabinCharacter {
 
 export interface CabinPlacedItem {
   id: string;
+  sku: string | null;
   name: string;
   x: number;
   y: number;
@@ -48,9 +49,9 @@ const DEMO: CabinData = {
     { id: "d2", nickname: "북극곰", roleLabel: "해남(항해사)", appearance: haenamDeckPreset() },
   ],
   placedItems: [
-    { id: "f1", name: "침대", x: 0.24, y: 0.62, rotation: 0 },
-    { id: "f2", name: "책상", x: 0.72, y: 0.58, rotation: 0 },
-    { id: "f3", name: "러그", x: 0.42, y: 0.82, rotation: 0 },
+    { id: "f1", sku: "furniture_bed", name: "침대", x: 0.24, y: 0.62, rotation: 0 },
+    { id: "f2", sku: "furniture_desk", name: "책상", x: 0.72, y: 0.58, rotation: 0 },
+    { id: "f3", sku: "furniture_rug", name: "러그", x: 0.42, y: 0.82, rotation: 0 },
   ],
   guestbook: [],
 };
@@ -89,7 +90,7 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
 
     const { data: placed } = await supabase
       .from("space_items")
-      .select("id, x, y, rotation, item_catalog(name)")
+      .select("id, x, y, rotation, item_catalog(sku, name)")
       .eq("space_id", space.id);
 
     const { data: guestbookRows } = await supabase
@@ -114,7 +115,14 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
       })),
       placedItems: (placed ?? []).map((p) => {
         const catalog = Array.isArray(p.item_catalog) ? p.item_catalog[0] : p.item_catalog;
-        return { id: p.id, name: catalog?.name ?? "아이템", x: Number(p.x), y: Number(p.y), rotation: Number(p.rotation) };
+        return {
+          id: p.id,
+          sku: catalog?.sku ?? null,
+          name: catalog?.name ?? "아이템",
+          x: Number(p.x),
+          y: Number(p.y),
+          rotation: Number(p.rotation),
+        };
       }),
       guestbook: (guestbookRows ?? []).map((g) => {
         const profile = Array.isArray(g.profiles) ? g.profiles[0] : g.profiles;

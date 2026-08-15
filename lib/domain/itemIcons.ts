@@ -17,6 +17,21 @@ export const ITEM_ICON_SKUS = new Set([
   "trash_can",
   "trash_slipper",
   "trash_sock",
+  "furniture_bed",
+  "furniture_desk",
+  "furniture_chair",
+  "furniture_shelf",
+  "furniture_fridge",
+  "furniture_rug",
+  "furniture_porthole",
+  "furniture_stand_light",
+  "bonppuri_season_bouquet",
+  "bonppuri_peony_bouquet",
+  "bonppuri_mini_vase",
+  "bonppuri_peony_vase",
+  "bonppuri_wedding_bouquet",
+  "bonppuri_premium_bouquet",
+  "bonppuri_season_deco",
 ]);
 
 export function itemIconSrc(sku: string | null | undefined): string | null {

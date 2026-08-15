@@ -1,6 +1,7 @@
 # 진행 상황 기록 (세션이 끊겨도 여기서 이어감)
 
-마지막 갱신: 작업 중 (Stage 2 — 낚시 결과물 아이콘 1차 적용 완료, 나머지 시트 반영 대기)
+마지막 갱신: 작업 중 (Stage 2 — 낚시/가구/본뿌리 아이콘 적용 완료, 사용자가 헤어/의상
+투명 레이어를 직접 그려서 전달 예정 — 그 전까지 다른 Stage 2 항목 계속 진행 중)
 
 ## 지금까지 완료된 큰 단위
 
@@ -8,8 +9,9 @@
 - **회사명 변경**: `(주)해녀쉽핑` → `(주)해녀해운` 전체 반영 완료 (코드 전수 검색 확인함, 잔여 없음).
 - **디자인 에셋 Stage 1**: 완료, 커밋/푸시됨.
 - **지나가는 선박 랜덤 조우 이벤트 시스템**: 완료, 커밋/푸시됨.
-- **Stage 2 (아이템 아이콘 적용)**: 낚시 결과물 16종 1차 완료(아래 섹션). 나머지 시트는
-  분류만 끝내고 다음 세션으로 이월.
+- **Stage 2 (아이템 아이콘 적용)**: 낚시 결과물 16종 + 선실 가구 8종 + 본뿌리 꽃 7종 = 31개
+  적용 완료(아래 섹션). **사용자가 캐릭터 헤어/의상 투명 레이어를 직접 그려서 전달하기로 함**
+  — 도착하면 레이어 합성 작업 재개.
 
 ## 디자인 에셋 Stage 1 체크리스트
 
@@ -98,35 +100,41 @@
    옷 자체만 보여주는 용도라 화풍 문제가 상대적으로 덜함) — 다음 패스 후보.
 3. **아이템 자체가 결과물인 소품/가구/낚시 결과물/꽃 등** (sheet-02, 03, 04, 05, 06, 13, 16,
    17 등) — 캐릭터에 입히는 게 아니라 그 자체로 UI에 노출되는 아이템이라 화풍 문제가 없고,
-   `item_catalog`의 sku와 라벨이 매우 정확하게 일치한다. **이번 세션에 sheet-17("낚시하면
-   건져지는 것")의 물고기 5종 + 분실물 6종 + 쓰레기 5종 = 16개를 크롭해 적용 완료** (아래 참고).
-   미반영 상태로 다음 패스 후보로 남은 것: sheet-16(선실 가구 6종, furniture_* 스카 거의 1:1),
-   sheet-13(본뿌리 꽃다발 7종, bonppuri_* 와 거의 1:1), sheet-17의 복원/전설 아이템(라벨이
-   카탈로그 sku와 정확히 1:1 매칭되지 않아 이번엔 건너뜀 — 새 sku를 만들지, 기존 아이템에
-   맞출지 결정 필요), sheet-06/11(새싹 의상), sheet-02(추가 낚시/분실물 소품).
+   `item_catalog`의 sku와 라벨이 매우 정확하게 일치한다. **이번 세션에 sheet-17(낚시결과물
+   16종) + sheet-16(가구 8종) + sheet-13(본뿌리 꽃 7종) = 31개를 크롭해 적용 완료** (아래 참고).
+   미반영 상태로 다음 패스 후보로 남은 것: sheet-17의 복원/전설 아이템(라벨이 카탈로그 sku와
+   정확히 1:1 매칭되지 않아 이번엔 건너뜀 — 새 sku를 만들지, 기존 아이템에 맞출지 결정 필요),
+   sheet-06/11(새싹 의상), sheet-02(추가 낚시/분실물 소품), sheet-16의 나머지(현창 변형 2종/
+   벽지 2종 — 카탈로그에 대응 sku 없음, 새로 추가할지 결정 필요).
 
-## 이번에 적용한 것: 낚시 결과물 아이콘 16종
+## 이번에 적용한 것: 낚시/가구/본뿌리 아이콘 31종
 
-- `public/images/items/{fish_mackerel,fish_squid,fish_tuna,fish_octopus,fish_pufferfish,
-  lost_old_phone,lost_glove,lost_notebook,lost_earphone,lost_leave_form,lost_photo,
-  trash_boots,trash_tire,trash_can,trash_slipper,trash_sock}.png` — sheet-17에서 좌표 기반
-  크롭 + 배경색 거리 기반 투명화 + 알파 bbox 트림으로 생성(Stage 1 아이콘 파이프라인과 동일 기법).
+- `public/images/items/`에 31개 PNG — sheet-17(낚시 16종) + sheet-16(가구 8종:
+  furniture_bed/desk/chair/shelf/fridge/rug/porthole/stand_light) + sheet-13(본뿌리 7종:
+  bonppuri_season_bouquet/peony_bouquet/mini_vase/peony_vase/wedding_bouquet/
+  premium_bouquet/season_deco). 좌표 기반 크롭 + 배경색 거리 기반 투명화 + 알파 bbox
+  트림(Stage 1 아이콘 파이프라인과 동일 기법), 헤더 칩/패널 테두리 bleed는 좌표 미세조정으로
+  대부분 제거(완전히 픽셀퍼펙트는 아니고 Stage 1과 동일한 수준의 사소한 잔여 있음).
 - `lib/domain/itemIcons.ts`: sku → 이미지 경로 매핑을 화이트리스트(Set)로 관리. 목록에 없는
-  sku는 자동으로 기존 희귀도 배지 플레이스홀더로 폴백 — 깨진 이미지가 뜨지 않음.
+  sku는 자동으로 기존 희귀도 배지 플레이스홀더/기본 GameIcon으로 폴백 — 깨진 이미지가 뜨지 않음.
 - `lib/game/inventoryData.ts`, `components/inventory/InventoryTabs.tsx`: 인벤토리 카드에
   실제 아이콘 표시(있으면 이미지, 없으면 기존처럼 별 배지).
 - `app/api/fishing/claim/route.ts`, `components/fishing/FishingScreen.tsx`: 조업 완료 결과
   카드에도 동일하게 실제 아이콘 표시.
-- Mock 데이터로 인벤토리 "낚시"/"소장품" 탭을 렌더링해 아이콘·폴백 동작을 스크린샷으로 확인함
-  (실제 Supabase 데이터로는 이 샌드박스에 연결이 없어 끝까지 확인 못함 — 위와 동일한 한계).
+- `lib/game/cabinData.ts`, `lib/game/cabinEditData.ts`, `components/cabin/CabinRoom.tsx`,
+  `components/cabin/CabinEditor.tsx`: 선실에 배치된 가구/가방의 "배치하기" 목록 전부 실제
+  가구 이미지로 교체(기존엔 아이템 이름 앞 두 글자만 표시하던 자리).
+- `lib/game/storeData.ts`, `components/store/StoreProductGrid.tsx`: 상점 진열 카드에 실제
+  상품 이미지 표시(없으면 기존 GameIcon "flower"로 폴백 — liri-gopchang 등 다른 상점은 영향 없음).
+- Mock 데이터로 인벤토리 탭/선실 에디터/상점 그리드를 렌더링해 아이콘·폴백 동작을 스크린샷으로
+  확인함(실제 Supabase 데이터로는 이 샌드박스에 연결이 없어 끝까지 확인 못함 — 위와 동일한 한계).
 
 ## 다음에 할 일 (우선순위 순)
 
-1. sheet-16 가구 6종 크롭 → `furniture_*` 인벤토리/선실 에디터에 적용
-2. sheet-13 본뿌리 꽃 7종 크롭 → `bonppuri_*` 상점/인벤토리에 적용
-3. 위 "reference-sheets 20장 분류 결과"의 사용자 확인 필요 사항(①②③) 답 듣고 캐릭터 레이어
-   합성 방향 결정
-4. 여유가 되면 sheet-06/11(새싹 의상), sheet-02(추가 낚시 소품) 반영
+1. 사용자가 그려서 줄 헤어/의상 투명 레이어 PNG 도착 대기 → 도착하면 캐릭터 레이어 합성 재개
+2. 여유가 되면 sheet-06/11(새싹 의상), sheet-02(추가 낚시 소품) 반영
+3. sheet-17의 복원/전설 아이템, sheet-16의 현창 변형/벽지 — 새 item_catalog sku 추가할지
+   여부 사용자 확인 필요
 
 ## 확인이 필요했지만 진행을 막지 않고 넘어간 것들 (나중에 사용자 확인용)
 

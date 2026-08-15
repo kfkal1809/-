@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 export interface PlacedFurniture {
   id: string; // space_items.id (temp client id for new placements: "new:<inventoryItemId>")
   inventoryItemId: string;
+  sku: string | null;
   name: string;
   x: number;
   y: number;
@@ -14,6 +15,7 @@ export interface PlacedFurniture {
 
 export interface UnplacedFurniture {
   inventoryItemId: string;
+  sku: string | null;
   name: string;
 }
 
@@ -49,11 +51,11 @@ export async function getCabinEditData(): Promise<CabinEditData> {
     const [{ data: placedRows }, { data: inventoryRows }] = await Promise.all([
       supabase
         .from("space_items")
-        .select("id, inventory_item_id, x, y, scale, rotation, flip_x, z_index, item_catalog(name)")
+        .select("id, inventory_item_id, x, y, scale, rotation, flip_x, z_index, item_catalog(sku, name)")
         .eq("space_id", space.id),
       supabase
         .from("inventory_items")
-        .select("id, item_catalog(name, placeable)")
+        .select("id, item_catalog(sku, name, placeable)")
         .eq("household_id", membership.household_id),
     ]);
 
@@ -62,6 +64,7 @@ export async function getCabinEditData(): Promise<CabinEditData> {
       return {
         id: row.id,
         inventoryItemId: row.inventory_item_id,
+        sku: catalog?.sku ?? null,
         name: catalog?.name ?? "아이템",
         x: Number(row.x),
         y: Number(row.y),
@@ -78,7 +81,7 @@ export async function getCabinEditData(): Promise<CabinEditData> {
       .map((row) => {
         const catalog = Array.isArray(row.item_catalog) ? row.item_catalog[0] : row.item_catalog;
         if (!catalog?.placeable || placedInventoryIds.has(row.id)) return null;
-        return { inventoryItemId: row.id, name: catalog.name };
+        return { inventoryItemId: row.id, sku: catalog.sku ?? null, name: catalog.name };
       })
       .filter((v): v is UnplacedFurniture => !!v);
 

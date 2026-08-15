@@ -1,9 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { itemIconSrc } from "@/lib/domain/itemIcons";
 import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
 
 let tempIdCounter = 0;
@@ -43,6 +45,7 @@ export function CabinEditor({
     const newItem: PlacedFurniture = {
       id: `new:${tempIdCounter++}`,
       inventoryItemId: item.inventoryItemId,
+      sku: item.sku,
       name: item.name,
       x: 0.5,
       y: 0.5,
@@ -60,7 +63,7 @@ export function CabinEditor({
     const item = placed.find((p) => p.id === selectedId);
     if (!item) return;
     setPlaced((prev) => prev.filter((p) => p.id !== selectedId));
-    setUnplaced((prev) => [...prev, { inventoryItemId: item.inventoryItemId, name: item.name }]);
+    setUnplaced((prev) => [...prev, { inventoryItemId: item.inventoryItemId, sku: item.sku, name: item.name }]);
     setSelectedId(null);
   }
 
@@ -148,7 +151,11 @@ export function CabinEditor({
                   selectedId === item.id ? "bg-[var(--color-sky-new)] text-white" : "bg-white/90 text-[var(--color-navy)]"
                 }`}
               >
-                {item.name.slice(0, 2)}
+                {itemIconSrc(item.sku) ? (
+                  <Image src={itemIconSrc(item.sku)!} alt="" width={40} height={40} unoptimized style={{ width: "88%", height: "88%", objectFit: "contain" }} />
+                ) : (
+                  item.name.slice(0, 2)
+                )}
               </div>
             </button>
           ))}
@@ -180,7 +187,12 @@ export function CabinEditor({
           <div className="grid grid-cols-3 gap-2">
             {unplaced.map((item) => (
               <button key={item.inventoryItemId} onClick={() => addFromBag(item)}>
-                <Card className="!p-2.5 text-center text-[11px] font-bold text-[var(--color-navy)]">{item.name}</Card>
+                <Card className="flex flex-col items-center gap-1 !p-2.5 text-center text-[11px] font-bold text-[var(--color-navy)]">
+                  {itemIconSrc(item.sku) && (
+                    <Image src={itemIconSrc(item.sku)!} alt="" width={36} height={36} unoptimized style={{ width: 36, height: 36, objectFit: "contain" }} />
+                  )}
+                  {item.name}
+                </Card>
               </button>
             ))}
           </div>
