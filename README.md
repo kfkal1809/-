@@ -55,6 +55,13 @@
   검증 후 +$1 지급(`app/api/attendance/kakao/{nonce,webhook}`, `lib/kakao/shareAuth.ts`).
   실제 카카오 디벨로퍼스 앱 등록·웹훅 URL 등록은 사용자가 직접 해야 함(계정 필요).
 
+### 캐릭터 레이어 아트 (진행 중)
+
+- [x] 사용자 제공 원본 시트에서 헤어/의상 90장 크롭 (`public/images/character/**`)
+- [x] 합성 방식 확정 — 얼굴은 헤어 레이어에 이미 포함되어 있어 별도 얼굴 합성 불필요,
+  의상 위에 헤어를 약간 겹쳐 배치하면 됨 (자세한 내용은 `docs/PROGRESS.md`)
+- [ ] `CharacterSprite.tsx`를 이미지 레이어 합성으로 교체하고 전 화면에 반영 (다음 세션)
+
 ### 다음 — Sprint 6 (QA/PWA)
 
 - [ ] 반응형/PWA 설치/알림/테스트/관리자/모니터링은 아직 스텁 상태
