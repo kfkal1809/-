@@ -32,6 +32,7 @@ export const ITEM_ICON_SKUS = new Set([
   "bonppuri_wedding_bouquet",
   "bonppuri_premium_bouquet",
   "bonppuri_season_deco",
+  "fish_crab",
 ]);
 
 export function itemIconSrc(sku: string | null | undefined): string | null {
