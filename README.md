@@ -41,7 +41,7 @@
 - [x] 가게 알바(본뿌리/리리양곱창) — 3~5탭 미니 인터랙션, 하루 1회 제한(DB unique 제약), 낮은 확률 테마 소품
 - [x] 본뿌리 상품 구매 — store_products 진열 검증 후 차감+지급, 선실 배치 가능
 
-### Sprint 5 — 커플/외부연동 (진행 중)
+### Sprint 5 — 커플/외부연동 (완료)
 
 - [x] 커플링 구매(귀금속점) → 혼인신고서 구매(귀금속점에서 반지 보유 확인) → 양쪽 서명 →
   자동으로 명예의 전당 등재까지 실제 동작하는 플로우로 구현(`app/api/jewelry/buy-ring`,
@@ -50,7 +50,14 @@
   적립(`lib/game/interest.ts`, idempotency_key로 중복 지급 방지)
 - [x] 환율 재미요소 — "오늘의 선상 환율" 표시(`lib/game/fxRate.ts`, 날짜 시드 기반 결정적
   값, `fx_rates` 테이블에 하루 1건 지연 삽입, 실제 외부 API 호출 없음)
-- [ ] 카카오 오픈채팅 출석 인증은 아직 스텁 상태(실제 카카오 앱 등록·웹훅 연동 필요)
+- [x] 카카오톡 공유 출항 인증 — Kakao Share SDK로 해연결방에 카드 공유 → 카카오 공유
+  성공 웹훅에서 Authorization/X-Kakao-Resource-ID/CHAT_TYPE/HASH_CHAT_ID/서명된 nonce를
+  검증 후 +$1 지급(`app/api/attendance/kakao/{nonce,webhook}`, `lib/kakao/shareAuth.ts`).
+  실제 카카오 디벨로퍼스 앱 등록·웹훅 URL 등록은 사용자가 직접 해야 함(계정 필요).
+
+### 다음 — Sprint 6 (QA/PWA)
+
+- [ ] 반응형/PWA 설치/알림/테스트/관리자/모니터링은 아직 스텁 상태
 
 ## 로컬 개발
 

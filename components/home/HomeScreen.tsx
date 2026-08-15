@@ -5,6 +5,7 @@ import { HomeHeader } from "@/components/home/HomeHeader";
 import { VoyageInfoCard } from "@/components/home/VoyageInfoCard";
 import { EventRow } from "@/components/home/EventRow";
 import { FunctionMenuGrid } from "@/components/home/FunctionMenuGrid";
+import { KakaoAttendanceButton } from "@/components/home/KakaoAttendanceButton";
 import type { HomeData } from "@/lib/game/homeData";
 
 export function HomeScreen({ data }: { data: HomeData }) {
@@ -21,6 +22,8 @@ export function HomeScreen({ data }: { data: HomeData }) {
           isDemo={data.isDemo}
           onBalanceChange={setBalance}
         />
+
+        <KakaoAttendanceButton alreadyDone={data.kakaoAttendedToday} />
 
         <EventRow title={data.activeEventTitle} eventId={data.activeEventId} />
 

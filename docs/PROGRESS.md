@@ -197,13 +197,40 @@ status/game_married_at`, `hall_of_fame`)를 그대로 사용.
    위치조정으로 비율 맞추기, (c) item_catalog의 hair/outfit/hat/accessory 아이템들과 매핑.
 2. 여유가 되면 sheet-15의 새싹 신발/양말/가방(획득 경로부터 결정 필요), sheet-06/11(새싹
    마네킹 의상 — sheet-15와 다른 앵글) 검토
-3. **카카오 오픈채팅 출석 인증** — `attendance.type='kakao'`, `kakao_webhook_receipts`
-   테이블은 이미 스키마에 있지만, 실제 카카오 쪽에서 어떤 방식으로 우리 웹훅을 호출할지
-   (카카오 i 오픈빌더 스킬 서버 형식인지, 특정 봇이 정해진 포맷으로 POST하는지 등) 원본
-   기획서에 적힌 정확한 페이로드 계약을 지금 이 세션에서는 알 수 없음 — 실제 카카오
-   개발자센터 앱 등록도 사용자 본인 계정에서 해야 하는 일이라, 계약을 추측해서 만들면
-   실제로는 안 맞을 위험이 큼. **사용자가 카카오 쪽 연동 방식(웹훅 페이로드 예시, 또는
-   기획서의 해당 챕터)을 알려주면 바로 구현 가능** — 그 전까지는 보류.
+3. Sprint 6(QA/PWA) 착수 — 반응형/PWA 설치/알림/테스트/관리자/모니터링
+
+## Sprint 5 — 카카오톡 공유 출항 인증 (완료)
+
+원본 기획서(1.18/3.8/5.14/FR-ATT-002)를 다시 찾아 읽어보니 "오픈채팅 메시지를 읽는" 방식이
+아니라 **카카오톡 공유(Kakao Share) + 카카오톡 공유 웹훅**이라는, 실제로 문서화된 카카오
+디벨로퍼스 기능이었다. 흐름: 사용자가 앱에서 "카카오톡 출항 인증" 버튼 클릭 → Kakao Share
+SDK로 해연결 오픈채팅방에 카드 공유 → 공유 성공 시 카카오 서버가 우리 웹훅을 호출 → 웹훅에서
+검증 후 +$1.
+
+- `lib/kakao/shareAuth.ts`: nonce 저장용 테이블이 스키마에 없어서(4.19 attendance, 4.34
+  kakao_webhook_receipts 어디에도 없음) DB 조회 없는 **stateless HMAC 서명** 방식을 선택.
+  공유 직전에 `userId:date`를 서버 전용 시크릿(`ATTENDANCE_NONCE_SECRET`, 카카오와 무관한
+  내부 키 — 새로 만든 게 아니라 `.env.example`에 빈 자리만 추가함)으로 서명해 nonce를
+  만들고, 웹훅에서 같은 값을 재계산해 `timingSafeEqual`로 비교. date가 오늘(KST)이 아니면
+  거부해 오래된 nonce 재사용도 막는다.
+- `app/api/attendance/kakao/nonce`(GET): 로그인한 사용자에게 `{userId, date, nonce}` 발급.
+- `app/api/attendance/kakao/webhook`(POST): 기획서에 명시된 순서 그대로 검증 —
+  ① `Authorization: KakaoAK {KAKAO_PRIMARY_ADMIN_KEY}` ② `X-Kakao-Resource-ID`를
+  `kakao_webhook_receipts`에 insert해 중복(replay) 차단(PK 충돌=이미 처리됨) ③
+  `CHAT_TYPE == OpenMultiChat` ④ `HASH_CHAT_ID == HAEYEONGYEOL_OPENCHAT_HASH` ⑤
+  serverCallbackArgs의 userId/date/nonce 검증 ⑥ attendance unique 제약으로 하루 1회 보장
+  ⑦ `apply_wallet_transaction`으로 +$1. **주의**: 실제 카카오 웹훅 payload의 정확한 필드명
+  (`chat_type`/`hashed_chat_id`/`extras` 등)은 기획서에 개념만 있고 정확한 키 이름까지는
+  없어서, 카카오 SDK의 통상적인 네이밍으로 구현하고 흔한 변형도 같이 허용해뒀음 — **실제
+  카카오 디벨로퍼스 콘솔에서 앱 등록 후 테스트 웹훅을 한 번 받아보고 필드명이 맞는지 최종
+  확인 필요** (이건 사용자 본인 카카오 계정으로만 할 수 있는 일이라 이 세션에서는 불가능).
+- `components/home/KakaoAttendanceButton.tsx`: 홈 화면에 노란 카카오 버튼 추가(나의 항해
+  정보 카드와 이벤트 줄 사이). 클릭 시 Kakao JS SDK를 동적 로드(`NEXT_PUBLIC_KAKAO_JS_KEY`
+  없으면 안전하게 에러 상태만 표시, 크래시 없음 — 스크린샷으로 확인함) → nonce 발급 →
+  `Kakao.Share.sendDefault(...)` 호출. 공유는 비동기라 버튼은 "공유 창을 여는" 역할만 하고,
+  실제 지급은 웹훅에서 처리되므로 홈 새로고침 시 `kakaoAttendedToday`로 완료 상태 표시.
+- `lib/game/homeData.ts`: 기존 앱 출석 날짜 계산이 KST가 아닌 UTC slice를 쓰던 걸 발견해서
+  같이 `kstDateString()`으로 통일(카카오 출석 필드를 추가하며 바로 옆 코드라 함께 고침).
 
 ## 확인이 필요했지만 진행을 막지 않고 넘어간 것들 (나중에 사용자 확인용)
 

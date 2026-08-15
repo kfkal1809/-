@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { haenyeoPreset, haenamDeckPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
-import { daysSinceKstDate } from "@/lib/game/kst";
+import { daysSinceKstDate, kstDateString } from "@/lib/game/kst";
 
 export interface HomeVoyageCard {
   haenyeoName: string;
@@ -19,6 +19,7 @@ export interface HomeData {
   nickname: string;
   walletBalance: number;
   attendedToday: boolean;
+  kakaoAttendedToday: boolean;
   voyage: HomeVoyageCard;
   activeEventTitle: string | null;
   activeEventId: string | null;
@@ -29,6 +30,7 @@ const DEMO_HOME_DATA: HomeData = {
   nickname: "두부",
   walletBalance: 43.5,
   attendedToday: false,
+  kakaoAttendedToday: false,
   voyage: {
     haenyeoName: "두부",
     haenyeoRole: "해녀",
@@ -63,25 +65,23 @@ export async function getHomeData(): Promise<HomeData> {
 
     const householdId = membership.household_id as string;
 
-    const [{ data: wallet }, { data: characters }, { data: attendanceToday }, { data: activeEvent }] = await Promise.all([
-      supabase.from("wallets").select("cached_balance").eq("household_id", householdId).maybeSingle(),
-      supabase.from("characters").select("*").eq("household_id", householdId),
-      supabase
-        .from("attendance")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("type", "app")
-        .eq("date", new Date().toISOString().slice(0, 10))
-        .maybeSingle(),
-      supabase
-        .from("posts")
-        .select("id, title")
-        .eq("type", "event")
-        .eq("status", "open")
-        .order("start_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
+    const today = kstDateString();
+
+    const [{ data: wallet }, { data: characters }, { data: attendanceToday }, { data: kakaoAttendanceToday }, { data: activeEvent }] =
+      await Promise.all([
+        supabase.from("wallets").select("cached_balance").eq("household_id", householdId).maybeSingle(),
+        supabase.from("characters").select("*").eq("household_id", householdId),
+        supabase.from("attendance").select("id").eq("user_id", user.id).eq("type", "app").eq("date", today).maybeSingle(),
+        supabase.from("attendance").select("id").eq("user_id", user.id).eq("type", "kakao").eq("date", today).maybeSingle(),
+        supabase
+          .from("posts")
+          .select("id, title")
+          .eq("type", "event")
+          .eq("status", "open")
+          .order("start_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
 
     const haenyeo = characters?.find((c) => c.kind === "haenyeo");
     const haenam = characters?.find((c) => c.kind === "haenam");
@@ -104,6 +104,7 @@ export async function getHomeData(): Promise<HomeData> {
       nickname: profile?.nickname ?? "해녀",
       walletBalance: wallet?.cached_balance ?? 0,
       attendedToday: !!attendanceToday,
+      kakaoAttendedToday: !!kakaoAttendanceToday,
       voyage: {
         haenyeoName: haenyeo?.nickname ?? "해녀",
         haenyeoRole: "해녀",
