@@ -96,28 +96,34 @@ export function VoyageInfoCard({
 
         <Link href="/voyage" className="relative block px-3">
           <Image
+            src="/images/home/railing.png"
+            alt=""
+            aria-hidden
+            width={2172}
+            height={664}
+            unoptimized
+            className="pointer-events-none absolute inset-x-4 bottom-6 h-6 w-[calc(100%-2rem)] opacity-95"
+            style={{ objectFit: "fill" }}
+          />
+          <Image
             src="/images/home/lifebuoy.png"
             alt=""
             aria-hidden
-            width={175}
-            height={135}
+            width={1036}
+            height={1170}
             unoptimized
-            className="pointer-events-none absolute bottom-3 left-3 w-[50px] opacity-90"
+            className="pointer-events-none absolute bottom-3 left-3 w-[46px]"
             style={{ height: "auto" }}
           />
           <Image
             src="/images/home/seagull-post.png"
             alt=""
             aria-hidden
-            width={170}
-            height={225}
+            width={997}
+            height={1395}
             unoptimized
-            className="pointer-events-none absolute bottom-3 right-4 w-[44px] opacity-90"
+            className="pointer-events-none absolute bottom-3 right-4 w-[38px]"
             style={{ height: "auto" }}
-          />
-          <div
-            className="pointer-events-none absolute inset-x-8 bottom-6 h-6 rounded-sm border-y border-white/70 bg-white/30"
-            aria-hidden
           />
 
           <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-2">
@@ -127,15 +133,16 @@ export function VoyageInfoCard({
                 해녀 {voyage.haenyeoName}
               </p>
             </div>
-            <div className="mb-7 text-[var(--color-coral)]" aria-hidden>
-              <svg width="16" height="16" viewBox="0 0 24 24">
-                <path
-                  d="M12 20.3c-.3 0-.6-.1-.8-.3C7.6 17 3 12.9 3 8.8 3 6.1 5.1 4 7.7 4c1.7 0 3.2.9 4.1 2.3C12.7 4.9 14.2 4 15.9 4 18.5 4 20.6 6.1 20.6 8.8c0 4.1-4.6 8.2-8.2 11.2-.2.2-.5.3-.8.3z"
-                  fill="currentColor"
-                  opacity={0.85}
-                />
-              </svg>
-            </div>
+            <Image
+              src="/images/home/deco-heart.png"
+              alt=""
+              aria-hidden
+              width={623}
+              height={490}
+              unoptimized
+              className="pointer-events-none mb-7 w-4"
+              style={{ height: "auto" }}
+            />
             <div className="flex flex-col items-center">
               <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={92} />
               <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-navy)]">

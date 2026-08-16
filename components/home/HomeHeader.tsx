@@ -6,32 +6,55 @@ import { GameIcon } from "@/components/icons/GameIcon";
 export function HomeHeader({ balance }: { balance: number }) {
   return (
     <header className="relative overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#bfe6ff] via-[#e3f4ff] to-transparent px-4 pb-6 pt-4">
-      <svg className="absolute left-[8%] top-[10%] opacity-70" width="26" height="14" viewBox="0 0 34 18" aria-hidden>
-        <path d="M2 12 Q9 2 17 10 Q25 2 32 12" stroke="#24365a" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      </svg>
-      <svg className="absolute right-[38%] top-[4%] opacity-60" width="20" height="11" viewBox="0 0 34 18" aria-hidden>
-        <path d="M2 12 Q9 2 17 10 Q25 2 32 12" stroke="#24365a" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      </svg>
-      <div className="absolute right-[6%] top-[2%] h-8 w-14 rounded-full bg-white/70 blur-[1px]" aria-hidden />
+      <Image
+        src="/images/home/seagull-fly-1.png"
+        alt=""
+        aria-hidden
+        width={804}
+        height={511}
+        unoptimized
+        className="pointer-events-none absolute left-[10%] top-[8%] w-9 opacity-90"
+        style={{ height: "auto" }}
+      />
+      <Image
+        src="/images/home/seagull-fly-2.png"
+        alt=""
+        aria-hidden
+        width={860}
+        height={469}
+        unoptimized
+        className="pointer-events-none absolute right-[36%] top-[2%] w-7 opacity-80"
+        style={{ height: "auto" }}
+      />
+      <Image
+        src="/images/home/cloud-2.png"
+        alt=""
+        aria-hidden
+        width={381}
+        height={241}
+        unoptimized
+        className="pointer-events-none absolute right-[4%] top-0 w-16"
+        style={{ height: "auto" }}
+      />
 
       <Image
         src="/images/home/lighthouse.png"
         alt=""
         aria-hidden
-        width={168}
-        height={248}
+        width={1021}
+        height={1368}
         unoptimized
-        className="pointer-events-none absolute -bottom-2 -left-2 w-[76px]"
+        className="pointer-events-none absolute -bottom-2 -left-2 w-[70px]"
         style={{ height: "auto" }}
       />
       <Image
         src="/images/home/ship.png"
         alt=""
         aria-hidden
-        width={236}
-        height={145}
+        width={1404}
+        height={1047}
         unoptimized
-        className="pointer-events-none absolute -bottom-1 -right-1 w-[92px]"
+        className="pointer-events-none absolute -bottom-1 -right-1 w-[100px]"
         style={{ height: "auto" }}
       />
 
