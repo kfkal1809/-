@@ -1,11 +1,13 @@
 import { SpaceStub } from "@/components/ui/SpaceStub";
 import { NPCS, LIRI_WORK_TASKS } from "@/lib/domain/constants";
 import { StoreWorkWidget } from "@/components/store/StoreWorkWidget";
+import { MissionPing } from "@/components/duties/MissionPing";
 
 export default function LiriGopchangPage() {
   const npc = NPCS.find((n) => n.id === "liri")!;
   return (
     <div className="flex flex-col gap-4">
+      <MissionPing space="liri" />
       <SpaceStub
         title="리리양곱창"
         npcName={npc.name}

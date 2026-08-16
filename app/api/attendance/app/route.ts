@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { kstDateString } from "@/lib/game/kst";
 import { APP_ATTENDANCE_REWARD } from "@/lib/domain/constants";
+import { incrementMission } from "@/lib/game/missions";
 
 // 기획서 3.7 / FR-ATT-001: KST 기준 하루 1회, 서버 검증 + idempotency_key로 중복 지급 차단.
 export async function POST() {
@@ -51,6 +52,11 @@ export async function POST() {
   // unique(user_id, date, type) 위반 시에도 이미 출석 처리된 것으로 간주(더블클릭 방지)
   if (attendanceError && attendanceError.code !== "23505") {
     return NextResponse.json({ error: attendanceError.message }, { status: 500 });
+  }
+
+  if (!attendanceError) {
+    await incrementMission(service, user.id, "attendance");
+    await incrementMission(service, user.id, "attendance5");
   }
 
   const { data: rpcResult, error: rpcError } = await service.rpc("apply_wallet_transaction", {

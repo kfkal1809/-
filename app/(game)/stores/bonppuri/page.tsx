@@ -3,6 +3,7 @@ import { NPCS, BONPPURI_WORK_TASKS } from "@/lib/domain/constants";
 import { getStoreProducts } from "@/lib/game/storeData";
 import { StoreProductGrid } from "@/components/store/StoreProductGrid";
 import { StoreWorkWidget } from "@/components/store/StoreWorkWidget";
+import { MissionPing } from "@/components/duties/MissionPing";
 
 export default async function BonppuriPage() {
   const npc = NPCS.find((n) => n.id === "mami")!;
@@ -10,6 +11,7 @@ export default async function BonppuriPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      <MissionPing space="bonppuri" />
       <SpaceStub
         title="본뿌리"
         npcName={npc.name}

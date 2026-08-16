@@ -21,6 +21,7 @@ export default async function MenuPage() {
     { href: "/wallet", label: "지갑", icon: "coin" as const },
     { href: "/jewelry", label: "귀금속점", icon: "ring" as const },
     { href: "/marriage", label: "혼인신고", icon: "trophy" as const },
+    { href: "/mailbox", label: "우편함", icon: "mailbox" as const },
     { href: "/notifications", label: "알림", icon: "bell" as const },
     { href: "/settings", label: "설정 (효과음/배경음악)", icon: "menu" as const },
   ];

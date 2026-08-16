@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getMyHouseholdId } from "@/lib/game/household";
 import { FISHING_DURATIONS } from "@/lib/domain/constants";
+import { incrementMission } from "@/lib/game/missions";
 
 // 기획서 3.12 / FR-FISH-001: household당 동시 낚시 세션 1개, 서버 시간 기준 종료.
 export async function POST(request: Request) {
@@ -50,6 +51,9 @@ export async function POST(request: Request) {
     if (error.code === "23505") return NextResponse.json({ error: "already_running" }, { status: 409 });
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  await incrementMission(service, user.id, "fishing");
+  await incrementMission(service, user.id, "fishing5");
 
   return NextResponse.json({ session });
 }

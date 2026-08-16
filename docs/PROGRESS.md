@@ -496,3 +496,81 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
 - **실제 음원 파일 넣는 곳**: `public/audio/sfx/*.mp3`(16개), `public/audio/bgm/*.mp3`(6개) —
   정확한 파일명/용도는 `public/audio/README.md`에 표로 정리해둠. 파일만 그 경로에 넣으면
   코드 변경 없이 바로 재생된다.
+- **사용자가 GitHub 웹 업로드로 넣어준 실제 음원 파일 정리**: SFX 9종은 `public/audio/`
+  최상위에 평평하게(일부는 `.wav`) 올라와 있어서 `ffmpeg-static`(임시 devDependency, 코드에는
+  안 남김)으로 `.wav`→`.mp3` 변환 후 `public/audio/sfx/{key}.mp3`로 이동, 이미 `.mp3`였던
+  2개는 그대로 이동. BGM 6종은 한글/영문 혼용 파일명("갑판_Waiting_for_the_Tide.mp3" 등)이라
+  내용으로 추정해 `public/audio/bgm/{key}.mp3`로 매핑 이동(갑판→deck, 낚시터→fishing,
+  리리양곱창→liri-gopchang, 본뿌리→bonppuri, 선실→cabin, 홈&메인→home). 대응 키가 없는
+  "상점_Life_Between_the_Tides.mp3"는 사용자 확인 결과 아직 화면이 없는 옷가게용으로 보류
+  (원래 경로에 그대로 둠, 옷가게 화면을 만들 때 연결 예정).
+
+## 미션 보상 수령 + 우편함(운영자 보상 지급) 기능
+
+- **미션 진행도 자동 집계 + 수령**: 기존에 `mission_catalog`/`mission_progress` 스키마와
+  `DAILY_MISSIONS`/`WEEKLY_MISSIONS` 상수는 이미 있었지만 아무 라우트도 진행도를 올리지
+  않고 `/duties` 화면도 정적 안내문만 보여주는 상태였음 — 이번에 실제로 연결함.
+  - `lib/game/missions.ts`: `incrementMission`(단순 카운터, target 도달 시 completed 고정)
+    / `incrementDistinctMission`(distinct-set — `metadata.seen` 배열에 방문 식별자를
+    중복 없이 누적, 배열 길이가 progress) / `getMissionSnapshot`(화면 표시+클레임 검증
+    공용, `daily_clear`/`weekly_clear`는 저장된 row가 아니라 "그 주기 미션 전부 완료"를
+    파생 계산 — 실제 row는 클레임 시점에 처음 생김).
+  - **distinct-set 미션(cabin_visit5: 서로 다른 선실 5곳, deck_visit4: 서로 다른 4일 갑판,
+    guestbook: 서로 다른 선실 방명록 3회) 처리**: `mission_progress`에 저장된 `metadata`
+    컬럼이 없어서(`supabase/migrations/0007_missions_mailbox.sql`로 추가, **미적용** — 아래
+    참고) 그 안에 방문 식별자 배열을 담는 방식을 택함. 기존 `space_visits` 테이블을 재사용하는
+    방안도 검토했으나 갑판/본뿌리/리리양곱창용 `spaces` row가 앱 코드 어디서도 실제로
+    생성/조회되지 않는 걸 확인해서(온보딩 때 `cabin` space만 생성) 이 방식은 포기.
+  - **주간 period_key**: `lib/game/kst.ts`에 `kstWeekString`(ISO 8601 "YYYY-Www") 추가.
+    기존 `kstDateString`과 같은 이유로 로컬 타임존 getter 대신 UTC 고정 getter만 사용.
+  - **방문형 데일리/위클리 미션(visit_bonppuri/visit_liri/visit_deck/cabin_visit5/
+    deck_visit4)**: Next.js Link prefetch가 서버 컴포넌트 렌더를 미리 실행할 수 있어서
+    페이지 렌더 본문에서 바로 진행도를 올리면 실제 방문 없이도 오탐 증가할 위험이 있음 —
+    `components/duties/MissionPing.tsx`(클라이언트, `useEffect` 마운트 시에만 1회
+    `POST /api/duties/ping`)로 우회. bonppuri/liri-gopchang/deck/cabin/[householdId]
+    페이지에 삽입.
+  - 기존 라우트 연동: `/api/attendance/app`(attendance+attendance5, 새 출석일 때만),
+    `/api/guestbook`(guestbook, distinct), `/api/fishing/start`(fishing+fishing5).
+  - `POST /api/duties/claim`: 개별 미션은 `completed=true AND rewarded=false` 조건부
+    UPDATE로 중복 지급 차단, `daily_clear`/`weekly_clear`는 `(user_id, mission_key,
+    period_key)` unique PK insert로 같은 효과. 재화 지급은 기존 `apply_wallet_transaction`
+    RPC 재사용(`mission_claim:{key}:{userId}:{periodKey}` idempotency key).
+  - `/duties` 화면을 정적 카드 나열에서 실제 progress/완료/수령 상태 기반으로 교체,
+    수령 버튼(`MissionClaimButton`)이 성공 시 `mission-complete` SFX 재생(이전 세션에
+    정의만 해두고 연결 못 했던 키).
+
+- **우편함(운영자 보상 지급) 기능**: `profiles.role`/`is_admin()`은 이미 있었지만 앱 코드
+  어디서도 안 쓰이고 있었음 — 이번에 처음으로 admin 기능 화면을 만듦.
+  - `mailbox_items` 신규 테이블(household 단위 — wallet/inventory와 동일한 스코프 원칙,
+    `supabase/migrations/0007_missions_mailbox.sql`, **미적용**): title/body/cash_reward/
+    catalog_item_id/item_quantity/claimed_at/claimed_by/created_by. RLS는 읽기만
+    `is_household_member() or is_admin()`, 쓰기는 서비스 롤 전용(기존 wallet_transactions와
+    동일 패턴).
+  - `lib/game/admin.ts`의 `isAdmin()` 헬퍼로 `POST /api/mailbox/send`(운영자 전용,
+    가구/아이템 유효성 검증 후 insert)를 보호. `POST /api/mailbox/claim`은
+    `claimed_at IS NULL` 조건부 UPDATE로 중복 수령 차단, 현금은 `apply_wallet_transaction`
+    (우편 1건당 idempotency key), 아이템은 `inventory_items`에 insert. 단건(`mailboxItemId`)과
+    "모두 받기"(`all:true`, 미수령 전체 순회) 둘 다 지원.
+  - `/mailbox`(유저): 전체/읽지않음/보관 탭 + 카드 목록(제목/본문/상대시각/보상 표시) +
+    개별 받기·모두 받기. 사용자가 준 디자인 시안(`design-assets/우편함 화면.png`)의
+    구성(헤더+탭+카드 리스트+하단 전체 받기)을 앱 기존 UI 언어(Card/색상 토큰)로 재구성—
+    시안의 편지 타입별 개별 스티커 아이콘(선물/고래/풍선 등)은 추가 에셋이 없어 생략하고
+    공용 우편함 아이콘으로 통일.
+  - `/admin/mailbox`(운영자 전용, role 체크 실패 시 안내문만 표시): 닉네임 검색으로 가구
+    선택(가구 자체는 표시 이름이 없어서 구성원 닉네임 조합으로 검색/식별) + 제목/본문/현금/
+    아이템 입력 폼. 실제 발송 권한 검증은 `/api/mailbox/send`가 서비스 롤로 한 번 더 함
+    (화면 gating은 UX용, 보안 경계 아님).
+  - 사용자가 준 우편함 아이콘(`design-assets/우편함 아이콘.png`)을 트림+리사이즈해
+    `public/images/icons/mailbox.png`로 등록, 기존 `GameIcon` 아이콘셋에 `mailbox` 키 추가
+    (메뉴/우편함/관리자 화면에서 재사용).
+
+- **⚠️ DB 마이그레이션 미적용**: `supabase/migrations/0007_missions_mailbox.sql`
+  (`mission_progress.metadata` 컬럼 추가 + `mailbox_items` 테이블/RLS)은 이 세션이 실제
+  Supabase 프로젝트에 접근할 수 없어서 파일만 작성했고 적용은 안 했습니다. 위 기능들이
+  동작하려면 `supabase db push`(또는 Supabase 대시보드 SQL 편집기에서 파일 내용 실행)로
+  실제 DB에 반영해주세요.
+- **검증**: `tsc --noEmit`/`eslint`/`vitest run`(48개 전부 통과, 신규 `kstWeekString`/
+  `relativeTimeKorean` 테스트 포함)/`next build` 전부 통과. 실 DB 세션이 없어 로그인 상태
+  전체 플로우는 못 돌렸지만, Playwright로 `/duties`·`/mailbox`·`/admin/mailbox`가
+  비로그인 폴백 상태에서 200으로 정상 렌더되고(`trySupabase` 스타일 try/catch 폴백)
+  콘솔 에러 없는 것 확인.

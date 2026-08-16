@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { kstDateString } from "@/lib/game/kst";
+import { incrementDistinctMission } from "@/lib/game/missions";
 
 // 기획서 3.19 / FR-GUEST-001: 300자 제한, 10초 재작성 제한, 서로 다른 선실 3회 데일리 미션 카운트.
 export async function POST(request: Request) {
@@ -41,6 +42,10 @@ export async function POST(request: Request) {
     { user_id: user.id, space_id: cabinSpaceId, visited_on: kstDateString() },
     { onConflict: "user_id,space_id,visited_on" }
   );
+
+  // "서로 다른 선실 방명록 3회" — 같은 선실에 여러 번 써도 진행도는 오르지 않고, 서로 다른 선실
+  // 3곳에 작성해야 완료되도록 cabinSpaceId를 distinct 키로 사용한다.
+  await incrementDistinctMission(service, user.id, "guestbook", cabinSpaceId);
 
   return NextResponse.json({ ok: true, entryId: entry.id });
 }
