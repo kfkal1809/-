@@ -14,6 +14,27 @@ export function HomeHeader({ balance }: { balance: number }) {
       </svg>
       <div className="absolute right-[6%] top-[2%] h-8 w-14 rounded-full bg-white/70 blur-[1px]" aria-hidden />
 
+      <Image
+        src="/images/home/lighthouse.png"
+        alt=""
+        aria-hidden
+        width={168}
+        height={248}
+        unoptimized
+        className="pointer-events-none absolute -bottom-2 -left-2 w-[76px]"
+        style={{ height: "auto" }}
+      />
+      <Image
+        src="/images/home/ship.png"
+        alt=""
+        aria-hidden
+        width={236}
+        height={145}
+        unoptimized
+        className="pointer-events-none absolute -bottom-1 -right-1 w-[92px]"
+        style={{ height: "auto" }}
+      />
+
       <div className="relative flex items-start justify-between gap-2">
         <Image
           src="/images/misc/logo-wordmark.png"

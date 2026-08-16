@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import type { HomeVoyageCard } from "@/lib/game/homeData";
 
@@ -93,8 +94,33 @@ export function VoyageInfoCard({
           )}
         </button>
 
-        <Link href="/voyage" className="block px-3">
-          <div className="relative mx-auto mt-1 flex items-end justify-center gap-2">
+        <Link href="/voyage" className="relative block px-3">
+          <Image
+            src="/images/home/lifebuoy.png"
+            alt=""
+            aria-hidden
+            width={175}
+            height={135}
+            unoptimized
+            className="pointer-events-none absolute bottom-3 left-3 w-[50px] opacity-90"
+            style={{ height: "auto" }}
+          />
+          <Image
+            src="/images/home/seagull-post.png"
+            alt=""
+            aria-hidden
+            width={170}
+            height={225}
+            unoptimized
+            className="pointer-events-none absolute bottom-3 right-4 w-[44px] opacity-90"
+            style={{ height: "auto" }}
+          />
+          <div
+            className="pointer-events-none absolute inset-x-8 bottom-6 h-6 rounded-sm border-y border-white/70 bg-white/30"
+            aria-hidden
+          />
+
+          <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-2">
             <div className="flex flex-col items-center">
               <CharacterSprite appearance={voyage.haenyeoAppearance} size={64} />
               <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-navy)]">
