@@ -11,3 +11,9 @@ export function daysSinceKstDate(dateStr: string): number {
   const start = new Date(dateStr + "T00:00:00+09:00");
   return Math.floor((Date.now() - start.getTime()) / 86400000);
 }
+
+// "2026년 8월 16일" 형식으로 표시 (승선확인증 등 인쇄용 문구에 사용).
+export function formatKoreanDate(dateStr: string): string {
+  const d = new Date(dateStr + "T00:00:00+09:00");
+  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+}

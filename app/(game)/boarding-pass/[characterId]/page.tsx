@@ -1,12 +1,29 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { trySupabase } from "@/lib/supabase/safeQuery";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { haenyeoPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import { Card } from "@/components/ui/Card";
-import { daysSinceKstDate } from "@/lib/game/kst";
+import { formatKoreanDate } from "@/lib/game/kst";
+import { SHIP_NAME } from "@/lib/domain/constants";
 
 const RELATION_LABEL: Record<string, string> = { dating: "연애중", engaged: "약혼", married: "부부" };
+
+// public/images/misc/boarding-pass-frame.png(706x925) 안에서 사진/글자를 얹을 자리의 상대 좌표(%).
+// 좌표를 낼 때 쓴 원본 그리드 크롭 과정은 docs/ASSET_PIPELINE.md 참고.
+const FRAME = {
+  photo: { left: 12.75, top: 30.6, width: 28.05, height: 27.0 },
+  rows: {
+    name: 33.5,
+    ship: 38.7,
+    role: 43.9,
+    boarded: 49.5,
+    signoff: 54.9,
+  },
+  rowText: { left: 62.3, width: 29.0 },
+  date: { left: 23.1, top: 78.6, width: 31.9, height: 8 },
+};
 
 interface BoardingPassData {
   character: {
@@ -19,8 +36,8 @@ interface BoardingPassData {
   };
   household: { relation_status: string | null; game_marriage_status: string | null } | null;
   householdMates: { nickname: string; kind: string }[];
-  boardedDays: number | null;
-  signoffDays: number | null;
+  boardedAt: string | null;
+  signoffAt: string | null;
 }
 
 export default async function BoardingPassPage({ params }: PageProps<"/boarding-pass/[characterId]">) {
@@ -50,8 +67,8 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
       .neq("id", character.id)
       .neq("kind", "child");
 
-    let boardedDays: number | null = null;
-    let signoffDays: number | null = null;
+    let boardedAt: string | null = null;
+    let signoffAt: string | null = null;
     if (character.kind === "haenam") {
       const { data: voyage } = await supabase
         .from("voyages")
@@ -59,11 +76,11 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
         .eq("haenam_character_id", character.id)
         .eq("active", true)
         .maybeSingle();
-      if (voyage?.boarded_at) boardedDays = daysSinceKstDate(voyage.boarded_at);
-      if (voyage?.expected_signoff_at) signoffDays = -daysSinceKstDate(voyage.expected_signoff_at);
+      boardedAt = voyage?.boarded_at ?? null;
+      signoffAt = voyage?.expected_signoff_at ?? null;
     }
 
-    return { character, household, householdMates: householdMates ?? [], boardedDays, signoffDays } as BoardingPassData;
+    return { character, household, householdMates: householdMates ?? [], boardedAt, signoffAt } as BoardingPassData;
   }, null as BoardingPassData | null);
 
   if (!result) {
@@ -76,90 +93,96 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
     );
   }
 
-  const { character, household, householdMates, boardedDays, signoffDays } = result;
+  const { character, household, householdMates, boardedAt, signoffAt } = result;
   const roleLabel =
     character.kind === "haenyeo" ? "해녀" : character.kind === "child" ? "새싹" : character.department === "engine" ? "해남(기관사)" : "해남(항해사)";
 
-  const rows: { label: string; value: string }[] = [
-    { label: "성명", value: character.nickname },
-    { label: "직책", value: roleLabel },
-    { label: "관계", value: household?.relation_status ? RELATION_LABEL[household.relation_status] : "-" },
-    { label: "함께 승선", value: householdMates.length > 0 ? householdMates.map((m) => m.nickname).join(", ") : "-" },
-  ];
-  if (character.kind === "haenam") {
-    rows.push({ label: "승선", value: boardedDays !== null ? `D+${boardedDays}` : "-" });
-    rows.push({ label: "하선", value: signoffDays !== null ? `D-${signoffDays}` : "-" });
-  }
+  const today = formatKoreanDate(new Date().toISOString().slice(0, 10));
 
   return (
     <div className="flex flex-col items-center gap-4 px-4 pt-6">
       <div
-        className="relative w-full max-w-[360px] border-[3px] border-[#24365a] bg-[var(--color-cream)] px-6 pb-6 pt-5 shadow-[0_10px_28px_rgba(36,54,90,0.18)]"
+        className="relative w-full max-w-[360px] shadow-[0_10px_28px_rgba(36,54,90,0.18)]"
         style={{
-          borderRadius: "22px",
+          aspectRatio: "706 / 925",
           clipPath:
-            "polygon(0 18px, 18px 18px, 18px 0, calc(100% - 18px) 0, calc(100% - 18px) 18px, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 18px calc(100% - 18px), 0 calc(100% - 18px))",
+            "polygon(0 1.95%, 2.55% 1.95%, 2.55% 0, 97.45% 0, 97.45% 1.95%, 100% 1.95%, 100% 98.05%, 97.45% 98.05%, 97.45% 100%, 2.55% 100%, 2.55% 98.05%, 0 98.05%)",
         }}
       >
-        <div
-          className="pointer-events-none absolute inset-[6px]"
-          style={{
-            borderRadius: "16px",
-            border: "1.5px dashed #9fb3d1",
-          }}
+        <Image
+          src="/images/misc/boarding-pass-frame.png"
+          alt="승선확인증"
+          fill
+          unoptimized
+          priority
+          sizes="360px"
+          className="object-cover"
         />
 
-        <div className="relative flex flex-col items-center pt-2 text-center">
-          <svg width="26" height="20" viewBox="0 0 26 20" className="text-[#24365a]">
-            <path
-              d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              fill="none"
-              strokeLinecap="round"
-            />
-          </svg>
-          <h1 className="mt-1 text-[22px] font-extrabold tracking-wide text-[#24365a]">승선확인증</h1>
-          <p className="mt-0.5 text-[10px] font-bold tracking-[0.2em] text-[var(--color-tab-active)]">BOARDING CERTIFICATE</p>
+        <div
+          className="absolute flex items-center justify-center overflow-hidden rounded-xl"
+          style={{
+            left: `${FRAME.photo.left}%`,
+            top: `${FRAME.photo.top}%`,
+            width: `${FRAME.photo.width}%`,
+            height: `${FRAME.photo.height}%`,
+          }}
+        >
+          <CharacterSprite appearance={(character.appearance_json as CharacterAppearance) ?? haenyeoPreset()} size={90} />
         </div>
 
-        <div className="relative mt-4 flex items-center gap-4">
-          <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#24365a] bg-gradient-to-b from-[#bfe6ff] to-[#eaf6ff]">
-            <CharacterSprite appearance={(character.appearance_json as CharacterAppearance) ?? haenyeoPreset()} size={90} />
-          </div>
-          <dl className="flex-1 text-[12px]">
-            {rows.map((r) => (
-              <div key={r.label} className="flex items-baseline gap-2 border-b border-dotted border-[#9fb3d1] py-1">
-                <dt className="w-14 shrink-0 font-bold text-[#24365a]">{r.label}</dt>
-                <dd className="truncate text-[#24365a]">{r.value}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-
-        <p className="relative mt-5 text-center text-[12px] leading-relaxed text-[#24365a]">
-          위 사람은 (주)해녀해운 선박에
-          <br />
-          승선하였음을 확인합니다.
+        <p
+          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.name}%`, width: `${FRAME.rowText.width}%` }}
+        >
+          {character.nickname}
+        </p>
+        <p
+          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.ship}%`, width: `${FRAME.rowText.width}%` }}
+        >
+          {SHIP_NAME}
+        </p>
+        <p
+          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.role}%`, width: `${FRAME.rowText.width}%` }}
+        >
+          {roleLabel}
+        </p>
+        <p
+          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.boarded}%`, width: `${FRAME.rowText.width}%` }}
+        >
+          {character.kind === "haenam" && boardedAt ? formatKoreanDate(boardedAt) : "-"}
+        </p>
+        <p
+          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.signoff}%`, width: `${FRAME.rowText.width}%` }}
+        >
+          {character.kind === "haenam" && signoffAt ? formatKoreanDate(signoffAt) : "-"}
         </p>
 
-        <div className="relative mt-4 flex items-center justify-between">
-          <p className="text-[11px] text-[var(--color-navy-soft)]">
-            {new Date().toLocaleDateString("ko-KR", { year: "numeric", month: "long", day: "numeric" })}
-          </p>
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-[var(--color-danger)] text-center">
-            <span className="text-[10px] font-extrabold leading-tight text-[var(--color-danger)]">
-              주)
-              <br />
-              해녀해운
-            </span>
-          </div>
-        </div>
-
-        <p className="relative mt-3 text-center text-[10px] text-[var(--color-navy-soft)]">
-          혼인신고 {household?.game_marriage_status === "married" ? "완료" : "미완료"}
+        <p
+          className="absolute text-center text-[11px] text-[var(--color-navy-soft)] sm:text-[13px]"
+          style={{ left: `${FRAME.date.left}%`, top: `${FRAME.date.top}%`, width: `${FRAME.date.width}%` }}
+        >
+          {today}
         </p>
       </div>
+
+      <Card tone="cream" className="w-full max-w-[360px] px-4 py-3 text-[12px]">
+        <div className="flex items-baseline justify-between border-b border-dotted border-[#9fb3d1] py-1">
+          <span className="font-bold text-[#24365a]">관계</span>
+          <span className="text-[#24365a]">{household?.relation_status ? RELATION_LABEL[household.relation_status] : "-"}</span>
+        </div>
+        <div className="flex items-baseline justify-between py-1">
+          <span className="font-bold text-[#24365a]">함께 승선</span>
+          <span className="truncate text-[#24365a]">{householdMates.length > 0 ? householdMates.map((m) => m.nickname).join(", ") : "-"}</span>
+        </div>
+        <p className="mt-1 text-center text-[10px] text-[var(--color-navy-soft)]">
+          혼인신고 {household?.game_marriage_status === "married" ? "완료" : "미완료"}
+        </p>
+      </Card>
     </div>
   );
 }
