@@ -35,3 +35,50 @@ export const ROOM_CLIP = {
   rightWall: "polygon(49.6% 2.1%, 98.4% 20.8%, 98.4% 60.4%, 49.6% 33.4%)",
   floor: "polygon(2.7% 67%, 49.6% 45.6%, 96.4% 67%, 99.1% 71.9%, 49.6% 99.5%, 1% 71.9%)",
 };
+
+interface ZoneBounds {
+  xMin: number;
+  xMax: number;
+  yMin: number;
+  yMax: number;
+}
+
+// ROOM_CLIP의 폴리곤 좌표(퍼센트 문자열)에서 바운딩 박스를 뽑아 0~1 정규화 좌표로 변환.
+// 완전한 폴리곤 충돌판정 대신 "바닥/벽 영역에서 크게 벗어나지 않게"하는 최소한의 배치 제약으로 쓴다.
+function boundsFromClip(clip: string): ZoneBounds {
+  const points = clip
+    .replace(/^polygon\(/, "")
+    .replace(/\)$/, "")
+    .split(",")
+    .map((pair) => {
+      const [x, y] = pair.trim().split(/\s+/).map((v) => parseFloat(v) / 100);
+      return { x, y };
+    });
+  return {
+    xMin: Math.min(...points.map((p) => p.x)),
+    xMax: Math.max(...points.map((p) => p.x)),
+    yMin: Math.min(...points.map((p) => p.y)),
+    yMax: Math.max(...points.map((p) => p.y)),
+  };
+}
+
+export const ROOM_ZONES = {
+  leftWall: boundsFromClip(ROOM_CLIP.leftWall),
+  rightWall: boundsFromClip(ROOM_CLIP.rightWall),
+  floor: boundsFromClip(ROOM_CLIP.floor),
+};
+
+// wall 폴리곤 두 개(좌/우)를 합친 바운딩 박스 — placementType "wall"용.
+export const WALL_BOUNDS: ZoneBounds = {
+  xMin: Math.min(ROOM_ZONES.leftWall.xMin, ROOM_ZONES.rightWall.xMin),
+  xMax: Math.max(ROOM_ZONES.leftWall.xMax, ROOM_ZONES.rightWall.xMax),
+  yMin: Math.min(ROOM_ZONES.leftWall.yMin, ROOM_ZONES.rightWall.yMin),
+  yMax: Math.max(ROOM_ZONES.leftWall.yMax, ROOM_ZONES.rightWall.yMax),
+};
+
+export function clampToZone(x: number, y: number, bounds: ZoneBounds): { x: number; y: number } {
+  return {
+    x: Math.min(bounds.xMax, Math.max(bounds.xMin, x)),
+    y: Math.min(bounds.yMax, Math.max(bounds.yMin, y)),
+  };
+}

@@ -1,15 +1,26 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
-import { WALLPAPER_SWATCHES, FLOOR_SWATCHES } from "@/lib/domain/cabinDecor";
+import { WALLPAPER_SWATCHES, FLOOR_SWATCHES, clampToZone } from "@/lib/domain/cabinDecor";
+import { getPlacementDef, furnitureWrapperStyle, depthOf, zoneBoundsFor } from "@/lib/domain/cabinPlacement";
 import { playSfx } from "@/lib/audio/audioManager";
 import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
+import {
+  RotateLeftIcon,
+  RotateRightIcon,
+  FlipIcon,
+  ShrinkIcon,
+  GrowIcon,
+  LayerForwardIcon,
+  LayerBackIcon,
+  PickupIcon,
+} from "@/components/cabin/EditIcons";
 
 let tempIdCounter = 0;
 
@@ -30,6 +41,9 @@ export function CabinEditor({
   const roomRef = useRef<HTMLDivElement>(null);
   const [placed, setPlaced] = useState(initialPlaced);
   const [unplaced, setUnplaced] = useState(initialUnplaced);
+  // 저장이 성공할 때마다 이 시점 상태를 "깨끗한 기준선"으로 갱신한다(취소/이탈 경고 판단용).
+  const [savedPlaced, setSavedPlaced] = useState(initialPlaced);
+  const [savedUnplaced, setSavedUnplaced] = useState(initialUnplaced);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -37,6 +51,17 @@ export function CabinEditor({
   const [wallpaper, setWallpaper] = useState(initialWallpaper);
   const [floor, setFloor] = useState(initialFloor);
   const [decorSaving, setDecorSaving] = useState(false);
+
+  const dirty = JSON.stringify(placed) !== JSON.stringify(savedPlaced);
+
+  useEffect(() => {
+    function handler(e: BeforeUnloadEvent) {
+      if (!dirty) return;
+      e.preventDefault();
+    }
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
 
   async function pickDecor(kind: "wallpaper" | "floor", key: string) {
     if (!spaceId || decorSaving) return;
@@ -67,22 +92,28 @@ export function CabinEditor({
 
   function handlePointerMove(e: React.PointerEvent) {
     if (!draggingId || !roomRef.current) return;
+    const item = placed.find((p) => p.id === draggingId);
+    if (!item) return;
+    const bounds = zoneBoundsFor(getPlacementDef(item.sku).placementType);
     const rect = roomRef.current.getBoundingClientRect();
-    const x = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    const y = Math.min(1, Math.max(0, (e.clientY - rect.top) / rect.height));
+    const rawX = (e.clientX - rect.left) / rect.width;
+    const rawY = (e.clientY - rect.top) / rect.height;
+    const { x, y } = clampToZone(rawX, rawY, bounds);
     setPlaced((prev) => prev.map((p) => (p.id === draggingId ? { ...p, x, y } : p)));
   }
 
   function addFromBag(item: UnplacedFurniture) {
+    const def = getPlacementDef(item.sku);
+    const bounds = zoneBoundsFor(def.placementType);
     const maxZ = placed.reduce((max, p) => Math.max(max, p.zIndex), 0);
     const newItem: PlacedFurniture = {
       id: `new:${tempIdCounter++}`,
       inventoryItemId: item.inventoryItemId,
       sku: item.sku,
       name: item.name,
-      x: 0.5,
-      y: 0.5,
-      scale: 1,
+      x: (bounds.xMin + bounds.xMax) / 2,
+      y: (bounds.yMin + bounds.yMax) / 2,
+      scale: def.defaultScale,
       rotation: 0,
       flipX: false,
       zIndex: maxZ + 1,
@@ -112,6 +143,14 @@ export function CabinEditor({
     updateSelected({ zIndex: minZ - 1 });
   }
 
+  function handleCancel() {
+    if (dirty && !window.confirm("저장하지 않은 변경사항이 있어요. 편집 시작 전으로 되돌릴까요?")) return;
+    setPlaced(savedPlaced);
+    setUnplaced(savedUnplaced);
+    setSelectedId(null);
+    setMessage(null);
+  }
+
   async function handleSave() {
     if (!spaceId) return;
     setSaving(true);
@@ -135,6 +174,8 @@ export function CabinEditor({
       });
       if (!res.ok) throw new Error("failed");
       setMessage("저장했어요!");
+      setSavedPlaced(placed);
+      setSavedUnplaced(unplaced);
       router.refresh();
     } catch {
       setMessage("저장에 실패했어요. 다시 시도해주세요.");
@@ -144,14 +185,22 @@ export function CabinEditor({
   }
 
   const selected = placed.find((p) => p.id === selectedId) ?? null;
+  const selectedDef = selected ? getPlacementDef(selected.sku) : null;
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-extrabold text-[var(--color-navy)]">방꾸미기</h1>
-        <Button tone="coral" onClick={handleSave} disabled={saving || !spaceId} className="!px-4 !py-2 text-[14px]">
-          {saving ? "저장 중..." : "저장"}
-        </Button>
+        <div className="flex gap-2">
+          {dirty && (
+            <Button tone="outline" onClick={handleCancel} className="!px-4 !py-2 text-[13px]">
+              취소
+            </Button>
+          )}
+          <Button tone="coral" onClick={handleSave} disabled={saving || !spaceId} className="!px-4 !py-2 text-[14px]">
+            {saving ? "저장 중..." : "저장"}
+          </Button>
+        </div>
       </div>
       {message && <p className="text-center text-[13px] font-bold text-[var(--color-navy)]">{message}</p>}
 
@@ -165,35 +214,45 @@ export function CabinEditor({
         <RoomBackground wallpaper={wallpaper} floor={floor} />
 
         {[...placed]
-          .sort((a, b) => a.zIndex - b.zIndex)
-          .map((item) => (
-            <button
-              key={item.id}
-              onPointerDown={(e) => {
-                e.preventDefault();
-                setSelectedId(item.id);
-                setDraggingId(item.id);
-              }}
-              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-              style={{
-                left: `${item.x * 100}%`,
-                top: `${item.y * 100}%`,
-                transform: `translate(-50%, -50%) rotate(${item.rotation}deg) scaleX(${item.flipX ? -1 : 1}) scale(${item.scale})`,
-              }}
-            >
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-xl text-[9px] font-bold shadow ${
-                  selectedId === item.id ? "bg-[var(--color-sky-new)] text-white" : "bg-white/90 text-[var(--color-navy)]"
-                }`}
+          .sort((a, b) => depthOf(a.y, a.zIndex) - depthOf(b.y, b.zIndex))
+          .map((item) => {
+            const def = getPlacementDef(item.sku);
+            const src = itemIconSrc(item.sku);
+            const isSelected = selectedId === item.id;
+            const style = furnitureWrapperStyle({
+              x: item.x,
+              y: item.y,
+              scale: item.scale,
+              rotation: item.rotation,
+              flipX: item.flipX,
+              depth: depthOf(item.y, item.zIndex),
+              baseHeightFrac: def.baseHeightFrac,
+            });
+            return (
+              <button
+                key={item.id}
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  setSelectedId(item.id);
+                  setDraggingId(item.id);
+                }}
+                style={{
+                  ...style,
+                  outline: isSelected ? "2px solid var(--color-tab-active)" : "none",
+                  outlineOffset: 3,
+                  borderRadius: 8,
+                }}
               >
-                {itemIconSrc(item.sku) ? (
-                  <Image src={itemIconSrc(item.sku)!} alt="" width={28} height={28} unoptimized style={{ width: "88%", height: "88%", objectFit: "contain" }} />
+                {src ? (
+                  <Image src={src} alt="" width={400} height={400} unoptimized style={{ height: "100%", width: "auto", objectFit: "contain" }} />
                 ) : (
-                  item.name.slice(0, 2)
+                  <div className="flex aspect-square h-full items-center justify-center rounded-xl bg-white/90 text-[9px] font-bold text-[var(--color-navy)] shadow">
+                    {item.name.slice(0, 2)}
+                  </div>
                 )}
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
       </div>
 
       <div className="flex flex-col gap-2">
@@ -230,19 +289,39 @@ export function CabinEditor({
         </div>
       </div>
 
-      {selected && (
-        <Card className="flex flex-wrap items-center justify-between gap-2 !p-3">
+      {selected && selectedDef && (
+        <Card className="sticky bottom-2 z-20 flex flex-col gap-2 !p-3 shadow-[0_10px_28px_rgba(36,54,90,0.18)]">
           <p className="text-[13px] font-bold text-[var(--color-navy)]">{selected.name}</p>
           <div className="flex flex-wrap gap-1.5">
-            <IconBtn onClick={() => updateSelected({ rotation: selected.rotation - 15 })}>↺</IconBtn>
-            <IconBtn onClick={() => updateSelected({ rotation: selected.rotation + 15 })}>↻</IconBtn>
-            <IconBtn onClick={() => updateSelected({ flipX: !selected.flipX })}>⇋</IconBtn>
-            <IconBtn onClick={() => updateSelected({ scale: Math.max(0.5, selected.scale - 0.1) })}>−</IconBtn>
-            <IconBtn onClick={() => updateSelected({ scale: Math.min(1.8, selected.scale + 0.1) })}>+</IconBtn>
-            <IconBtn onClick={bringForward}>앞으로</IconBtn>
-            <IconBtn onClick={sendBackward}>뒤로</IconBtn>
-            <IconBtn onClick={removeSelected} danger>
-              가방으로
+            <IconBtn label="회전" onClick={() => updateSelected({ rotation: selected.rotation - 15 })}>
+              <RotateLeftIcon />
+            </IconBtn>
+            <IconBtn label="회전" onClick={() => updateSelected({ rotation: selected.rotation + 15 })}>
+              <RotateRightIcon />
+            </IconBtn>
+            <IconBtn label="반전" onClick={() => updateSelected({ flipX: !selected.flipX })}>
+              <FlipIcon />
+            </IconBtn>
+            <IconBtn
+              label="작게"
+              onClick={() => updateSelected({ scale: Math.max(selectedDef.minScale, +(selected.scale - 0.1).toFixed(2)) })}
+            >
+              <ShrinkIcon />
+            </IconBtn>
+            <IconBtn
+              label="크게"
+              onClick={() => updateSelected({ scale: Math.min(selectedDef.maxScale, +(selected.scale + 0.1).toFixed(2)) })}
+            >
+              <GrowIcon />
+            </IconBtn>
+            <IconBtn label="앞으로" onClick={bringForward}>
+              <LayerForwardIcon />
+            </IconBtn>
+            <IconBtn label="뒤로" onClick={sendBackward}>
+              <LayerBackIcon />
+            </IconBtn>
+            <IconBtn label="회수" onClick={removeSelected} danger>
+              <PickupIcon />
             </IconBtn>
           </div>
         </Card>
@@ -271,15 +350,27 @@ export function CabinEditor({
   );
 }
 
-function IconBtn({ children, onClick, danger }: { children: React.ReactNode; onClick: () => void; danger?: boolean }) {
+function IconBtn({
+  children,
+  label,
+  onClick,
+  danger,
+}: {
+  children: ReactNode;
+  label: string;
+  onClick: () => void;
+  danger?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-full px-2.5 py-1.5 text-[12px] font-bold ${
+      aria-label={label}
+      className={`flex flex-col items-center gap-0.5 rounded-2xl px-2.5 py-1.5 text-[10px] font-bold ${
         danger ? "bg-[var(--color-danger)]/10 text-[var(--color-danger)]" : "bg-[var(--color-sky)] text-[var(--color-navy)]"
       }`}
     >
       {children}
+      {label}
     </button>
   );
 }

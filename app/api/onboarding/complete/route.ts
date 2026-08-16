@@ -3,14 +3,18 @@ import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getMyHouseholdId } from "@/lib/game/household";
 import { WELCOME_GRANT_AMOUNT } from "@/lib/domain/constants";
 
+// 좌표는 room-base.png의 바닥/벽 영역(lib/domain/cabinDecor.ts ROOM_CLIP) 안에 들어오도록
+// 잡았다 — 침대/책상+의자/냉장고/조명/러그는 바닥 영역에, 현창은 벽 영역에 배치.
+// ("furniture_lamp"는 item_catalog에 없는 존재하지 않는 sku라 조용히 스킵되던 버그였음 →
+// 실제 카탈로그에 있는 "furniture_stand_light"로 교체)
 const DEFAULT_FURNITURE_LAYOUT: { sku: string; x: number; y: number; rotation?: number }[] = [
-  { sku: "furniture_bed", x: 0.24, y: 0.62 },
-  { sku: "furniture_desk", x: 0.72, y: 0.58 },
-  { sku: "furniture_chair", x: 0.72, y: 0.74 },
-  { sku: "furniture_fridge", x: 0.9, y: 0.5 },
-  { sku: "furniture_porthole", x: 0.5, y: 0.22 },
-  { sku: "furniture_lamp", x: 0.12, y: 0.3 },
-  { sku: "furniture_rug", x: 0.42, y: 0.82 },
+  { sku: "furniture_bed", x: 0.22, y: 0.65 },
+  { sku: "furniture_desk", x: 0.78, y: 0.6 },
+  { sku: "furniture_chair", x: 0.78, y: 0.72 },
+  { sku: "furniture_fridge", x: 0.92, y: 0.58 },
+  { sku: "furniture_porthole", x: 0.5, y: 0.18 },
+  { sku: "furniture_stand_light", x: 0.1, y: 0.6 },
+  { sku: "furniture_rug", x: 0.46, y: 0.86 },
 ];
 
 // 기획서 3.6: household/cabin/wallet 생성 + $20 웰컴 그랜트 + 기본 아이템 지급을 한 번에 처리.

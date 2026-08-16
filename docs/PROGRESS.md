@@ -574,3 +574,69 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
   전체 플로우는 못 돌렸지만, Playwright로 `/duties`·`/mailbox`·`/admin/mailbox`가
   비로그인 폴백 상태에서 200으로 정상 렌더되고(`trySupabase` 스타일 try/catch 폴백)
   콘솔 에러 없는 것 확인.
+
+## 선실 방꾸미기 시스템 전면 개편
+
+- **문제**: 선실 화면(`CabinRoom.tsx`)과 방꾸미기 편집기(`CabinEditor.tsx`)가 가구 종류와
+  무관하게 전부 32px 고정 아이콘 배지로 렌더링하고 있었음 — 실제 가구 이미지(`public/images/items/*.png`,
+  ~150종, 원본 비율 그대로인 진짜 가구 일러스트)가 이미 있었는데도 crop된 아이콘처럼 짓눌러
+  표시해 "가구가 아니라 아이콘처럼 보인다"는 문제의 실제 원인이었음. 좌표/스케일/회전/반전/
+  z-index 저장 구조(`space_items` 테이블, `scale`/`rotation`/`flip_x`/`z_index` 컬럼)와
+  드래그(포인터 이벤트)·저장 API·소유권 검증은 이미 잘 구현돼 있어서 스키마 변경 없이
+  렌더링/배치 로직만 다시 짜면 되는 문제였음.
+- **`lib/domain/cabinPlacement.ts`(신규)**: item_catalog에 새 컬럼을 추가하는 대신, sku 이름
+  패턴으로 카테고리(침대/테이블/좌석/수납/러그/조명/벽장식/소품/가전)를 분류해 카테고리별
+  기본값(`baseHeightFrac`=방 높이 대비 렌더 높이 비율, `placementType`=floor/wall/rug/free,
+  `defaultScale`/`minScale`/`maxScale`)을 적용하고, 규칙만으로 어색한 극소수 아이템만
+  `SKU_OVERRIDES`로 예외 처리(100여 종을 하나씩 하드코딩하는 방식 회피). `depthOf(y, zIndex)`로
+  바닥 y좌표를 기본 depth로 쓰고 사용자의 앞으로/뒤로 조정을 그 위에 더해서, 화면 위/아래로
+  멀리 떨어진 가구는 항상 y가 우선하고 비슷한 위치에서 겹칠 때만 zIndex로 순서가 뒤집히게 함
+  (캐릭터도 같은 depth 공식에 편입시켜 "테이블 뒤 캐릭터가 항상 앞으로 튀어나오는" 문제 방지).
+- **배치 영역 제약**: 기존 `RoomBackground`의 `ROOM_CLIP` isometric 폴리곤(벽/바닥 영역)을
+  새로 만들지 않고 그대로 재사용 — `lib/domain/cabinDecor.ts`에 `ROOM_ZONES`/`WALL_BOUNDS`(폴리곤
+  좌표에서 뽑은 바운딩 박스)와 `clampToZone` 헬퍼를 추가해, 편집기에서 드래그할 때
+  placementType(floor/wall/rug)에 맞는 영역 밖으로 못 나가게 클램프(완전한 폴리곤 충돌판정
+  대신 바운딩 박스 기준 MVP 제약 — 벽 장식이 방 한가운데로, 침대가 벽에 매달리는 일은
+  방지되지만 isometric 모서리 근처의 미세한 오차는 있을 수 있음).
+- **렌더링 방식**: `furnitureWrapperStyle()`이 `position:absolute` + `height:{baseHeightFrac*scale}%`
+  (방 컨테이너가 `aspect-ratio`로 높이가 고정돼 있어 퍼센트 높이가 항상 같은 비율로 반응형
+  유지됨) + `translate(-50%,-100%)`(바닥 접점=발밑 기준 앵커, 크기를 키워도 바닥 위치가
+  흔들리지 않음)로 스타일을 계산 — JS로 컨테이너 픽셀을 측정할 필요 없이 순수 CSS로
+  모바일/태블릿/데스크톱 어디서나 같은 상대 위치·크기가 유지됨. `CabinRoom`(일반 모드)과
+  `CabinEditor`(편집 모드)가 이 헬퍼를 공유해서 두 화면의 크기 체감이 일치함.
+- **편집 UX**: 선택된 가구에 얇은 outline(굵은 개발툴 바운딩 박스 대신)을 표시하고, 하단에
+  `Card` 기반 컨트롤 패널(`sticky bottom-2`)이 뜬다 — 회전/반전/작게/크게/앞으로/뒤로/회수
+  7개 버튼을 이모지나 유니코드 기호 대신 새로 그린 얇은 인라인 SVG 라인 아이콘
+  (`components/cabin/EditIcons.tsx`)으로 통일. 작게/크게는 `getPlacementDef`의
+  minScale/maxScale 범위 안에서만 움직임(가구 종류별로 확대/축소 한계가 다름). 저장 전
+  로컬 state만 바꾸다가 "저장"을 눌러야 서버에 반영되는 기존 방식은 유지하되, 마지막
+  저장 시점과 현재 state를 비교해 dirty 여부를 추적 → 변경사항이 있을 때만 "취소" 버튼과
+  브라우저 이탈 경고(`beforeunload`)가 뜨도록 추가.
+- **가방에서 배치**: 새로 꺼낸 가구는 화면 정중앙(0.5, 0.5)이 아니라 그 가구의 placementType
+  영역 중심(벽 장식이면 벽 영역 중심, 바닥 가구면 바닥 영역 중심)에 스폰되도록 변경.
+- **권한**: 다른 사용자 선실 편집 차단은 이미 `POST /api/cabin/save-layout`이 서버에서
+  `space.household_id !== 내 household_id`면 403으로 막고 있던 기존 로직을 그대로 재검증만
+  하고 유지(클라이언트 버튼 숨김에만 의존하지 않음, 이번에 변경 없음).
+- **기본 선실 초기 배치 버그 수정**: `app/api/onboarding/complete/route.ts`의
+  `DEFAULT_FURNITURE_LAYOUT`이 `"furniture_lamp"`라는 **존재하지 않는 sku**를 참조해서
+  (`item_catalog`에 없어 `if (!item) continue`로 조용히 스킵) 신규 가입자에게 조명이
+  아예 지급도 배치도 안 되고 있었음 — 실제로 존재하는 `"furniture_stand_light"`로 교체.
+  나머지 좌표도 `ROOM_CLIP` 바닥/벽 영역 안에 들어오도록 재조정(침대는 왼쪽, 책상+의자는
+  오른쪽 세트, 냉장고는 모서리, 러그는 중앙, 현창은 벽 중앙).
+- **`cabinData.ts`/`CabinPlacedItem`**: view 모드도 scale/flipX/zIndex를 반영해야 해서
+  `space_items` 조회 쿼리에 `scale, flip_x, z_index` 컬럼을 추가하고 타입/매핑을 갱신.
+- **테스트**: `lib/domain/cabinPlacement.test.ts`(신규, 15개) — 카테고리 분류, 배치영역
+  바운딩 박스, `clampToZone` 경계 고정, `depthOf` 정렬 규칙(y 차이가 크면 zIndex로 못
+  뒤집힘/작으면 뒤집힘)을 순수 로직으로 검증.
+- **실제 화면 검증**: 임시 `app/(dev)/cabin-editor-preview` 라우트(모의 데이터로
+  `CabinEditor` 직접 렌더, 커밋 전 삭제)를 만들어 Playwright로 (A) 일반 모드 — 침대/책상/
+  의자/화분/벽 액자가 실제 가구 비율로 자연스럽게 배치된 화면, (B) 편집 모드 — 가구 선택 시
+  얇은 outline + 하단 컨트롤 패널(회전/반전/작게/크게/앞으로/뒤로/회수) 노출, (C) 침대를
+  마우스로 벽 영역 쪽으로 드래그했을 때 `floor` 바운딩 박스 경계에서 정확히 멈추는 것(clamp
+  동작)을 스크린샷+좌표 로그로 확인. `pageerror` 0건. `next build`/`vitest run`(63개, 신규
+  15개 포함)/`tsc`/`eslint` 전부 통과.
+- **범위상 하지 않은 것(다음 단계 후보)**: 완전한 polygon 충돌판정(현재는 바운딩 박스 MVP),
+  가구 카테고리 자동분류 규칙의 100% 정확성(휴리스틱이라 애매한 소수 아이템은
+  `SKU_OVERRIDES`로 계속 다듬어야 함), 실제 로그인 세션에서의 인벤토리→배치→저장→새로고침
+  풀 사이클 수동 확인(샌드박스에 라이브 Supabase가 없어 스키마/권한 로직만 코드 검증, 실제
+  DB 왕복은 사용자가 배포 환경에서 확인 필요).

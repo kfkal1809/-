@@ -6,8 +6,15 @@ import { RoomBackground } from "@/components/cabin/RoomBackground";
 import type { CabinData } from "@/lib/game/cabinData";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
+import { getPlacementDef, furnitureWrapperStyle, depthOf } from "@/lib/domain/cabinPlacement";
+
+// 캐릭터 열을 방 바닥의 이 y위치에 서 있는 것으로 취급해 가구와 같은 depth 계산식을 쓴다
+// (예: 등대 액자처럼 y가 작은 벽 장식은 항상 캐릭터 뒤, 러그처럼 y가 큰 바닥 가구는 앞).
+const CHARACTER_Y = 0.86;
 
 export function CabinRoom({ data }: { data: CabinData }) {
+  const characterDepth = depthOf(CHARACTER_Y, 0);
+
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">
       <div className="flex items-center justify-between">
@@ -22,23 +29,44 @@ export function CabinRoom({ data }: { data: CabinData }) {
       <div className="relative aspect-[1473/909] w-full overflow-hidden rounded-[28px] border-2 border-white shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
         <RoomBackground wallpaper={data.wallpaper} floor={data.floor} />
 
-        {data.placedItems.map((item) => (
-          <div
-            key={item.id}
-            className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
-            style={{ left: `${item.x * 100}%`, top: `${item.y * 100}%`, transform: `translate(-50%, -50%) rotate(${item.rotation}deg)` }}
-          >
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/85 text-[9px] font-bold text-[var(--color-navy)] shadow">
-              {itemIconSrc(item.sku) ? (
-                <Image src={itemIconSrc(item.sku)!} alt="" width={28} height={28} unoptimized style={{ width: "88%", height: "88%", objectFit: "contain" }} />
+        {data.placedItems.map((item) => {
+          const def = getPlacementDef(item.sku);
+          const src = itemIconSrc(item.sku);
+          return (
+            <div
+              key={item.id}
+              style={furnitureWrapperStyle({
+                x: item.x,
+                y: item.y,
+                scale: item.scale,
+                rotation: item.rotation,
+                flipX: item.flipX,
+                depth: depthOf(item.y, item.zIndex),
+                baseHeightFrac: def.baseHeightFrac,
+              })}
+            >
+              {src ? (
+                <Image
+                  src={src}
+                  alt=""
+                  width={400}
+                  height={400}
+                  unoptimized
+                  style={{ height: "100%", width: "auto", objectFit: "contain" }}
+                />
               ) : (
-                item.name.slice(0, 2)
+                <div className="flex aspect-square h-full items-center justify-center rounded-xl bg-white/85 text-[9px] font-bold text-[var(--color-navy)] shadow">
+                  {item.name.slice(0, 2)}
+                </div>
               )}
             </div>
-          </div>
-        ))}
+          );
+        })}
 
-        <div className="absolute bottom-[6%] left-1/2 flex -translate-x-1/2 gap-3">
+        <div
+          className="absolute left-1/2 flex gap-3"
+          style={{ top: `${CHARACTER_Y * 100}%`, transform: "translate(-50%, -100%)", zIndex: Math.round(characterDepth * 10) }}
+        >
           {data.characters.map((c) =>
             data.isOwner ? (
               <Link key={c.id} href={`/character/${c.id}/customize`} className="flex flex-col items-center">
