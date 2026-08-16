@@ -640,3 +640,45 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
   `SKU_OVERRIDES`로 계속 다듬어야 함), 실제 로그인 세션에서의 인벤토리→배치→저장→새로고침
   풀 사이클 수동 확인(샌드박스에 라이브 Supabase가 없어 스키마/권한 로직만 코드 검증, 실제
   DB 왕복은 사용자가 배포 환경에서 확인 필요).
+
+## 가구상점
+
+- 사용자가 준 디자인 시안(가구상점 UI)을 기준으로 신규 구현. **기존 구매 시스템을 그대로
+  재사용** — 새 구매 API를 만들지 않고 이미 있던 `POST /api/store/purchase`(storeSlug +
+  catalogItemId, 서버가 store_products/item_catalog 조회 → 잔액 검증 →
+  `apply_wallet_transaction` → inventory_items insert)를 그대로 호출한다
+  (`FurnitureStoreScreen.tsx`에서 `storeSlug: "furniture"`로 호출).
+- **판매 상품**: `supabase/migrations/0008_furniture_store.sql`(**미적용**, `supabase db push`
+  필요)로 `stores`에 `slug='furniture'` row를 추가하고, 이미 카탈로그에 있던 interior_pack
+  소품(온보딩 때 무료 지급되는 것과 별개) 24종에 실제 판매가(`buy_price`)를 부여해
+  `store_products`로 연결했다. 새 아이템/새 아트를 만들지 않고 기존 카탈로그·에셋만 재사용.
+  중복 구매 허용(가구는 여러 개 살 수 있음, `inventory_items.quantity` 그대로 사용).
+- **카테고리 탭**: 상품을 화면에 하드코딩하지 않고, 이전 방꾸미기 개편에서 만든
+  `lib/domain/cabinPlacement.ts`의 sku 기반 카테고리 분류를 그대로 재사용해
+  `lib/domain/furnitureStoreCategories.ts`에서 상점 탭(전체/침대/책상/의자/수납/장식/벽·바닥)으로
+  매핑만 했다 — 같은 아이템이 선실 배치에서와 상점에서 항상 같은 카테고리로 취급됨.
+- **미리보기(`previewFurniture`)**: 상품 카드를 눌러도 DB나 실제 선실 배치는 전혀 바뀌지
+  않는 순수 client state(`FurnitureStoreScreen`의 `previewId`)로 관리. "미리보기" 버튼을
+  눌러야 쇼룸에 크게 표시되도록 디자인 시안 그대로 구현(상품 선택=카드 선택,
+  미리보기=쇼룸 표시를 분리). 쇼룸 크기 계산도 방꾸미기와 동일한
+  `getPlacementDef(sku).baseHeightFrac`을 재사용해서, 상점에서 봤을 때도 침대/책상/화분의
+  상대적 크기 차이가 실제 선실에 배치했을 때와 일치한다.
+- **오늘의 추천**: 복잡한 추천 백엔드 없이 날짜 문자열(`YYYY-MM-DD`)의 문자코드 합을 상품
+  개수로 나눈 나머지로 결정적 선택 — 같은 날엔 항상 같은 상품이 추천되고 서버 상태가 필요
+  없다.
+- **컴포넌트**: `FurnitureStoreScreen`(오케스트레이터) / `FurnitureStorePreview`(쇼룸+좌우
+  화살표로 필터링된 목록 순환) / `FurnitureRecommendationCard` / `FurnitureStoreTabs` /
+  `FurnitureProductCard`(NEW 배지 스카이블루, 선택 시 파란 테두리+체크) /
+  `FurnitureStoreDetail`(하단 상세: 이름/설명/보유량/가격/미리보기·구매 버튼) — 디자인 이미지를
+  배경으로 깔지 않고 전부 실제 DOM 컴포넌트로 구현.
+- **진입점**: `/stores/furniture` 신규 라우트. 가방(`/inventory`) 헤더와 방꾸미기
+  편집기(`/cabin/edit`, "가방에서 배치하기" 섹션)에 링크 추가 — 상점=구매, 선실=배치 역할을
+  분리한 요청대로 가구상점에는 배치 편집 기능을 넣지 않았다.
+- **구매 실패/중복 방지**: 클라이언트가 가격을 보내지 않고(서버가 catalog에서 직접 조회),
+  잔액 부족 시 버튼 자체가 "잔액부족"으로 비활성화되고 서버도 `insufficient_funds`로 거절한다.
+  구매 중엔 버튼이 `disabled`+"구매 중..."으로 바뀌어 더블클릭으로 중복 결제되지 않는다
+  (기존 `/api/store/purchase`가 이미 이 로직을 갖고 있어 그대로 재사용).
+- **검증**: 실 DB가 없어 임시 `app/(dev)/furniture-store-preview`(목데이터, 커밋 전 삭제)로
+  Playwright 스크린샷 확인 — 전체 그리드, 카테고리 필터, 상품 선택(파란 테두리+체크),
+  미리보기 쇼룸 반영까지 정상 동작 확인, `pageerror` 0건. `tsc`/`eslint`/`vitest run`(63개)/
+  `next build` 전부 통과.

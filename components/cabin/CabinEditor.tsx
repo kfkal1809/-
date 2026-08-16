@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -328,7 +329,12 @@ export function CabinEditor({
       )}
 
       <div>
-        <p className="mb-2 text-[14px] font-extrabold text-[var(--color-navy)]">가방에서 배치하기</p>
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[14px] font-extrabold text-[var(--color-navy)]">가방에서 배치하기</p>
+          <Link href="/stores/furniture" className="text-[12px] font-bold text-[var(--color-tab-active)]">
+            가구상점 가기 ›
+          </Link>
+        </div>
         {unplaced.length === 0 ? (
           <p className="text-[13px] text-[var(--color-navy-soft)]">배치할 수 있는 아이템이 모두 방에 놓여 있어요.</p>
         ) : (

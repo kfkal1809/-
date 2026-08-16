@@ -56,7 +56,7 @@ export interface PlacementDef {
   maxScale: number;
 }
 
-type Category = "bed" | "table" | "seat" | "storage" | "rug" | "lamp" | "wallDeco" | "smallDeco" | "appliance";
+export type Category = "bed" | "table" | "seat" | "storage" | "rug" | "lamp" | "wallDeco" | "smallDeco" | "appliance";
 
 const CATEGORY_DEFAULTS: Record<Category, PlacementDef> = {
   bed: { placementType: "floor", baseHeightFrac: 0.34, defaultScale: 1, minScale: 0.8, maxScale: 1.3 },
@@ -73,21 +73,18 @@ const CATEGORY_DEFAULTS: Record<Category, PlacementDef> = {
 // [정규식, 카테고리] 순서대로 첫 매치를 사용. 침대/러그처럼 넓은 이름 매치가 우선되도록 구체적인
 // 패턴을 앞에 둔다.
 const RULES: [RegExp, Category][] = [
-  [/bed/, "bed"],
+  [/bed|crib|bunk/, "bed"],
   [/rug|carpet/, "rug"],
   [/(floor_lamp|stand_light|nightstand_lamp|dresser_lamp)/, "lamp"],
   [/(frame|mirror|clock|porthole_window|curtains|wall_shelf|coat_hook|sailor_coat_hooks|bell$)/, "wallDeco"],
   [/(fridge|tv|record_player)/, "appliance"],
   [/(shelf|wardrobe|cabinet|drawer|dresser|chest|closet|bookshelf)/, "storage"],
   [/(desk|table|cart|island|sideboard|vanity(?!_stool)|nightstand(?!_lamp))/, "table"],
-  [
-    /(chair|stool|bench|sofa|armchair|ottoman|recliner|chaise|loveseat|rocking|beanbag|cushion$|crib|bunk)/,
-    "seat",
-  ],
+  [/(chair|stool|bench|sofa|armchair|ottoman|recliner|chaise|loveseat|rocking|beanbag|cushion$)/, "seat"],
   [/porthole$/, "wallDeco"],
 ];
 
-function classify(sku: string): Category {
+export function classify(sku: string): Category {
   for (const [re, cat] of RULES) {
     if (re.test(sku)) return cat;
   }
