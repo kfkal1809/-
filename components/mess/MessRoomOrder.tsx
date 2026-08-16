@@ -37,23 +37,23 @@ export function MessRoomOrder() {
     <div className="flex flex-col gap-2.5 px-4 pb-2">
       {result && (
         <Card tone="cream" className="text-center !py-3">
-          <p className="text-[13px] font-bold text-[var(--color-navy)]">
+          <p className="text-[14px] font-bold text-[var(--color-navy)]">
             {result.name} 획득! ({RARITY_LABEL[result.rarity as keyof typeof RARITY_LABEL] ?? result.rarity})
           </p>
         </Card>
       )}
-      {error && <p className="text-center text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
+      {error && <p className="text-center text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
 
       {MESS_ROOM_MENU.map((m) => (
         <Card key={m.key} className="flex items-center justify-between !p-3">
           <div>
-            <p className="text-[13px] font-bold text-[var(--color-navy)]">{m.name}</p>
-            <p className="text-[11px] text-[var(--color-navy-soft)]">{m.description}</p>
+            <p className="text-[14px] font-bold text-[var(--color-navy)]">{m.name}</p>
+            <p className="text-[12px] text-[var(--color-navy-soft)]">{m.description}</p>
           </div>
           <button
             onClick={() => handleOrder(m.key)}
             disabled={ordering !== null}
-            className="rounded-full bg-[var(--color-coral)] px-4 py-2 text-[12px] font-bold text-white disabled:opacity-50"
+            className="rounded-full bg-[var(--color-coral)] px-4 py-2 text-[13px] font-bold text-white disabled:opacity-50"
           >
             {ordering === m.key ? "먹는 중..." : `$${m.price}`}
           </button>

@@ -20,7 +20,7 @@ export default function ShippingPage() {
         {MENU.map((m) => (
           <Link key={m.href} href={m.href} className="flex flex-col items-center gap-1.5 rounded-2xl bg-white p-4 shadow-[0_4px_14px_rgba(36,54,90,0.08)]">
             <GameIcon name={m.icon} size={40} withBadge />
-            <span className="text-[12px] font-bold text-[var(--color-navy)]">{m.label}</span>
+            <span className="text-[13px] font-bold text-[var(--color-navy)]">{m.label}</span>
           </Link>
         ))}
       </div>

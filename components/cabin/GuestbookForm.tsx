@@ -39,12 +39,12 @@ export function GuestbookForm({ cabinSpaceId }: { cabinSpaceId: string }) {
         maxLength={300}
         rows={2}
         placeholder="따뜻한 말 한마디를 남겨주세요"
-        className="w-full resize-none rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-[13px] outline-none focus:border-[var(--color-tab-active)]"
+        className="w-full resize-none rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-[14px] outline-none focus:border-[var(--color-tab-active)]"
       />
       <div className="flex items-center justify-between">
-        <p className="text-[11px] text-[var(--color-navy-soft)]">{text.length}/300</p>
-        {error && <p className="text-[11px] font-bold text-[var(--color-danger)]">{error}</p>}
-        <Button tone="mint" onClick={handleSubmit} disabled={submitting || !text.trim()} className="!px-4 !py-2 text-[12px]">
+        <p className="text-[12px] text-[var(--color-navy-soft)]">{text.length}/300</p>
+        {error && <p className="text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
+        <Button tone="mint" onClick={handleSubmit} disabled={submitting || !text.trim()} className="!px-4 !py-2 text-[13px]">
           등록
         </Button>
       </div>

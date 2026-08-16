@@ -13,10 +13,10 @@ export function HomeScreen({ data }: { data: HomeData }) {
   const [balance, setBalance] = useState(data.walletBalance);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <HomeHeader balance={balance} />
 
-      <div className="flex flex-col gap-4 px-4">
+      <div className="flex flex-col gap-3 px-4">
         <VoyageInfoCard
           voyage={data.voyage}
           initialAttended={data.attendedToday}
@@ -35,10 +35,10 @@ export function HomeScreen({ data }: { data: HomeData }) {
           width={2048}
           height={282}
           unoptimized
-          className="pointer-events-none mx-auto -mb-2 mt-1 h-auto w-2/3 opacity-60"
+          className="pointer-events-none mx-auto -mb-3 h-auto w-2/3 opacity-60"
         />
 
-        <div className="mt-1 rounded-[26px] border-2 border-white bg-white/60 p-4">
+        <div className="rounded-[26px] border-2 border-white bg-white/60 p-3.5 pb-2">
           <FunctionMenuGrid />
         </div>
       </div>

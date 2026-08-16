@@ -29,15 +29,15 @@ export default async function EventsListPage() {
       <h1 className="text-lg font-extrabold text-[var(--color-navy)]">이벤트</h1>
 
       {!events?.length ? (
-        <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
+        <Card tone="cream" className="py-8 text-center text-[14px] text-[var(--color-navy-soft)]">
           {EMPTY_STATE_COPY.event}
         </Card>
       ) : (
         events.map((e) => (
           <Link key={e.id} href={`/shipping/events/${e.id}`}>
             <Card className="!p-4">
-              <p className="text-[13px] font-extrabold text-[var(--color-navy)]">{e.title}</p>
-              <p className="mt-1 line-clamp-2 text-[12px] text-[var(--color-navy-soft)]">{e.body}</p>
+              <p className="text-[14px] font-extrabold text-[var(--color-navy)]">{e.title}</p>
+              <p className="mt-1 line-clamp-2 text-[13px] text-[var(--color-navy-soft)]">{e.body}</p>
             </Card>
           </Link>
         ))

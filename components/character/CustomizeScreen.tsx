@@ -37,7 +37,7 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
     <div className="flex flex-col gap-4 px-4 pt-5">
       <div className="text-center">
         <h1 className="text-lg font-extrabold text-[var(--color-navy)]">{data.nickname} 꾸미기</h1>
-        <p className="text-[11px] text-[var(--color-navy-soft)]">{data.roleLabel}</p>
+        <p className="text-[12px] text-[var(--color-navy-soft)]">{data.roleLabel}</p>
       </div>
 
       <div className="flex justify-center">
@@ -53,16 +53,16 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
       </div>
 
       {!data.canEdit && (
-        <p className="text-center text-[12px] text-[var(--color-navy-soft)]">이 캐릭터는 내가 관리할 수 없어요.</p>
+        <p className="text-center text-[13px] text-[var(--color-navy-soft)]">이 캐릭터는 내가 관리할 수 없어요.</p>
       )}
-      {error && <p className="text-center text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
+      {error && <p className="text-center text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
 
       {CATEGORIES.map((cat) => {
         const items = data.candidates.filter((c) => c.category === cat);
         if (items.length === 0) return null;
         return (
           <div key={cat}>
-            <p className="mb-2 text-[13px] font-extrabold text-[var(--color-navy)]">{CATEGORY_LABEL[cat]}</p>
+            <p className="mb-2 text-[14px] font-extrabold text-[var(--color-navy)]">{CATEGORY_LABEL[cat]}</p>
             <div className="grid grid-cols-3 gap-2">
               {items.map((item) => (
                 <button
@@ -72,7 +72,7 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
                   className="text-left"
                 >
                   <Card className="!p-3 text-center">
-                    <p className="line-clamp-1 text-[11px] font-bold text-[var(--color-navy)]">
+                    <p className="line-clamp-1 text-[12px] font-bold text-[var(--color-navy)]">
                       {equipping === item.inventoryItemId ? "착용 중..." : item.name}
                     </p>
                   </Card>
@@ -84,7 +84,7 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
       })}
 
       {data.candidates.length === 0 && (
-        <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
+        <Card tone="cream" className="py-8 text-center text-[14px] text-[var(--color-navy-soft)]">
           착용 가능한 아이템이 아직 없어요. 낚시터·본뿌리·선내식당에서 모아볼까요?
         </Card>
       )}

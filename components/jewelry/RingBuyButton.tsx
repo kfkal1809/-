@@ -33,11 +33,11 @@ export function RingBuyButton({ sku, price }: { sku: string; price: number }) {
       <button
         onClick={handleBuy}
         disabled={loading}
-        className="rounded-full bg-[var(--color-coral)] px-3 py-1.5 text-[12px] font-extrabold text-white disabled:opacity-50"
+        className="rounded-full bg-[var(--color-coral)] px-3 py-1.5 text-[13px] font-extrabold text-white disabled:opacity-50"
       >
         {loading ? "구매 중..." : `$${price} 구매`}
       </button>
-      {message && <p className="text-[10px] font-bold text-[var(--color-navy-soft)]">{message}</p>}
+      {message && <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">{message}</p>}
     </div>
   );
 }

@@ -66,21 +66,21 @@ export default async function WalletPage() {
 
       <Card tone="cream" className="flex items-center justify-between !p-5">
         <div>
-          <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">공동 선용금</p>
+          <p className="text-[12px] font-bold text-[var(--color-navy-soft)]">공동 선용금</p>
           <p className="text-2xl font-extrabold text-[var(--color-navy)]">${balance.toFixed(2)}</p>
         </div>
         <GameIcon name="coin" size={54} />
       </Card>
       {newInterest !== null && (
-        <p className="text-center text-[12px] font-bold text-[var(--color-mint-deep)]">
+        <p className="text-center text-[13px] font-bold text-[var(--color-mint-deep)]">
           오늘의 선내 외화이자 +${newInterest.toFixed(2)} 적립됐어요!
         </p>
       )}
 
       {fxRate !== null && (
         <div className="flex items-center justify-between rounded-2xl bg-white/70 px-4 py-2.5">
-          <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">오늘의 선상 환율</p>
-          <p className="text-[12px] font-extrabold text-[var(--color-navy)]">
+          <p className="text-[12px] font-bold text-[var(--color-navy-soft)]">오늘의 선상 환율</p>
+          <p className="text-[13px] font-extrabold text-[var(--color-navy)]">
             $1 = ₩{fxRate.toLocaleString("ko-KR")}
             <span className="ml-2 font-normal text-[var(--color-navy-soft)]">
               (내 선용금 ≈ ₩{Math.round(balance * fxRate).toLocaleString("ko-KR")})
@@ -89,16 +89,16 @@ export default async function WalletPage() {
         </div>
       )}
 
-      <p className="text-center text-[11px] text-[var(--color-navy-soft)]">{CURRENCY_DISCLAIMER}</p>
+      <p className="text-center text-[12px] text-[var(--color-navy-soft)]">{CURRENCY_DISCLAIMER}</p>
 
       <div className="flex flex-col gap-2">
         {transactions.map((t) => (
           <Card key={t.id} className="flex items-center justify-between !p-3">
             <div>
-              <p className="text-[12px] font-bold text-[var(--color-navy)]">{TYPE_LABEL[t.type] ?? t.type}</p>
-              <p className="text-[10px] text-[var(--color-navy-soft)]">{new Date(t.created_at).toLocaleString("ko-KR")}</p>
+              <p className="text-[13px] font-bold text-[var(--color-navy)]">{TYPE_LABEL[t.type] ?? t.type}</p>
+              <p className="text-[11px] text-[var(--color-navy-soft)]">{new Date(t.created_at).toLocaleString("ko-KR")}</p>
             </div>
-            <p className={`text-[14px] font-extrabold ${t.amount >= 0 ? "text-[var(--color-mint-deep)]" : "text-[var(--color-danger)]"}`}>
+            <p className={`text-[15px] font-extrabold ${t.amount >= 0 ? "text-[var(--color-mint-deep)]" : "text-[var(--color-danger)]"}`}>
               {t.amount >= 0 ? "+" : ""}
               {t.amount}
             </p>

@@ -2,7 +2,7 @@
 export function NewBadge({ className = "" }: { className?: string }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full bg-[var(--color-sky-new)] px-2 py-0.5 text-[10px] font-extrabold text-white shadow-sm ${className}`}
+      className={`inline-flex items-center rounded-full bg-[var(--color-sky-new)] px-2 py-0.5 text-[11px] font-extrabold text-white shadow-sm ${className}`}
     >
       NEW
     </span>

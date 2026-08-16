@@ -20,7 +20,7 @@ export default function OnboardingPartnerPage() {
 
   return (
     <AppFrame className="px-5 py-8">
-      <p className="mb-4 text-center text-[11px] font-bold text-[var(--color-tab-active)]">STEP 3 / 4</p>
+      <p className="mb-4 text-center text-[12px] font-bold text-[var(--color-tab-active)]">STEP 3 / 4</p>
       <AdultCharacterForm
         title="상대의 캐릭터도 만들어요"
         subtitle="아직 상대가 가입하지 않았다면, 초대코드로 나중에 연결할 수 있어요"

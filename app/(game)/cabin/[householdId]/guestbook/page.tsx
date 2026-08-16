@@ -40,7 +40,7 @@ export default async function GuestbookPage({ params }: PageProps<"/cabin/[house
       {cabin.spaceId && <GuestbookForm cabinSpaceId={cabin.spaceId} />}
 
       {entries.length === 0 ? (
-        <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
+        <Card tone="cream" className="py-8 text-center text-[14px] text-[var(--color-navy-soft)]">
           {EMPTY_STATE_COPY.guestbook}
         </Card>
       ) : (
@@ -48,10 +48,10 @@ export default async function GuestbookPage({ params }: PageProps<"/cabin/[house
           {entries.map((e) => (
             <Card key={e.id} className="!p-3">
               <div className="flex items-center justify-between">
-                <p className="text-[12px] font-extrabold text-[var(--color-navy)]">{e.authorNickname}</p>
-                <p className="text-[10px] text-[var(--color-navy-soft)]">{new Date(e.createdAt).toLocaleDateString("ko-KR")}</p>
+                <p className="text-[13px] font-extrabold text-[var(--color-navy)]">{e.authorNickname}</p>
+                <p className="text-[11px] text-[var(--color-navy-soft)]">{new Date(e.createdAt).toLocaleDateString("ko-KR")}</p>
               </div>
-              <p className="mt-1 text-[13px] text-[var(--color-navy)]">{e.body}</p>
+              <p className="mt-1 text-[14px] text-[var(--color-navy)]">{e.body}</p>
             </Card>
           ))}
         </div>

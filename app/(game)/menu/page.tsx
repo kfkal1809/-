@@ -34,7 +34,7 @@ export default async function MenuPage() {
           className="flex items-center gap-3 rounded-2xl bg-white px-4 py-3 shadow-[0_4px_14px_rgba(36,54,90,0.06)]"
         >
           <GameIcon name={item.icon} size={34} />
-          <span className="text-[13px] font-bold text-[var(--color-navy)]">{item.label}</span>
+          <span className="text-[14px] font-bold text-[var(--color-navy)]">{item.label}</span>
         </Link>
       ))}
 

@@ -10,7 +10,7 @@ export default function DutiesPage() {
       <Section title="데일리" items={DAILY_MISSIONS} clearBonus={DAILY_CLEAR_BONUS} />
       <Section title="주간" items={WEEKLY_MISSIONS} clearBonus={WEEKLY_CLEAR_BONUS} />
 
-      <p className="text-center text-[11px] text-[var(--color-navy-soft)]">
+      <p className="text-center text-[12px] text-[var(--color-navy-soft)]">
         미션 진행도 자동 집계 기능은 각 공간이 열리는 대로 순차 연동돼요.
       </p>
     </div>
@@ -28,21 +28,21 @@ function Section({
 }) {
   return (
     <div>
-      <p className="mb-2 text-[13px] font-extrabold text-[var(--color-navy)]">{title}</p>
+      <p className="mb-2 text-[14px] font-extrabold text-[var(--color-navy)]">{title}</p>
       <div className="flex flex-col gap-2">
         {items.map((m) => (
           <Card key={m.key} className="flex items-center gap-3 !p-3">
             <GameIcon name="clipboard" size={38} />
             <div className="flex-1">
-              <p className="text-[13px] font-bold text-[var(--color-navy)]">{m.title}</p>
-              <p className="text-[11px] text-[var(--color-navy-soft)]">{m.description}</p>
+              <p className="text-[14px] font-bold text-[var(--color-navy)]">{m.title}</p>
+              <p className="text-[12px] text-[var(--color-navy-soft)]">{m.description}</p>
             </div>
-            <p className="text-[13px] font-extrabold text-[var(--color-coral)]">+${m.reward}</p>
+            <p className="text-[14px] font-extrabold text-[var(--color-coral)]">+${m.reward}</p>
           </Card>
         ))}
         <Card tone="cream" className="flex items-center justify-between !p-3">
-          <p className="text-[12px] font-extrabold text-[var(--color-navy)]">{title} 올클리어 보너스</p>
-          <p className="text-[13px] font-extrabold text-[var(--color-gold-deep)]">+${clearBonus}</p>
+          <p className="text-[13px] font-extrabold text-[var(--color-navy)]">{title} 올클리어 보너스</p>
+          <p className="text-[14px] font-extrabold text-[var(--color-gold-deep)]">+${clearBonus}</p>
         </Card>
       </div>
     </div>

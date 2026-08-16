@@ -128,8 +128,8 @@ export function ShipEventOverlay() {
           >
             <ShipSprite ship={ship} width={34} />
             <div>
-              <p className="text-[12px] font-extrabold text-[var(--color-navy)]">{event.shipTypeName}</p>
-              <p className="text-[10px] text-[var(--color-navy-soft)]">{event.themeLabel}</p>
+              <p className="text-[13px] font-extrabold text-[var(--color-navy)]">{event.shipTypeName}</p>
+              <p className="text-[11px] text-[var(--color-navy-soft)]">{event.themeLabel}</p>
             </div>
           </div>
         </div>
@@ -141,7 +141,7 @@ export function ShipEventOverlay() {
           className="animate-bob absolute bottom-24 right-4 z-40 flex flex-col items-center gap-0.5 rounded-2xl border-2 border-white bg-white/95 px-2.5 py-2 shadow-[0_8px_20px_rgba(36,54,90,0.2)]"
         >
           <CrateIcon color={ship.accentColor} />
-          <span className="text-[9px] font-extrabold leading-tight text-[var(--color-navy)]">{event.shipTypeName}</span>
+          <span className="text-[10px] font-extrabold leading-tight text-[var(--color-navy)]">{event.shipTypeName}</span>
         </button>
       )}
 
@@ -151,20 +151,20 @@ export function ShipEventOverlay() {
             <div className="flex justify-center">
               <ShipSprite ship={ship} width={100} />
             </div>
-            <p className="mt-2 text-[15px] font-extrabold text-[var(--color-navy)]">{event.shipTypeName}이 선물을 두고 갔어요</p>
-            <p className="mt-1 text-[12px] text-[var(--color-navy-soft)]">{event.themeLabel}</p>
+            <p className="mt-2 text-[16px] font-extrabold text-[var(--color-navy)]">{event.shipTypeName}이 선물을 두고 갔어요</p>
+            <p className="mt-1 text-[13px] text-[var(--color-navy-soft)]">{event.themeLabel}</p>
 
             <div className="mt-4 flex items-center justify-center gap-3 rounded-2xl bg-white/80 py-3">
               <div className="text-center">
-                <p className="text-[10px] font-bold text-[var(--color-navy-soft)]">선용금</p>
-                <p className="text-[16px] font-extrabold text-[var(--color-coral)]">+${event.rewardCash.toFixed(2)}</p>
+                <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">선용금</p>
+                <p className="text-[17px] font-extrabold text-[var(--color-coral)]">+${event.rewardCash.toFixed(2)}</p>
               </div>
               {event.rewardItem && (
                 <>
                   <div className="h-8 w-px bg-[var(--color-navy)]/10" />
                   <div className="text-center">
-                    <p className="text-[10px] font-bold text-[var(--color-navy-soft)]">보너스 아이템</p>
-                    <p className="text-[13px] font-extrabold text-[var(--color-navy)]">{event.rewardItem.name}</p>
+                    <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">보너스 아이템</p>
+                    <p className="text-[14px] font-extrabold text-[var(--color-navy)]">{event.rewardItem.name}</p>
                   </div>
                 </>
               )}
@@ -173,14 +173,14 @@ export function ShipEventOverlay() {
             <div className="mt-4 flex gap-2">
               <button
                 onClick={() => setPhase("crate")}
-                className="flex-1 rounded-full bg-white px-4 py-3 text-[13px] font-bold text-[var(--color-navy-soft)]"
+                className="flex-1 rounded-full bg-white px-4 py-3 text-[14px] font-bold text-[var(--color-navy-soft)]"
               >
                 나중에
               </button>
               <button
                 onClick={handleClaim}
                 disabled={claiming}
-                className="flex-1 rounded-full bg-[var(--color-coral)] px-4 py-3 text-[13px] font-extrabold text-white disabled:opacity-60"
+                className="flex-1 rounded-full bg-[var(--color-coral)] px-4 py-3 text-[14px] font-extrabold text-white disabled:opacity-60"
               >
                 {claiming ? "받는 중..." : "선물 받기"}
               </button>
@@ -192,7 +192,7 @@ export function ShipEventOverlay() {
       {phase === "claimed" && (
         <div className="pointer-events-none absolute inset-x-0 top-1/3 z-50 flex justify-center px-6">
           <div className="animate-sparkle rounded-full border-2 border-white bg-white px-5 py-3 text-center shadow-[0_8px_20px_rgba(36,54,90,0.2)]">
-            <p className="text-[13px] font-extrabold text-[var(--color-navy)]">선물을 받았어요!</p>
+            <p className="text-[14px] font-extrabold text-[var(--color-navy)]">선물을 받았어요!</p>
           </div>
         </div>
       )}
@@ -200,7 +200,7 @@ export function ShipEventOverlay() {
       {SHOW_DEBUG_TRIGGER && (
         <button
           onClick={handleDebugSpawn}
-          className="absolute bottom-24 left-4 z-40 rounded-full border border-dashed border-[var(--color-navy)]/30 bg-white/80 px-2.5 py-1 text-[9px] font-bold text-[var(--color-navy-soft)]"
+          className="absolute bottom-24 left-4 z-40 rounded-full border border-dashed border-[var(--color-navy)]/30 bg-white/80 px-2.5 py-1 text-[10px] font-bold text-[var(--color-navy-soft)]"
         >
           DEV: 선박 스폰
         </button>

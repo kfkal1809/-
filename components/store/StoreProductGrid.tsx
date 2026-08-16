@@ -34,12 +34,12 @@ export function StoreProductGrid({ storeSlug, products }: { storeSlug: string; p
   }
 
   if (products.length === 0) {
-    return <p className="px-4 text-center text-[12px] text-[var(--color-navy-soft)]">아직 진열된 상품이 없어요.</p>;
+    return <p className="px-4 text-center text-[13px] text-[var(--color-navy-soft)]">아직 진열된 상품이 없어요.</p>;
   }
 
   return (
     <div className="flex flex-col gap-2 px-4 pb-2">
-      {message && <p className="text-center text-[12px] font-bold text-[var(--color-navy)]">{message}</p>}
+      {message && <p className="text-center text-[13px] font-bold text-[var(--color-navy)]">{message}</p>}
       <div className="grid grid-cols-2 gap-2.5">
         {products.map((p) => (
           <Card key={p.catalogItemId} className="flex flex-col items-center gap-1.5 !p-3 text-center">
@@ -48,11 +48,11 @@ export function StoreProductGrid({ storeSlug, products }: { storeSlug: string; p
             ) : (
               <GameIcon name="flower" size={44} />
             )}
-            <p className="text-[12px] font-bold text-[var(--color-navy)]">{p.name}</p>
+            <p className="text-[13px] font-bold text-[var(--color-navy)]">{p.name}</p>
             <button
               onClick={() => handleBuy(p)}
               disabled={buying !== null}
-              className="w-full rounded-full bg-[var(--color-coral)] py-1.5 text-[12px] font-extrabold text-white disabled:opacity-50"
+              className="w-full rounded-full bg-[var(--color-coral)] py-1.5 text-[13px] font-extrabold text-white disabled:opacity-50"
             >
               {buying === p.catalogItemId ? "구매 중..." : `$${p.price}`}
             </button>

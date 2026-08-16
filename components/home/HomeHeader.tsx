@@ -98,7 +98,23 @@ export function HomeHeader({ balance }: { balance: number }) {
         style={{ height: "auto" }}
       />
 
-      <div className="relative flex items-start justify-between gap-2">
+      <div className="relative flex flex-col items-center pt-1">
+        <div className="absolute right-0 top-0 z-10 flex flex-col items-end gap-1.5">
+          <Link
+            href="/wallet"
+            className="flex flex-col items-center gap-0.5 rounded-2xl border border-dashed border-[var(--color-gold)] bg-[var(--color-cream)] px-3 py-1.5 shadow-[0_4px_14px_rgba(36,54,90,0.08)]"
+          >
+            <span className="text-[10px] font-bold text-[var(--color-navy-soft)]">{CURRENCY_NAME}</span>
+            <span className="flex items-center gap-1">
+              <GameIcon name="coin" size={18} />
+              <span className="text-[14px] font-extrabold text-[var(--color-navy)]">${balance.toFixed(2)}</span>
+            </span>
+          </Link>
+          <Link href="/notifications" className="rounded-full bg-white p-1.5 shadow-[0_4px_14px_rgba(36,54,90,0.08)]">
+            <GameIcon name="bell" size={20} withBadge={false} />
+          </Link>
+        </div>
+
         <Image
           src="/images/misc/logo-wordmark.png"
           alt={APP_NAME}
@@ -106,25 +122,9 @@ export function HomeHeader({ balance }: { balance: number }) {
           height={346}
           unoptimized
           priority
-          className="-ml-1 mt-1 w-[132px]"
+          className="w-[190px]"
           style={{ height: "auto" }}
         />
-
-        <div className="flex flex-col items-end gap-1.5">
-          <Link
-            href="/wallet"
-            className="flex flex-col items-center gap-0.5 rounded-2xl border border-dashed border-[var(--color-gold)] bg-[var(--color-cream)] px-3 py-1.5 shadow-[0_4px_14px_rgba(36,54,90,0.08)]"
-          >
-            <span className="text-[9px] font-bold text-[var(--color-navy-soft)]">{CURRENCY_NAME}</span>
-            <span className="flex items-center gap-1">
-              <GameIcon name="coin" size={18} />
-              <span className="text-[13px] font-extrabold text-[var(--color-navy)]">${balance.toFixed(2)}</span>
-            </span>
-          </Link>
-          <Link href="/notifications" className="rounded-full bg-white p-1.5 shadow-[0_4px_14px_rgba(36,54,90,0.08)]">
-            <GameIcon name="bell" size={20} withBadge={false} />
-          </Link>
-        </div>
       </div>
     </header>
   );

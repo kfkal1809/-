@@ -33,12 +33,12 @@ export function LootActions({ inventoryItemId, subcategory }: { inventoryItemId:
 
   return (
     <div className="mt-1 flex w-full flex-col gap-1">
-      {message && <p className="text-center text-[9px] font-bold text-[var(--color-navy)]">{message}</p>}
+      {message && <p className="text-center text-[10px] font-bold text-[var(--color-navy)]">{message}</p>}
       <div className="flex w-full gap-1">
         <button
           onClick={() => call("sell")}
           disabled={loading !== null}
-          className="flex-1 rounded-full bg-[var(--color-sky)] py-1 text-[10px] font-bold text-[var(--color-navy)]"
+          className="flex-1 rounded-full bg-[var(--color-sky)] py-1 text-[11px] font-bold text-[var(--color-navy)]"
         >
           판매
         </button>
@@ -46,7 +46,7 @@ export function LootActions({ inventoryItemId, subcategory }: { inventoryItemId:
           <button
             onClick={() => call("cook")}
             disabled={loading !== null}
-            className="flex-1 rounded-full bg-[var(--color-mint)] py-1 text-[10px] font-bold text-[var(--color-navy)]"
+            className="flex-1 rounded-full bg-[var(--color-mint)] py-1 text-[11px] font-bold text-[var(--color-navy)]"
           >
             조리
           </button>
@@ -55,7 +55,7 @@ export function LootActions({ inventoryItemId, subcategory }: { inventoryItemId:
           <button
             onClick={() => call("restore")}
             disabled={loading !== null}
-            className="flex-1 rounded-full bg-[var(--color-gold)] py-1 text-[10px] font-bold text-white"
+            className="flex-1 rounded-full bg-[var(--color-gold)] py-1 text-[11px] font-bold text-white"
           >
             복원
           </button>

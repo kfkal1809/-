@@ -11,7 +11,7 @@ export default async function VoyagePage() {
       <h1 className="text-lg font-extrabold text-[var(--color-navy)]">항해일지</h1>
 
       {data.voyages.length === 0 && (
-        <Card tone="cream" className="text-center text-[13px] text-[var(--color-navy-soft)]">
+        <Card tone="cream" className="text-center text-[14px] text-[var(--color-navy-soft)]">
           아직 등록된 항해 일정이 없어요.
         </Card>
       )}
@@ -21,8 +21,8 @@ export default async function VoyagePage() {
           <div className="flex items-center gap-3">
             <CharacterSprite appearance={v.appearance} kind="haenam" size={80} />
             <div>
-              <p className="text-[15px] font-extrabold text-[var(--color-navy)]">{v.nickname}</p>
-              <p className="text-[11px] text-[var(--color-navy-soft)]">{v.roleLabel}</p>
+              <p className="text-[16px] font-extrabold text-[var(--color-navy)]">{v.nickname}</p>
+              <p className="text-[12px] text-[var(--color-navy-soft)]">{v.roleLabel}</p>
             </div>
           </div>
 
@@ -31,7 +31,7 @@ export default async function VoyagePage() {
             <Stat label="하선" value={v.signoffDays !== null ? `D-${v.signoffDays}` : "-"} color="var(--color-tab-active)" />
           </div>
 
-          <dl className="grid grid-cols-2 gap-y-1 text-[12px] text-[var(--color-navy-soft)]">
+          <dl className="grid grid-cols-2 gap-y-1 text-[13px] text-[var(--color-navy-soft)]">
             <dt>승선일</dt>
             <dd className="text-right font-bold text-[var(--color-navy)]">{v.boardedAt ?? "미등록"}</dd>
             <dt>하선 예정일</dt>
@@ -45,7 +45,7 @@ export default async function VoyagePage() {
           {data.canEdit && (
             <Link
               href={`/voyage/edit?characterId=${v.characterId}`}
-              className="rounded-full bg-[var(--color-navy)] py-2.5 text-center text-[13px] font-bold text-white"
+              className="rounded-full bg-[var(--color-navy)] py-2.5 text-center text-[14px] font-bold text-white"
             >
               일정 수정하기
             </Link>
@@ -59,8 +59,8 @@ export default async function VoyagePage() {
 function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
     <div className="rounded-2xl bg-[var(--color-sky)] py-2.5">
-      <p className="text-[10px] font-bold text-[var(--color-navy-soft)]">{label}</p>
-      <p className="text-[16px] font-extrabold" style={{ color }}>
+      <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">{label}</p>
+      <p className="text-[17px] font-extrabold" style={{ color }}>
         {value}
       </p>
     </div>

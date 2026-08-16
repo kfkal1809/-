@@ -45,7 +45,7 @@ export default function JoinPage() {
       <Card tone="cream" className="w-full">
         <p className="text-center text-sm font-bold text-[var(--color-navy-soft)]">{SHIP_NAME} 승선 신청</p>
         <h1 className="mt-1 text-center text-xl font-extrabold text-[var(--color-navy)]">초대코드를 입력해주세요</h1>
-        <p className="mt-2 text-center text-[12px] text-[var(--color-navy-soft)]">
+        <p className="mt-2 text-center text-[13px] text-[var(--color-navy-soft)]">
           해연결 단톡방 구성원이거나, 구성원의 연인 초대코드를 받은 분만 승선할 수 있어요.
         </p>
 
@@ -55,9 +55,9 @@ export default function JoinPage() {
             onChange={(e) => setCode(e.target.value)}
             placeholder="예) HAEYEON-2026"
             autoCapitalize="characters"
-            className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-3 text-center text-[15px] font-bold tracking-widest text-[var(--color-navy)] outline-none focus:border-[var(--color-tab-active)]"
+            className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-3 text-center text-[16px] font-bold tracking-widest text-[var(--color-navy)] outline-none focus:border-[var(--color-tab-active)]"
           />
-          {error && <p className="text-center text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
+          {error && <p className="text-center text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
           <Button type="submit" tone="coral" full disabled={loading}>
             {loading ? "확인 중..." : "다음"}
           </Button>

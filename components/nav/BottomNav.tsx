@@ -25,7 +25,7 @@ export function BottomNav() {
           <Link
             key={tab.key}
             href={tab.href}
-            className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[11px] font-bold"
+            className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[12px] font-bold"
           >
             <span
               className={`flex h-9 w-9 items-center justify-center rounded-full ${active ? "bg-white shadow-[0_2px_8px_rgba(15,33,54,0.25)]" : ""}`}

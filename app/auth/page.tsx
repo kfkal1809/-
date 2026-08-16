@@ -30,7 +30,7 @@ export default function AuthPage() {
     <AppFrame className="items-center justify-center px-6">
       <Card tone="cream" className="w-full text-center">
         <h1 className="text-xl font-extrabold text-[var(--color-navy)]">카카오로 승선하기</h1>
-        <p className="mt-2 text-[12px] text-[var(--color-navy-soft)]">
+        <p className="mt-2 text-[13px] text-[var(--color-navy-soft)]">
           카카오 계정으로 간편하게 해연결호에 승선해요.
         </p>
 
@@ -38,7 +38,7 @@ export default function AuthPage() {
           {loading ? "연결 중..." : "카카오로 로그인"}
         </Button>
 
-        {error && <p className="mt-3 text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
+        {error && <p className="mt-3 text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
       </Card>
     </AppFrame>
   );

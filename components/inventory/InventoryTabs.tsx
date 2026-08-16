@@ -62,7 +62,7 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`shrink-0 rounded-full px-4 py-2 text-[12px] font-bold ${
+            className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-bold ${
               tab === t.key ? "bg-[var(--color-navy)] text-white" : "bg-white text-[var(--color-navy-soft)]"
             }`}
           >
@@ -71,10 +71,10 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
         ))}
       </div>
 
-      {equippedMsg && <p className="text-center text-[12px] font-bold text-[var(--color-navy)]">{equippedMsg}</p>}
+      {equippedMsg && <p className="text-center text-[13px] font-bold text-[var(--color-navy)]">{equippedMsg}</p>}
 
       {filtered.length === 0 ? (
-        <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
+        <Card tone="cream" className="py-8 text-center text-[14px] text-[var(--color-navy-soft)]">
           {EMPTY_STATE_COPY.inventory}
         </Card>
       ) : (
@@ -86,15 +86,15 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
             return (
               <Card key={item.id} className="relative flex flex-col items-center gap-1 !p-2.5 text-center">
                 {item.isNew && <NewBadge className="absolute right-1.5 top-1.5" />}
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-sky)] text-[11px] text-[var(--color-navy-soft)]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-sky)] text-[12px] text-[var(--color-navy-soft)]">
                   {itemIconSrc(item.sku) ? (
                     <Image src={itemIconSrc(item.sku)!} alt="" width={48} height={48} unoptimized style={{ width: "80%", height: "80%", objectFit: "contain" }} />
                   ) : (
                     RARITY_STARS[item.rarity]
                   )}
                 </div>
-                <p className="line-clamp-1 text-[11px] font-bold text-[var(--color-navy)]">{item.name}</p>
-                <p className="text-[9px] text-[var(--color-navy-soft)]">
+                <p className="line-clamp-1 text-[12px] font-bold text-[var(--color-navy)]">{item.name}</p>
+                <p className="text-[10px] text-[var(--color-navy-soft)]">
                   {RARITY_LABEL[item.rarity]} · x{item.quantity}
                 </p>
 
@@ -107,7 +107,7 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
                             key={c.id}
                             onClick={() => handleEquip(item.id, c.id, c.nickname)}
                             disabled={equipping === item.id}
-                            className="rounded-full bg-[var(--color-mint)] px-2 py-1 text-[10px] font-bold text-[var(--color-navy)]"
+                            className="rounded-full bg-[var(--color-mint)] px-2 py-1 text-[11px] font-bold text-[var(--color-navy)]"
                           >
                             {c.nickname}
                           </button>
@@ -116,7 +116,7 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
                     ) : (
                       <button
                         onClick={() => setOpenPickerId(item.id)}
-                        className="w-full rounded-full bg-[var(--color-sky)] py-1 text-[10px] font-bold text-[var(--color-navy)]"
+                        className="w-full rounded-full bg-[var(--color-sky)] py-1 text-[11px] font-bold text-[var(--color-navy)]"
                       >
                         착용
                       </button>
@@ -127,7 +127,7 @@ export function InventoryTabs({ items, myCharacters }: { items: InventoryItemRow
                 {placeable && (
                   <Link
                     href="/cabin/edit"
-                    className="mt-1 w-full rounded-full bg-[var(--color-sky)] py-1 text-[10px] font-bold text-[var(--color-navy)]"
+                    className="mt-1 w-full rounded-full bg-[var(--color-sky)] py-1 text-[11px] font-bold text-[var(--color-navy)]"
                   >
                     선실에 배치
                   </Link>

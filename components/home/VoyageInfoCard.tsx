@@ -61,7 +61,7 @@ export function VoyageInfoCard({
             strokeLinecap="round"
           />
         </svg>
-        <span className="text-[13px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
+        <span className="text-[14px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
         <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
           <path
             d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
@@ -92,13 +92,13 @@ export function VoyageInfoCard({
           className="absolute right-3 top-4 z-10 flex h-[72px] w-[72px] flex-col items-center justify-center rounded-full border-2 border-dashed border-[var(--color-tab-active)] bg-white/90 text-center shadow-[0_4px_12px_rgba(36,54,90,0.14)] disabled:opacity-70"
         >
           {attended ? (
-            <span className="text-[11px] font-extrabold leading-tight text-[var(--color-navy)]">
+            <span className="text-[12px] font-extrabold leading-tight text-[var(--color-navy)]">
               출항
               <br />
               완료
             </span>
           ) : (
-            <span className="text-[11px] font-extrabold leading-tight text-[var(--color-tab-active)]">
+            <span className="text-[12px] font-extrabold leading-tight text-[var(--color-tab-active)]">
               출항하기
               <br />
               +$1
@@ -141,7 +141,7 @@ export function VoyageInfoCard({
           <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-3">
             <div className="flex flex-col items-center">
               <CharacterSprite appearance={voyage.haenyeoAppearance} kind="haenyeo" size={115} />
-              <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[12px] font-bold text-[var(--color-navy)]">
+              <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[13px] font-bold text-[var(--color-navy)]">
                 해녀 {voyage.haenyeoName}
               </p>
             </div>
@@ -157,7 +157,7 @@ export function VoyageInfoCard({
             />
             <div className="flex flex-col items-center">
               <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={115} />
-              <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[12px] font-bold text-[var(--color-navy)]">
+              <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[13px] font-bold text-[var(--color-navy)]">
                 해남 {voyage.haenamName}
               </p>
             </div>
@@ -166,21 +166,21 @@ export function VoyageInfoCard({
 
         <div className="relative mx-4 mt-5 flex items-stretch justify-between gap-2 rounded-2xl bg-white/85 p-4">
           <div className="flex-1 text-center">
-            <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">승선</p>
-            <p className="text-[18px] font-extrabold text-[var(--color-coral)]">
+            <p className="text-[12px] font-bold text-[var(--color-navy-soft)]">승선</p>
+            <p className="text-[19px] font-extrabold text-[var(--color-coral)]">
               {voyage.boardedDays !== null ? `D+${voyage.boardedDays}` : "정보 없음"}
             </p>
           </div>
           <div className="w-px bg-[var(--color-navy)]/10" />
           <div className="flex-1 text-center">
-            <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">하선</p>
-            <p className="text-[18px] font-extrabold text-[var(--color-tab-active)]">
+            <p className="text-[12px] font-bold text-[var(--color-navy-soft)]">하선</p>
+            <p className="text-[19px] font-extrabold text-[var(--color-tab-active)]">
               {voyage.signoffDays !== null ? `D-${voyage.signoffDays}` : "정보 없음"}
             </p>
           </div>
         </div>
 
-        {toast && <p className="relative mt-2 px-4 text-center text-[11px] text-[var(--color-navy-soft)]">{toast}</p>}
+        {toast && <p className="relative mt-2 px-4 text-center text-[12px] text-[var(--color-navy-soft)]">{toast}</p>}
       </div>
     </div>
   );

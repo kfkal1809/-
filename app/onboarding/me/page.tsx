@@ -25,7 +25,7 @@ export default function OnboardingMePage() {
 
   return (
     <AppFrame className="px-5 py-8">
-      <p className="mb-4 text-center text-[11px] font-bold text-[var(--color-tab-active)]">STEP 1 / 4</p>
+      <p className="mb-4 text-center text-[12px] font-bold text-[var(--color-tab-active)]">STEP 1 / 4</p>
       <AdultCharacterForm
         title="내 캐릭터를 만들어요"
         subtitle="해연결호에서 사용할 나의 모습이에요"

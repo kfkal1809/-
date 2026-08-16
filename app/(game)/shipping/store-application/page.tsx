@@ -49,7 +49,7 @@ export default function StoreApplicationPage() {
       <h1 className="text-lg font-extrabold text-[var(--color-navy)]">가게 입점 신청</h1>
 
       {done ? (
-        <Card tone="cream" className="py-8 text-center text-[13px] font-bold text-[var(--color-navy)]">
+        <Card tone="cream" className="py-8 text-center text-[14px] font-bold text-[var(--color-navy)]">
           신청이 접수됐어요. 관리자 승인 후 가게가 열려요!
         </Card>
       ) : (
@@ -58,7 +58,7 @@ export default function StoreApplicationPage() {
           <Field label="업종" value={businessType} onChange={setBusinessType} placeholder="예) 꽃집" />
           <Field label="한줄소개" value={intro} onChange={setIntro} placeholder="가게를 소개해주세요" />
           <Field label="희망 공간 컨셉" value={desiredTheme} onChange={setDesiredTheme} placeholder="예) 화이트톤 미니멀" />
-          {error && <p className="text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
+          {error && <p className="text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
           <Button tone="coral" full onClick={handleSubmit} disabled={submitting}>
             {submitting ? "제출 중..." : "입점 신청하기"}
           </Button>
@@ -81,12 +81,12 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[11px] font-bold text-[var(--color-navy-soft)]">{label}</span>
+      <span className="text-[12px] font-bold text-[var(--color-navy-soft)]">{label}</span>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="rounded-xl border-2 border-[var(--color-navy)]/10 px-3 py-2 text-[13px] outline-none focus:border-[var(--color-tab-active)]"
+        className="rounded-xl border-2 border-[var(--color-navy)]/10 px-3 py-2 text-[14px] outline-none focus:border-[var(--color-tab-active)]"
       />
     </label>
   );

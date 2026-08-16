@@ -15,7 +15,7 @@ const TONES: Record<string, string> = {
 export function Button({ tone = "coral", full, className = "", children, ...rest }: ButtonProps) {
   return (
     <button
-      className={`rounded-full px-5 py-3 text-[15px] font-bold shadow-[0_4px_14px_rgba(36,54,90,0.15)] transition active:scale-[0.97] disabled:opacity-40 disabled:active:scale-100 ${
+      className={`rounded-full px-5 py-3 text-[16px] font-bold shadow-[0_4px_14px_rgba(36,54,90,0.15)] transition active:scale-[0.97] disabled:opacity-40 disabled:active:scale-100 ${
         TONES[tone]
       } ${full ? "w-full" : ""} ${className}`}
       {...rest}

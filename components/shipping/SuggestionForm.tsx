@@ -47,16 +47,16 @@ export function SuggestionForm() {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="제목"
-        className="rounded-xl border-2 border-[var(--color-navy)]/10 px-3 py-2 text-[13px] outline-none focus:border-[var(--color-tab-active)]"
+        className="rounded-xl border-2 border-[var(--color-navy)]/10 px-3 py-2 text-[14px] outline-none focus:border-[var(--color-tab-active)]"
       />
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         rows={3}
         placeholder="선주 아랍에게 전할 내용을 적어주세요"
-        className="resize-none rounded-xl border-2 border-[var(--color-navy)]/10 px-3 py-2 text-[13px] outline-none focus:border-[var(--color-tab-active)]"
+        className="resize-none rounded-xl border-2 border-[var(--color-navy)]/10 px-3 py-2 text-[14px] outline-none focus:border-[var(--color-tab-active)]"
       />
-      {error && <p className="text-[11px] font-bold text-[var(--color-danger)]">{error}</p>}
+      {error && <p className="text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
       <Button tone="mint" onClick={handleSubmit} disabled={submitting}>
         건의하기
       </Button>

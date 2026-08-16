@@ -114,11 +114,11 @@ export function CabinEditor({
     <div className="flex flex-col gap-4 px-4 pt-5">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-extrabold text-[var(--color-navy)]">방꾸미기</h1>
-        <Button tone="coral" onClick={handleSave} disabled={saving || !spaceId} className="!px-4 !py-2 text-[13px]">
+        <Button tone="coral" onClick={handleSave} disabled={saving || !spaceId} className="!px-4 !py-2 text-[14px]">
           {saving ? "저장 중..." : "저장"}
         </Button>
       </div>
-      {message && <p className="text-center text-[12px] font-bold text-[var(--color-navy)]">{message}</p>}
+      {message && <p className="text-center text-[13px] font-bold text-[var(--color-navy)]">{message}</p>}
 
       <div
         ref={roomRef}
@@ -147,7 +147,7 @@ export function CabinEditor({
               }}
             >
               <div
-                className={`flex h-12 w-12 items-center justify-center rounded-2xl text-[10px] font-bold shadow ${
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl text-[11px] font-bold shadow ${
                   selectedId === item.id ? "bg-[var(--color-sky-new)] text-white" : "bg-white/90 text-[var(--color-navy)]"
                 }`}
               >
@@ -163,7 +163,7 @@ export function CabinEditor({
 
       {selected && (
         <Card className="flex flex-wrap items-center justify-between gap-2 !p-3">
-          <p className="text-[12px] font-bold text-[var(--color-navy)]">{selected.name}</p>
+          <p className="text-[13px] font-bold text-[var(--color-navy)]">{selected.name}</p>
           <div className="flex flex-wrap gap-1.5">
             <IconBtn onClick={() => updateSelected({ rotation: selected.rotation - 15 })}>↺</IconBtn>
             <IconBtn onClick={() => updateSelected({ rotation: selected.rotation + 15 })}>↻</IconBtn>
@@ -180,14 +180,14 @@ export function CabinEditor({
       )}
 
       <div>
-        <p className="mb-2 text-[13px] font-extrabold text-[var(--color-navy)]">가방에서 배치하기</p>
+        <p className="mb-2 text-[14px] font-extrabold text-[var(--color-navy)]">가방에서 배치하기</p>
         {unplaced.length === 0 ? (
-          <p className="text-[12px] text-[var(--color-navy-soft)]">배치할 수 있는 아이템이 모두 방에 놓여 있어요.</p>
+          <p className="text-[13px] text-[var(--color-navy-soft)]">배치할 수 있는 아이템이 모두 방에 놓여 있어요.</p>
         ) : (
           <div className="grid grid-cols-3 gap-2">
             {unplaced.map((item) => (
               <button key={item.inventoryItemId} onClick={() => addFromBag(item)}>
-                <Card className="flex flex-col items-center gap-1 !p-2.5 text-center text-[11px] font-bold text-[var(--color-navy)]">
+                <Card className="flex flex-col items-center gap-1 !p-2.5 text-center text-[12px] font-bold text-[var(--color-navy)]">
                   {itemIconSrc(item.sku) && (
                     <Image src={itemIconSrc(item.sku)!} alt="" width={36} height={36} unoptimized style={{ width: 36, height: 36, objectFit: "contain" }} />
                   )}
@@ -206,7 +206,7 @@ function IconBtn({ children, onClick, danger }: { children: React.ReactNode; onC
   return (
     <button
       onClick={onClick}
-      className={`rounded-full px-2.5 py-1.5 text-[11px] font-bold ${
+      className={`rounded-full px-2.5 py-1.5 text-[12px] font-bold ${
         danger ? "bg-[var(--color-danger)]/10 text-[var(--color-danger)]" : "bg-[var(--color-sky)] text-[var(--color-navy)]"
       }`}
     >

@@ -88,7 +88,7 @@ export function AdultCharacterForm({
     <div className="flex flex-col gap-5">
       <div className="text-center">
         <h1 className="text-lg font-extrabold text-[var(--color-navy)]">{title}</h1>
-        {subtitle && <p className="mt-1 text-[12px] text-[var(--color-navy-soft)]">{subtitle}</p>}
+        {subtitle && <p className="mt-1 text-[13px] text-[var(--color-navy-soft)]">{subtitle}</p>}
       </div>
 
       <div className="flex justify-center">
@@ -104,7 +104,7 @@ export function AdultCharacterForm({
               key={k}
               type="button"
               onClick={() => setKind(k)}
-              className={`flex-1 rounded-2xl border-2 py-2.5 text-[13px] font-bold ${
+              className={`flex-1 rounded-2xl border-2 py-2.5 text-[14px] font-bold ${
                 kind === k ? "border-[var(--color-tab-active)] bg-[var(--color-sky-deep)]" : "border-transparent bg-white"
               }`}
             >
@@ -124,7 +124,7 @@ export function AdultCharacterForm({
                 setDepartment(d);
                 setOutfitColor(d === "engine" ? HAENAM_ENGINE_OUTFIT_SWATCHES[0] : HAENAM_DECK_OUTFIT_SWATCHES[0]);
               }}
-              className={`flex-1 rounded-2xl border-2 py-2.5 text-[13px] font-bold ${
+              className={`flex-1 rounded-2xl border-2 py-2.5 text-[14px] font-bold ${
                 department === d ? "border-[var(--color-tab-active)] bg-[var(--color-sky-deep)]" : "border-transparent bg-white"
               }`}
             >
@@ -139,20 +139,20 @@ export function AdultCharacterForm({
         onChange={(e) => setNickname(e.target.value)}
         placeholder="별명을 입력해주세요"
         maxLength={12}
-        className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-3 text-center text-[15px] font-bold text-[var(--color-navy)] outline-none focus:border-[var(--color-tab-active)]"
+        className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-3 text-center text-[16px] font-bold text-[var(--color-navy)] outline-none focus:border-[var(--color-tab-active)]"
       />
 
       <SwatchRow label="피부톤" values={SKIN_SWATCHES} selected={skinTone} onSelect={setSkinTone} />
       <SwatchRow label="헤어 컬러" values={HAIR_SWATCHES} selected={hairColor} onSelect={setHairColor} />
       <div>
-        <p className="mb-1.5 text-[11px] font-bold text-[var(--color-navy-soft)]">헤어 스타일</p>
+        <p className="mb-1.5 text-[12px] font-bold text-[var(--color-navy-soft)]">헤어 스타일</p>
         <div className="flex gap-2">
           {hairStyles.map((style) => (
             <button
               key={style}
               type="button"
               onClick={() => setHairStyle(style)}
-              className={`flex-1 rounded-xl border-2 py-2 text-[11px] font-bold ${
+              className={`flex-1 rounded-xl border-2 py-2 text-[12px] font-bold ${
                 hairStyle === style ? "border-[var(--color-tab-active)] bg-[var(--color-sky-deep)]" : "border-transparent bg-white"
               }`}
             >
@@ -163,7 +163,7 @@ export function AdultCharacterForm({
       </div>
       <SwatchRow label="의상 컬러" values={outfitSwatches} selected={outfitColor} onSelect={setOutfitColor} />
 
-      {error && <p className="text-center text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
+      {error && <p className="text-center text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
 
       <Button tone="coral" full onClick={handleSubmit} disabled={submitting}>
         {submitting ? "저장 중..." : submitLabel}
@@ -197,7 +197,7 @@ function SwatchRow({
 }) {
   return (
     <div>
-      <p className="mb-1.5 text-[11px] font-bold text-[var(--color-navy-soft)]">{label}</p>
+      <p className="mb-1.5 text-[12px] font-bold text-[var(--color-navy-soft)]">{label}</p>
       <div className="flex gap-2">
         {values.map((v) => (
           <button

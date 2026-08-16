@@ -34,17 +34,17 @@ export default function OnboardingRelationshipPage() {
 
   return (
     <AppFrame className="items-center justify-center px-6">
-      <p className="mb-4 text-center text-[11px] font-bold text-[var(--color-tab-active)]">STEP 2 / 4</p>
+      <p className="mb-4 text-center text-[12px] font-bold text-[var(--color-tab-active)]">STEP 2 / 4</p>
       <Card tone="cream" className="w-full">
         <h1 className="text-center text-lg font-extrabold text-[var(--color-navy)]">지금 두 분은 어떤 사이인가요?</h1>
-        <p className="mt-1 text-center text-[12px] text-[var(--color-navy-soft)]">현실 관계 상태예요. 언제든 바꿀 수 있어요.</p>
+        <p className="mt-1 text-center text-[13px] text-[var(--color-navy-soft)]">현실 관계 상태예요. 언제든 바꿀 수 있어요.</p>
 
         <div className="mt-5 flex flex-col gap-2.5">
           {OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setValue(opt.value)}
-              className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-[14px] font-bold ${
+              className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-[15px] font-bold ${
                 value === opt.value ? "border-[var(--color-tab-active)] bg-[var(--color-sky-deep)]" : "border-transparent bg-white"
               }`}
             >

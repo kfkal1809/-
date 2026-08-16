@@ -54,12 +54,12 @@ function VoyageEditForm() {
 function DateField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-[12px] font-bold text-[var(--color-navy-soft)]">{label}</span>
+      <span className="text-[13px] font-bold text-[var(--color-navy-soft)]">{label}</span>
       <input
         type="date"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-[14px] font-bold text-[var(--color-navy)] outline-none focus:border-[var(--color-tab-active)]"
+        className="rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-[15px] font-bold text-[var(--color-navy)] outline-none focus:border-[var(--color-tab-active)]"
       />
     </label>
   );

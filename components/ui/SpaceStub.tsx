@@ -55,17 +55,17 @@ export function SpaceStub({
 
         {npcId && (
           <div className="mt-1 text-center">
-            <p className="text-[14px] font-extrabold text-[var(--color-navy)]">{npcName}</p>
-            <p className="text-[10px] text-[var(--color-navy-soft)]">{npcTitle}</p>
+            <p className="text-[15px] font-extrabold text-[var(--color-navy)]">{npcName}</p>
+            <p className="text-[11px] text-[var(--color-navy-soft)]">{npcTitle}</p>
           </div>
         )}
 
         {npcLine && (
-          <p className="mt-2 max-w-[260px] rounded-2xl bg-white px-4 py-2.5 text-center text-[13px] font-bold text-[var(--color-navy)] shadow-[0_4px_14px_rgba(36,54,90,0.08)]">
+          <p className="mt-2 max-w-[260px] rounded-2xl bg-white px-4 py-2.5 text-center text-[14px] font-bold text-[var(--color-navy)] shadow-[0_4px_14px_rgba(36,54,90,0.08)]">
             {npcLine}
           </p>
         )}
-        {description && <p className="mt-2 max-w-[280px] text-center text-[12px] text-[var(--color-navy-soft)]">{description}</p>}
+        {description && <p className="mt-2 max-w-[280px] text-center text-[13px] text-[var(--color-navy-soft)]">{description}</p>}
       </div>
     </div>
   );

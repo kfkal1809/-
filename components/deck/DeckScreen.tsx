@@ -135,7 +135,7 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
         <Image src="/images/backgrounds/deck.jpg" alt="" fill unoptimized style={{ objectFit: "cover" }} />
 
         {onlineOthers.length === 0 ? (
-          <p className="absolute bottom-14 left-1/2 -translate-x-1/2 rounded-full bg-white/85 px-4 py-1.5 text-[12px] font-bold text-[var(--color-navy)]">
+          <p className="absolute bottom-14 left-1/2 -translate-x-1/2 rounded-full bg-white/85 px-4 py-1.5 text-[13px] font-bold text-[var(--color-navy)]">
             지금 갑판에는 아무도 없어요
           </p>
         ) : (
@@ -143,7 +143,7 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
             {onlineOthers.map((p) => (
               <button key={p.userId} onClick={() => setActiveCharacter(p)} className="flex shrink-0 flex-col items-center">
                 <CharacterSprite appearance={p.appearance} kind={p.kind} childGender={p.childGender} childStage={p.childStage} size={80} />
-                <p className="rounded-full bg-white/85 px-2 text-[10px] font-bold text-[var(--color-navy)]">{p.nickname}</p>
+                <p className="rounded-full bg-white/85 px-2 text-[11px] font-bold text-[var(--color-navy)]">{p.nickname}</p>
               </button>
             ))}
           </div>
@@ -152,13 +152,13 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
 
       {activeCharacter && (
         <div className="mx-4 mt-2 flex items-center justify-between gap-2 rounded-2xl bg-white p-2.5 shadow-[0_4px_14px_rgba(36,54,90,0.10)]">
-          <p className="text-[12px] font-bold text-[var(--color-navy)]">{activeCharacter.nickname}</p>
+          <p className="text-[13px] font-bold text-[var(--color-navy)]">{activeCharacter.nickname}</p>
           <div className="flex gap-1.5">
             {activeCharacter.characterId && (
               <>
                 <Link
                   href={`/boarding-pass/${activeCharacter.characterId}`}
-                  className="rounded-full bg-[var(--color-sky)] px-2.5 py-1 text-[10px] font-bold text-[var(--color-navy)]"
+                  className="rounded-full bg-[var(--color-sky)] px-2.5 py-1 text-[11px] font-bold text-[var(--color-navy)]"
                 >
                   승선확인증
                 </Link>
@@ -169,13 +169,13 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
                 setInput((prev) => `${prev}${prev && !prev.endsWith(" ") ? " " : ""}@${activeCharacter.nickname} `);
                 setActiveCharacter(null);
               }}
-              className="rounded-full bg-[var(--color-mint)] px-2.5 py-1 text-[10px] font-bold text-[var(--color-navy)]"
+              className="rounded-full bg-[var(--color-mint)] px-2.5 py-1 text-[11px] font-bold text-[var(--color-navy)]"
             >
               태그
             </button>
             <button
               onClick={() => setActiveCharacter(null)}
-              className="rounded-full bg-[var(--color-navy)]/10 px-2.5 py-1 text-[10px] font-bold text-[var(--color-navy-soft)]"
+              className="rounded-full bg-[var(--color-navy)]/10 px-2.5 py-1 text-[11px] font-bold text-[var(--color-navy-soft)]"
             >
               닫기
             </button>
@@ -186,11 +186,11 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
       <div className="mt-3 flex flex-col overflow-hidden rounded-[24px] border-2 border-white bg-white/70 px-4 pt-3">
         <div ref={listRef} className="scrollbar-none h-64 overflow-y-auto pb-2">
           {messages.length === 0 ? (
-            <p className="py-6 text-center text-[12px] text-[var(--color-navy-soft)]">아직 대화가 없어요. 먼저 말을 걸어볼까요?</p>
+            <p className="py-6 text-center text-[13px] text-[var(--color-navy-soft)]">아직 대화가 없어요. 먼저 말을 걸어볼까요?</p>
           ) : (
             <ul className="flex flex-col gap-1.5">
               {messages.map((m) => (
-                <li key={m.id} className="text-[12px]">
+                <li key={m.id} className="text-[13px]">
                   <span className="font-bold text-[var(--color-navy)]">{m.nickname}</span>{" "}
                   <span className="text-[var(--color-navy)]">{m.body}</span>
                 </li>
@@ -206,7 +206,7 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
                 <button
                   key={c.userId}
                   onClick={() => pickMention(c.nickname)}
-                  className="rounded-full bg-[var(--color-sky)] px-2.5 py-1 text-[11px] font-bold text-[var(--color-navy)]"
+                  className="rounded-full bg-[var(--color-sky)] px-2.5 py-1 text-[12px] font-bold text-[var(--color-navy)]"
                 >
                   @{c.nickname}
                 </button>
@@ -222,12 +222,12 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
               }}
               disabled={!self.ready}
               placeholder={self.ready ? "메시지를 입력해보세요" : "로그인 후 대화할 수 있어요"}
-              className="flex-1 rounded-full bg-[var(--color-sky)] px-4 py-2.5 text-[13px] outline-none disabled:opacity-60"
+              className="flex-1 rounded-full bg-[var(--color-sky)] px-4 py-2.5 text-[14px] outline-none disabled:opacity-60"
             />
             <button
               onClick={handleSend}
               disabled={!self.ready || !input.trim()}
-              className="rounded-full bg-[var(--color-coral)] px-4 py-2.5 text-[12px] font-bold text-white disabled:opacity-40"
+              className="rounded-full bg-[var(--color-coral)] px-4 py-2.5 text-[13px] font-bold text-white disabled:opacity-40"
             >
               전송
             </button>

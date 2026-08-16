@@ -18,7 +18,7 @@ export default function JewelryPage() {
         <Image src="/images/backgrounds/jewelry.jpg" alt="" fill unoptimized style={{ objectFit: "cover" }} />
       </div>
 
-      <p className="text-[12px] text-[var(--color-navy-soft)]">커플링을 함께 맞추면 혼인신고서를 구매할 수 있어요.</p>
+      <p className="text-[13px] text-[var(--color-navy-soft)]">커플링을 함께 맞추면 혼인신고서를 구매할 수 있어요.</p>
 
       <div className="flex flex-col gap-2.5">
         {RING_SETS.map((r) => (
@@ -32,8 +32,8 @@ export default function JewelryPage() {
               style={{ width: 72, height: "auto" }}
             />
             <div className="flex-1">
-              <p className="text-[13px] font-bold text-[var(--color-navy)]">{r.name}</p>
-              <p className="text-[11px] text-[var(--color-navy-soft)]">둘이 함께 맞추는 커플링이에요</p>
+              <p className="text-[14px] font-bold text-[var(--color-navy)]">{r.name}</p>
+              <p className="text-[12px] text-[var(--color-navy-soft)]">둘이 함께 맞추는 커플링이에요</p>
             </div>
             <RingBuyButton sku={r.sku} price={r.price} />
           </Card>

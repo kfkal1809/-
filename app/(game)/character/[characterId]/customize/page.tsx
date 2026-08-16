@@ -9,7 +9,7 @@ export default async function CharacterCustomizePage({ params }: PageProps<"/cha
   if (!data.found) {
     return (
       <div className="px-4 pt-5">
-        <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
+        <Card tone="cream" className="py-8 text-center text-[14px] text-[var(--color-navy-soft)]">
           캐릭터를 찾을 수 없어요.
         </Card>
       </div>

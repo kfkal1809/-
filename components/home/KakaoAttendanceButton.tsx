@@ -72,7 +72,7 @@ export function KakaoAttendanceButton({ alreadyDone }: { alreadyDone: boolean })
   if (alreadyDone) {
     return (
       <div className="flex flex-col items-center gap-1">
-        <span className="rounded-full bg-[#fee500]/40 px-4 py-2 text-[12px] font-extrabold text-[var(--color-navy-soft)]">
+        <span className="rounded-full bg-[#fee500]/40 px-4 py-2 text-[13px] font-extrabold text-[var(--color-navy-soft)]">
           오늘 카카오 출항 인증 완료
         </span>
       </div>
@@ -84,14 +84,14 @@ export function KakaoAttendanceButton({ alreadyDone }: { alreadyDone: boolean })
       <button
         onClick={handleShare}
         disabled={status === "loading"}
-        className="rounded-full bg-[#fee500] px-4 py-2 text-[12px] font-extrabold text-[#3c1e1e] disabled:opacity-60"
+        className="rounded-full bg-[#fee500] px-4 py-2 text-[13px] font-extrabold text-[#3c1e1e] disabled:opacity-60"
       >
         {status === "loading" ? "여는 중..." : "카카오톡 출항 인증"}
       </button>
       {status === "shared" && (
-        <p className="text-[10px] text-[var(--color-navy-soft)]">공유가 완료되면 선용금이 자동 지급돼요.</p>
+        <p className="text-[11px] text-[var(--color-navy-soft)]">공유가 완료되면 선용금이 자동 지급돼요.</p>
       )}
-      {status === "error" && <p className="text-[10px] text-[var(--color-danger)]">지금은 이용할 수 없어요.</p>}
+      {status === "error" && <p className="text-[11px] text-[var(--color-danger)]">지금은 이용할 수 없어요.</p>}
     </div>
   );
 }

@@ -89,7 +89,7 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
   if (!result) {
     return (
       <div className="px-4 pt-5">
-        <Card tone="cream" className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">
+        <Card tone="cream" className="py-8 text-center text-[14px] text-[var(--color-navy-soft)]">
           승선확인증을 찾을 수 없어요.
         </Card>
       </div>
@@ -141,45 +141,45 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
         </div>
 
         <p
-          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          className="absolute truncate text-[14px] font-bold text-[#24365a] sm:text-[16px]"
           style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.name}%`, width: `${FRAME.rowText.width}%` }}
         >
           {character.nickname}
         </p>
         <p
-          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          className="absolute truncate text-[14px] font-bold text-[#24365a] sm:text-[16px]"
           style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.ship}%`, width: `${FRAME.rowText.width}%` }}
         >
           {SHIP_NAME}
         </p>
         <p
-          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          className="absolute truncate text-[14px] font-bold text-[#24365a] sm:text-[16px]"
           style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.role}%`, width: `${FRAME.rowText.width}%` }}
         >
           {roleLabel}
         </p>
         <p
-          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          className="absolute truncate text-[14px] font-bold text-[#24365a] sm:text-[16px]"
           style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.boarded}%`, width: `${FRAME.rowText.width}%` }}
         >
           {character.kind === "haenam" && boardedAt ? formatKoreanDate(boardedAt) : "-"}
         </p>
         <p
-          className="absolute truncate text-[13px] font-bold text-[#24365a] sm:text-[15px]"
+          className="absolute truncate text-[14px] font-bold text-[#24365a] sm:text-[16px]"
           style={{ left: `${FRAME.rowText.left}%`, top: `${FRAME.rows.signoff}%`, width: `${FRAME.rowText.width}%` }}
         >
           {character.kind === "haenam" && signoffAt ? formatKoreanDate(signoffAt) : "-"}
         </p>
 
         <p
-          className="absolute text-center text-[11px] text-[var(--color-navy-soft)] sm:text-[13px]"
+          className="absolute text-center text-[12px] text-[var(--color-navy-soft)] sm:text-[14px]"
           style={{ left: `${FRAME.date.left}%`, top: `${FRAME.date.top}%`, width: `${FRAME.date.width}%` }}
         >
           {today}
         </p>
       </div>
 
-      <Card tone="cream" className="w-full max-w-[360px] px-4 py-3 text-[12px]">
+      <Card tone="cream" className="w-full max-w-[360px] px-4 py-3 text-[13px]">
         <div className="flex items-baseline justify-between border-b border-dotted border-[#9fb3d1] py-1">
           <span className="font-bold text-[#24365a]">관계</span>
           <span className="text-[#24365a]">{household?.relation_status ? RELATION_LABEL[household.relation_status] : "-"}</span>
@@ -188,7 +188,7 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
           <span className="font-bold text-[#24365a]">함께 승선</span>
           <span className="truncate text-[#24365a]">{householdMates.length > 0 ? householdMates.map((m) => m.nickname).join(", ") : "-"}</span>
         </div>
-        <p className="mt-1 text-center text-[10px] text-[var(--color-navy-soft)]">
+        <p className="mt-1 text-center text-[11px] text-[var(--color-navy-soft)]">
           혼인신고 {household?.game_marriage_status === "married" ? "완료" : "미완료"}
         </p>
       </Card>

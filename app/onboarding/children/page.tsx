@@ -53,17 +53,17 @@ export default function OnboardingChildrenPage() {
 
   return (
     <AppFrame className="px-5 py-8">
-      <p className="mb-4 text-center text-[11px] font-bold text-[var(--color-tab-active)]">STEP 4 / 4</p>
+      <p className="mb-4 text-center text-[12px] font-bold text-[var(--color-tab-active)]">STEP 4 / 4</p>
       <Card tone="cream">
         <h1 className="text-center text-lg font-extrabold text-[var(--color-navy)]">새싹을 만들어볼까요?</h1>
-        <p className="mt-1 text-center text-[12px] text-[var(--color-navy-soft)]">가족당 최대 3명까지 만들 수 있어요 ({children.length}/3)</p>
+        <p className="mt-1 text-center text-[13px] text-[var(--color-navy-soft)]">가족당 최대 3명까지 만들 수 있어요 ({children.length}/3)</p>
 
         {children.length > 0 && (
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             {children.map((c) => (
               <div key={c.id} className="flex flex-col items-center">
                 <CharacterSprite appearance={c.appearance_json} kind="child" childGender={c.child_gender} childStage={c.child_stage} size={100} />
-                <p className="text-[11px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
+                <p className="text-[12px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
               </div>
             ))}
           </div>

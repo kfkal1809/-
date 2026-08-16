@@ -71,7 +71,7 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
         onChange={(e) => setNickname(e.target.value)}
         placeholder="새싹 별명"
         maxLength={12}
-        className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-center text-[14px] font-bold text-[var(--color-navy)] outline-none focus:border-[var(--color-tab-active)]"
+        className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-center text-[15px] font-bold text-[var(--color-navy)] outline-none focus:border-[var(--color-tab-active)]"
       />
 
       <div className="flex gap-2">
@@ -80,7 +80,7 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
             key={g}
             type="button"
             onClick={() => setGender(g)}
-            className={`flex-1 rounded-xl border-2 py-2 text-[12px] font-bold ${
+            className={`flex-1 rounded-xl border-2 py-2 text-[13px] font-bold ${
               gender === g ? "border-[var(--color-tab-active)] bg-[var(--color-sky-deep)]" : "border-transparent bg-white"
             }`}
           >
@@ -92,7 +92,7 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
       <select
         value={stage}
         onChange={(e) => setStage(e.target.value as ChildStage)}
-        className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-center text-[13px] font-bold text-[var(--color-navy)]"
+        className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-center text-[14px] font-bold text-[var(--color-navy)]"
       >
         {STAGES.map((s) => (
           <option key={s.value} value={s.value}>
@@ -129,7 +129,7 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
             key={style}
             type="button"
             onClick={() => setHairStyle(style)}
-            className={`flex-1 rounded-xl border-2 py-1.5 text-[11px] font-bold ${
+            className={`flex-1 rounded-xl border-2 py-1.5 text-[12px] font-bold ${
               hairStyle === style ? "border-[var(--color-tab-active)] bg-[var(--color-sky-deep)]" : "border-transparent bg-white"
             }`}
           >
@@ -150,7 +150,7 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
         ))}
       </div>
 
-      {error && <p className="text-center text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
+      {error && <p className="text-center text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
 
       <Button tone="mint" full onClick={handleSubmit} disabled={submitting}>
         {submitting ? "저장 중..." : "+ 새싹 추가"}

@@ -41,24 +41,24 @@ export function StoreWorkWidget({ storeSlug, tasks }: { storeSlug: string; tasks
 
   return (
     <Card className="flex flex-col items-center gap-2 !p-4 text-center">
-      <p className="text-[12px] font-bold text-[var(--color-navy-soft)]">오늘의 알바</p>
-      <p className="text-[15px] font-extrabold text-[var(--color-navy)]">{task}</p>
+      <p className="text-[13px] font-bold text-[var(--color-navy-soft)]">오늘의 알바</p>
+      <p className="text-[16px] font-extrabold text-[var(--color-navy)]">{task}</p>
 
       {result ? (
         <div>
-          <p className="text-[13px] font-bold text-[var(--color-mint-deep)]">+${result.reward} 받았어요!</p>
-          {result.propReward && <p className="text-[11px] text-[var(--color-navy-soft)]">보너스: {result.propReward.name}</p>}
+          <p className="text-[14px] font-bold text-[var(--color-mint-deep)]">+${result.reward} 받았어요!</p>
+          {result.propReward && <p className="text-[12px] text-[var(--color-navy-soft)]">보너스: {result.propReward.name}</p>}
         </div>
       ) : (
         <button
           onClick={handleTap}
           disabled={submitting}
-          className="mt-1 rounded-full bg-[var(--color-coral)] px-6 py-2.5 text-[13px] font-bold text-white active:scale-95"
+          className="mt-1 rounded-full bg-[var(--color-coral)] px-6 py-2.5 text-[14px] font-bold text-white active:scale-95"
         >
           {submitting ? "처리 중..." : `탭하기 (${taps}/${WORK_TAP_TARGET})`}
         </button>
       )}
-      {error && <p className="text-[11px] font-bold text-[var(--color-danger)]">{error}</p>}
+      {error && <p className="text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
     </Card>
   );
 }
