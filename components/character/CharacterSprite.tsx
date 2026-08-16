@@ -2,7 +2,17 @@ import Image from "next/image";
 import type { CharacterAppearance, HairStyle, OutfitStyle } from "@/lib/domain/characterPresets";
 import type { ChildGender, ChildStage, CharacterKind } from "@/lib/domain/types";
 import { PORTRAIT_SIZE, characterPortraitKeyFor, characterPortraitSrc, characterOutfitMaskSrc } from "@/lib/domain/characterPortrait";
-import { OUTFIT_CANVAS_W, OUTFIT_CANVAS_H, NECK_Y, HEAD_WIDTH, HEAD_OVERLAP, HEAD_SIZE, headSrc, outfitFullSrc } from "@/lib/domain/characterFullBody";
+import {
+  OUTFIT_CANVAS_W,
+  OUTFIT_CANVAS_H,
+  NECK_Y,
+  HEAD_WIDTH,
+  HEAD_OVERLAP,
+  HEAD_SIZE,
+  HEIGHT_SCALE_BY_KIND,
+  headSrc,
+  outfitFullSrc,
+} from "@/lib/domain/characterFullBody";
 
 interface CharacterSpriteProps {
   appearance: CharacterAppearance;
@@ -291,33 +301,41 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const headKey = characterPortraitKeyFor(portraitKey);
     const headDims = HEAD_SIZE[headKey];
     const scale = size / OUTFIT_CANVAS_H;
+    // 바깥 박스는 항상 같은 크기(레이아웃 자리 유지)로 두고, 안쪽 캐릭터만 kindScale로
+    // 줄여서 하단(발 기준선) 정렬 — 해남/해녀가 같은 바닥선에 서 있으면서 키 차이만 남는다.
     const width = Math.round(OUTFIT_CANVAS_W * scale);
     const height = Math.round(OUTFIT_CANVAS_H * scale);
-    const headRenderW = HEAD_WIDTH * scale;
+    const kindScale = HEIGHT_SCALE_BY_KIND[kind] ?? 1;
+    const innerScale = scale * kindScale;
+    const innerWidth = OUTFIT_CANVAS_W * innerScale;
+    const innerHeight = OUTFIT_CANVAS_H * innerScale;
+    const headRenderW = HEAD_WIDTH * innerScale;
     const headRenderH = (headDims.h / headDims.w) * headRenderW;
-    const headLeft = ((OUTFIT_CANVAS_W - HEAD_WIDTH) / 2) * scale;
-    const headTop = (NECK_Y + HEAD_OVERLAP) * scale - headRenderH;
+    const headLeft = (OUTFIT_CANVAS_W - HEAD_WIDTH) / 2 * innerScale;
+    const headTop = (NECK_Y + HEAD_OVERLAP) * innerScale - headRenderH;
 
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
-        <Image
-          src={outfitFullSrc(a.outfitAssetKey)}
-          alt=""
-          aria-hidden
-          width={OUTFIT_CANVAS_W}
-          height={OUTFIT_CANVAS_H}
-          unoptimized
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
-        />
-        <Image
-          src={headSrc(portraitKey)}
-          alt=""
-          aria-hidden
-          width={headDims.w}
-          height={headDims.h}
-          unoptimized
-          style={{ position: "absolute", left: headLeft, top: headTop, width: headRenderW, height: headRenderH }}
-        />
+        <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}>
+          <Image
+            src={outfitFullSrc(a.outfitAssetKey)}
+            alt=""
+            aria-hidden
+            width={OUTFIT_CANVAS_W}
+            height={OUTFIT_CANVAS_H}
+            unoptimized
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+          />
+          <Image
+            src={headSrc(portraitKey)}
+            alt=""
+            aria-hidden
+            width={headDims.w}
+            height={headDims.h}
+            unoptimized
+            style={{ position: "absolute", left: headLeft, top: headTop, width: headRenderW, height: headRenderH }}
+          />
+        </div>
       </div>
     );
   }

@@ -11,6 +11,15 @@ export const NECK_Y = 140;
 export const HEAD_WIDTH = 190;
 export const HEAD_OVERLAP = 10;
 
+// 해남/해녀를 같은 세계관 스케일로 맞추되, 해녀가 살짝 더 작아 보이도록 하는 키 보정.
+// 발 기준선(바닥)은 그대로 두고 위쪽만 줄어들도록 렌더링 쪽에서 하단 정렬로 적용한다
+// (CharacterSprite 참고) — 의상도 체형과 한 장으로 묶인 스프라이트라 자동으로 같이 줄어든다.
+export const HEIGHT_SCALE_BY_KIND: Record<string, number> = {
+  haenyeo: 0.94,
+  haenam: 1,
+  child: 1,
+};
+
 // public/images/character/base/head/*.png 실측 크기(스크립트로 생성, 8종 고정값).
 export const HEAD_SIZE: Record<string, { w: number; h: number }> = {
   haenyeo: { w: 346, h: 425 },
