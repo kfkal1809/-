@@ -54,20 +54,28 @@ export interface PlacementDef {
   defaultScale: number;
   minScale: number;
   maxScale: number;
+  // 기존 에셋이 실제로 그려진 단일 시점 — 방향별 스프라이트가 없어서 "전환 가능한 방향"이
+  // 아니라 "이 그림은 원래 이 방향으로 그려졌다"는 정보용 값이다. 새 방향 에셋이 생기기
+  // 전까지는 CSS rotate로 다른 방향인 척 만들지 않는다(방향이 다르면 원근/광원이 깨짐).
+  drawnFacing: "front-left" | "front-right" | "front" | "wall";
+  // scaleX(-1) 좌우반전만으로 자연스럽게 방향을 바꿀 수 있는지. 침대/수납장/가전처럼 손잡이·
+  // 헤드보드 등 좌우 비대칭 디테일이 있을 가능성이 높은 카테고리는 기본 false로 두고, 실제로
+  // 확인된 특정 아이템만 SKU_OVERRIDES에서 true로 뒤집는다.
+  mirrorSafe: boolean;
 }
 
 export type Category = "bed" | "table" | "seat" | "storage" | "rug" | "lamp" | "wallDeco" | "smallDeco" | "appliance";
 
 const CATEGORY_DEFAULTS: Record<Category, PlacementDef> = {
-  bed: { placementType: "floor", baseHeightFrac: 0.34, defaultScale: 1, minScale: 0.8, maxScale: 1.3 },
-  table: { placementType: "floor", baseHeightFrac: 0.26, defaultScale: 1, minScale: 0.75, maxScale: 1.35 },
-  seat: { placementType: "floor", baseHeightFrac: 0.24, defaultScale: 1, minScale: 0.75, maxScale: 1.35 },
-  storage: { placementType: "floor", baseHeightFrac: 0.36, defaultScale: 1, minScale: 0.8, maxScale: 1.3 },
-  appliance: { placementType: "floor", baseHeightFrac: 0.3, defaultScale: 1, minScale: 0.8, maxScale: 1.3 },
-  rug: { placementType: "rug", baseHeightFrac: 0.16, defaultScale: 1, minScale: 0.85, maxScale: 1.4 },
-  lamp: { placementType: "floor", baseHeightFrac: 0.3, defaultScale: 1, minScale: 0.8, maxScale: 1.3 },
-  wallDeco: { placementType: "wall", baseHeightFrac: 0.18, defaultScale: 1, minScale: 0.7, maxScale: 1.4 },
-  smallDeco: { placementType: "floor", baseHeightFrac: 0.14, defaultScale: 1, minScale: 0.7, maxScale: 1.6 },
+  bed: { placementType: "floor", baseHeightFrac: 0.34, defaultScale: 1, minScale: 0.8, maxScale: 1.3, drawnFacing: "front-left", mirrorSafe: false },
+  table: { placementType: "floor", baseHeightFrac: 0.26, defaultScale: 1, minScale: 0.75, maxScale: 1.35, drawnFacing: "front-right", mirrorSafe: true },
+  seat: { placementType: "floor", baseHeightFrac: 0.24, defaultScale: 1, minScale: 0.75, maxScale: 1.35, drawnFacing: "front-right", mirrorSafe: true },
+  storage: { placementType: "floor", baseHeightFrac: 0.36, defaultScale: 1, minScale: 0.8, maxScale: 1.3, drawnFacing: "front-right", mirrorSafe: false },
+  appliance: { placementType: "floor", baseHeightFrac: 0.3, defaultScale: 1, minScale: 0.8, maxScale: 1.3, drawnFacing: "front-right", mirrorSafe: false },
+  rug: { placementType: "rug", baseHeightFrac: 0.16, defaultScale: 1, minScale: 0.85, maxScale: 1.4, drawnFacing: "front", mirrorSafe: true },
+  lamp: { placementType: "floor", baseHeightFrac: 0.3, defaultScale: 1, minScale: 0.8, maxScale: 1.3, drawnFacing: "front", mirrorSafe: true },
+  wallDeco: { placementType: "wall", baseHeightFrac: 0.18, defaultScale: 1, minScale: 0.7, maxScale: 1.4, drawnFacing: "wall", mirrorSafe: true },
+  smallDeco: { placementType: "floor", baseHeightFrac: 0.14, defaultScale: 1, minScale: 0.7, maxScale: 1.6, drawnFacing: "front", mirrorSafe: true },
 };
 
 // [정규식, 카테고리] 순서대로 첫 매치를 사용. 침대/러그처럼 넓은 이름 매치가 우선되도록 구체적인

@@ -300,7 +300,11 @@ export function CabinEditor({
             <IconBtn label="회전" onClick={() => updateSelected({ rotation: selected.rotation + 15 })}>
               <RotateRightIcon />
             </IconBtn>
-            <IconBtn label="반전" onClick={() => updateSelected({ flipX: !selected.flipX })}>
+            <IconBtn
+              label="반전"
+              disabled={!selectedDef.mirrorSafe}
+              onClick={() => updateSelected({ flipX: !selected.flipX })}
+            >
               <FlipIcon />
             </IconBtn>
             <IconBtn
@@ -361,17 +365,20 @@ function IconBtn({
   label,
   onClick,
   danger,
+  disabled,
 }: {
   children: ReactNode;
   label: string;
   onClick: () => void;
   danger?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       aria-label={label}
-      className={`flex flex-col items-center gap-0.5 rounded-2xl px-2.5 py-1.5 text-[10px] font-bold ${
+      className={`flex flex-col items-center gap-0.5 rounded-2xl px-2.5 py-1.5 text-[10px] font-bold disabled:opacity-30 ${
         danger ? "bg-[var(--color-danger)]/10 text-[var(--color-danger)]" : "bg-[var(--color-sky)] text-[var(--color-navy)]"
       }`}
     >

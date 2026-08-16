@@ -82,3 +82,28 @@ export function clampToZone(x: number, y: number, bounds: ZoneBounds): { x: numb
     y: Math.min(bounds.yMax, Math.max(bounds.yMin, y)),
   };
 }
+
+// room-base.png 오른쪽 벽의 실제 문 위치를 픽셀 단위로 측정해서 뽑은 x 범위(문+여닫이 여유
+// 포함). 기본 배치를 고를 때 이 구간을 피해서 가구가 문을 가리지 않게 한다.
+export const DOOR_X_RANGE = { min: 0.76, max: 0.93 };
+
+// floor 폴리곤 위 한 점이 실제로 폴리곤 안에 있는지 검사(ray casting) — 바운딩 박스보다
+// 정확하게 "바닥 위에 서 있는지"를 확인할 때 쓴다(기본 배치 좌표를 고를 때 사용).
+export function isInsideFloor(x: number, y: number): boolean {
+  const points = ROOM_CLIP.floor
+    .replace(/^polygon\(/, "")
+    .replace(/\)$/, "")
+    .split(",")
+    .map((pair) => {
+      const [px, py] = pair.trim().split(/\s+/).map((v) => parseFloat(v) / 100);
+      return [px, py] as [number, number];
+    });
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const [xi, yi] = points[i];
+    const [xj, yj] = points[j];
+    const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}

@@ -59,8 +59,8 @@ const DEMO: CabinData = {
   ],
   placedItems: [
     { id: "f1", sku: "furniture_bed", name: "침대", x: 0.22, y: 0.62, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
-    { id: "f2", sku: "furniture_desk", name: "책상", x: 0.76, y: 0.56, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
-    { id: "f6", sku: "furniture_chair", name: "의자", x: 0.76, y: 0.72, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
+    { id: "f2", sku: "furniture_desk", name: "책상", x: 0.64, y: 0.56, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
+    { id: "f6", sku: "furniture_chair", name: "의자", x: 0.64, y: 0.72, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
     { id: "f3", sku: "furniture_rug", name: "러그", x: 0.46, y: 0.84, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
     { id: "f4", sku: "interior_plant_side_table", name: "화분 사이드테이블", x: 0.1, y: 0.76, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
     { id: "f5", sku: "interior_lighthouse_frame", name: "등대 액자", x: 0.5, y: 0.18, scale: 1, rotation: 0, flipX: false, zIndex: 0 },

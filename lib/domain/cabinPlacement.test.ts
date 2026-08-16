@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getPlacementDef, zoneBoundsFor, depthOf } from "@/lib/domain/cabinPlacement";
-import { clampToZone, ROOM_ZONES, WALL_BOUNDS } from "@/lib/domain/cabinDecor";
+import { clampToZone, isInsideFloor, DOOR_X_RANGE, ROOM_ZONES, WALL_BOUNDS } from "@/lib/domain/cabinDecor";
 
 describe("getPlacementDef", () => {
   it("침대류는 floor에, 넓고 크게 렌더된다", () => {
@@ -86,4 +86,44 @@ describe("depthOf", () => {
   it("멀리 떨어진 y차이는 통상적인 zIndex 조정 폭(수 회 클릭)으로 뒤집히지 않는다", () => {
     expect(depthOf(0.1, 5)).toBeLessThan(depthOf(0.9, 0));
   });
+});
+
+describe("isInsideFloor", () => {
+  it("방 중앙 앞쪽(러그 자리)은 바닥 폴리곤 안에 있다", () => {
+    expect(isInsideFloor(0.46, 0.86)).toBe(true);
+  });
+
+  it("바운딩 박스 안이지만 실제 육각형 폴리곤 밖(뒤쪽 모서리 근처)인 점은 걸러낸다", () => {
+    // ROOM_ZONES.floor 바운딩 박스 안에 있지만, 뒤쪽으로 좁아지는 실제 폴리곤 밖의 점.
+    expect(isInsideFloor(0.1, 0.5)).toBe(false);
+  });
+
+  it("천장/벽 쪽 점은 바닥이 아니다", () => {
+    expect(isInsideFloor(0.5, 0.1)).toBe(false);
+  });
+});
+
+// 기본 선실 배치(app/api/onboarding/complete/route.ts DEFAULT_FURNITURE_LAYOUT,
+// lib/game/cabinData.ts DEMO)가 실제 바닥 폴리곤 안에, 문 앞을 피해서 놓이는지 회귀 검증.
+// 좌표를 여기 값과 동기화해서 유지한다.
+describe("기본 선실 배치 좌표", () => {
+  const floorItems: { name: string; x: number; y: number }[] = [
+    { name: "침대", x: 0.22, y: 0.65 },
+    { name: "책상", x: 0.68, y: 0.58 },
+    { name: "의자", x: 0.68, y: 0.72 },
+    { name: "냉장고", x: 0.56, y: 0.5 },
+    { name: "스탠드조명", x: 0.16, y: 0.7 },
+    { name: "러그", x: 0.46, y: 0.86 },
+  ];
+
+  it.each(floorItems)("$name는 실제 바닥 폴리곤 안에 있다", ({ x, y }) => {
+    expect(isInsideFloor(x, y)).toBe(true);
+  });
+
+  it.each(floorItems.filter((i) => i.name === "책상" || i.name === "의자" || i.name === "냉장고"))(
+    "$name는 문 앞 구간(DOOR_X_RANGE)을 피한다",
+    ({ x }) => {
+      expect(x).toBeLessThan(DOOR_X_RANGE.min);
+    }
+  );
 });
