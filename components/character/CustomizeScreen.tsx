@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { Card } from "@/components/ui/Card";
 import { playSfx } from "@/lib/audio/audioManager";
@@ -40,6 +41,11 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
       <div className="text-center">
         <h1 className="text-lg font-extrabold text-[var(--color-navy)]">{data.nickname} 꾸미기</h1>
         <p className="text-[12px] text-[var(--color-navy-soft)]">{data.roleLabel}</p>
+        {data.canEdit && (
+          <Link href={`/stores/clothing?characterId=${data.characterId}`} className="mt-1 inline-block text-[12px] font-bold text-[var(--color-tab-active)]">
+            옷가게에서 옷 사러 가기 ›
+          </Link>
+        )}
       </div>
 
       <div className="flex justify-center">

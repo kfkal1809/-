@@ -682,3 +682,67 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
   Playwright 스크린샷 확인 — 전체 그리드, 카테고리 필터, 상품 선택(파란 테두리+체크),
   미리보기 쇼룸 반영까지 정상 동작 확인, `pageerror` 0건. `tsc`/`eslint`/`vitest run`(63개)/
   `next build` 전부 통과.
+
+## 옷가게 (피팅룸)
+
+- 사용자가 준 디자인 시안 기준 신규 구현. 핵심은 "상품을 누르면 구매 전에도 실제 캐릭터에게
+  즉시 입혀본다" — 별도 캐릭터 렌더러를 새로 만들지 않고 기존 `CharacterSprite`를 그대로
+  재사용했다(`components/store/ClothingFittingRoom.tsx`). `CharacterSprite`는 이전 세션에
+  이미 `HEAD_MARGIN_TOP` 보정으로 "size = 머리~발끝 실제 높이"가 outfitAssetKey/
+  fullPortraitKey/구버전 렌더링 방식 모두에서 동일하게 나오도록 고쳐져 있어서, size를
+  고정해두는 것만으로 옷을 계속 갈아입어도 캐릭터 키/발 위치가 흔들리지 않는다(별도 CSS
+  보정 없이 해녀/해남(항해사)/해남(기관사)/새싹 4종 × 옷 4~5벌씩 클릭해서 확인, 회귀 없음).
+- **previewAppearance / equippedAppearance 분리**: 상품 클릭 → 기존
+  `lib/domain/itemAppearance.ts`의 `ITEM_APPEARANCE_PATCH[sku]`를 클라이언트에서 그대로
+  재사용해 `previewAppearance` state에만 병합(서버 호출 0회, DB 미변경). "착용하기"를 눌러야
+  기존 `POST /api/character/equip`(character_managers 권한 검증 + slot upsert +
+  appearance_json 병합, 이미 있던 라우트 그대로 재사용)을 호출해 실제로 저장한다. 구매는
+  기존 `POST /api/store/purchase`를 그대로 재사용(storeSlug: "clothing"). 상점을 나가면
+  저장 안 한 preview는 그냥 로컬 state라 자동 폐기됨(DB에 안 남음).
+- **previewId 관리(Effect 없이)**: React 공식 "adjusting state when a prop changes" 패턴으로
+  렌더 중에 이전 `data`와 비교해서 products/balance만 항상 동기화하고, **캐릭터를 바꿨을
+  때만** preview를 리셋한다 — 구매 성공 후 호출하는 `router.refresh()`가 미리보기 중이던
+  미구매 옷을 원래 착용 상태로 되돌리는 버그를 방지(리뷰 중 `react-hooks/set-state-in-effect`
+  린트 규칙에 걸려서 useEffect 대신 이 패턴으로 다시 작성함).
+- **캐릭터 호환성**: 새 metadata 컬럼을 추가하지 않고 기존 sku 네이밍 규칙
+  (`haenyeo_*`/`haenam_deck_*`/`haenam_engine_*`/`child_*`, 이미 `item_catalog.subcategory`와
+  온보딩 스타터 지급 로직이 쓰던 값과 동일)을 그대로 호환 키로 사용
+  (`lib/domain/clothingStoreCategories.ts`의 `compatKeyFor`). 캐릭터를 바꾸면 그 캐릭터의
+  호환 키에 맞는 상품만 다시 필터링된다.
+- **캐릭터 전환**: `/stores/clothing?characterId=...` 쿼리 파라미터로 서버 컴포넌트가 다시
+  데이터를 읽어오게 했다(디자인의 좌우 화살표를 캐릭터 전환에 사용). 다른 사용자가 관리하지
+  않는 캐릭터의 appearance는 애초에 `character_managers` 기반으로 목록에 안 뜨고,
+  저장 라우트(`/api/character/equip`)도 서버에서 다시 한번 권한을 검증한다(기존 로직 그대로).
+- **탭 매핑**: 디자인의 7개 탭(전체/상의/하의/원피스/모자/신발/악세사리)을 그대로 유지하되,
+  현재 카탈로그가 지원 안 하는 하의/신발은 가짜 데이터를 채우지 않고 항상 빈 상태로 둔다.
+  원피스는 `outfit` 카테고리 중 sku에 "dress"가 들어간 것만 분리해서(진짜 데이터 기반, 하드코딩
+  아님) 상의와 구분했다.
+- **⚠️ 알아낸 기존 시스템의 한계(정직하게 기록)**: 옷가게 작업 중 확인한 것 — `hat`/
+  `accessory` appearance 필드는 `CharacterSprite`의 **구버전 SVG 벡터 렌더링 경로에서만**
+  실제로 그려지고(`Hat`/`Accessory` 컴포넌트), 지금 게임이 실제로 쓰는 일러스트 합성 렌더링
+  경로(`kind` prop을 넘겨서 쓰는 outfitAssetKey/fullPortraitKey 방식, 이 프로젝트의 모든
+  실제 캐릭터가 이 경로를 씀)에는 모자/소품을 합성하는 이미지 레이어가 아예 없다 —
+  `CustomizeScreen`에서도 이미 같은 제약이 있던 기존 문제이고 옷가게가 새로 만든 버그는
+  아니다. 그래서 옷가게에서 모자(항해모/안전모)·소품(스패너)을 구매/착용하는 기능 자체는
+  정상 동작하고(appearance_json에 정확히 저장됨, `character_equipment`에도 정확히 반영됨)
+  가격도 매겨져 있지만, 캐릭터 위에 시각적으로는 아직 안 보인다. "별도 캐릭터 렌더러를 새로
+  만들지 말라"는 지시를 지키기 위해 이번 작업에서는 이 렌더링 갭을 직접 고치지 않았다 —
+  고치려면 8종 체형별 모자/소품 이미지 앵커링을 `characterFullBody.ts`에 새로 추가하는
+  별도 작업이 필요해서, 다음 단계 후보로 남겨둔다.
+- **컴포넌트**: `ClothingStoreScreen`(오케스트레이터) / `ClothingFittingRoom`(캐릭터 미리보기 +
+  좌우 캐릭터 전환) / `ClothingTabs` / `ClothingProductCard`(NEW·보유중·착용됨 표시) /
+  `ClothingStoreDetail`(보유/미보유에 따라 착용하기·구매하기 버튼 상태 분기) — 전부 실제 DOM
+  컴포넌트, 디자인 이미지를 배경으로 안 씀. `BackButton`은 가구상점과 공유.
+- **마이그레이션(0009_clothing_store.sql, 미적용)**: `stores`에 `slug='clothing'` row 추가 +
+  기존 hair를 제외한 outfit/hat/accessory 카탈로그 20종을 `store_products`로 연결 — 이
+  아이템들은 이미 실제 가격이 매겨져 있어서(`buy_price`) 별도 가격 조정 없이 그대로 연결만
+  했다. 헤어 5종은 참고 디자인에 대응 탭이 없어서 이번 옷가게 판매 목록에는 넣지 않음
+  (기존 `CustomizeScreen`에서 계속 착용 가능).
+- **진입점**: `/stores/clothing` 신규 라우트. `/character/[id]/customize`(내가 관리하는
+  캐릭터일 때만)와 `/inventory` 헤더에 링크 추가.
+- **검증**: 임시 `app/(dev)/clothing-store-preview`(해녀/해남 항해사/해남 기관사/새싹 4종
+  목데이터, 커밋 전 삭제)로 Playwright 확인 — 4종 캐릭터 각각 옷 4~5벌 연속 클릭해도 머리
+  크기/목 연결/발 위치/캐릭터 전체 높이 불변, 미보유 아이템 클릭 시 DB 변경 없이 즉시
+  미리보기, 보유+착용 아이템은 "착용중" 비활성 버튼, 하의/신발 탭은 정직한 빈 상태 문구
+  확인. `/cabin`·`/home` 등 기존 CharacterSprite 사용 화면도 스크린샷으로 회귀 없음 확인.
+  `pageerror` 0건. `tsc`/`eslint`/`vitest run`(63개)/`next build` 전부 통과.
