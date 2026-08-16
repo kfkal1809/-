@@ -10,7 +10,13 @@ export function BottomNav() {
 
   return (
     <nav
-      className="sticky bottom-0 z-30 mx-auto flex w-full max-w-[460px] items-stretch justify-between border-t-2 border-white bg-white/95 px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 backdrop-blur"
+      className="sticky bottom-0 z-30 mx-auto flex w-full max-w-[460px] items-stretch justify-between px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-6"
+      style={{
+        backgroundImage: "url(/images/home/wave-navbar-bg.png)",
+        backgroundSize: "100% 100%",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "top",
+      }}
       aria-label="하단 메뉴"
     >
       {BOTTOM_TABS.map((tab) => {
@@ -21,13 +27,12 @@ export function BottomNav() {
             href={tab.href}
             className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[11px] font-bold"
           >
-            <GameIcon name={tab.icon as never} size={30} withBadge={false} />
-            <span className={active ? "text-[var(--color-tab-active)]" : "text-[var(--color-tab-inactive)]"}>
-              {tab.label}
-            </span>
             <span
-              className={`h-1 w-1 rounded-full ${active ? "bg-[var(--color-tab-active)]" : "bg-transparent"}`}
-            />
+              className={`flex h-9 w-9 items-center justify-center rounded-full ${active ? "bg-white shadow-[0_2px_8px_rgba(15,33,54,0.25)]" : ""}`}
+            >
+              <GameIcon name={tab.icon as never} size={26} withBadge={false} />
+            </span>
+            <span className={active ? "text-white" : "text-white/70"}>{tab.label}</span>
           </Link>
         );
       })}

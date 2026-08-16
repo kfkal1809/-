@@ -51,8 +51,8 @@ export function VoyageInfoCard({
 
   return (
     <div className="relative pt-4">
-      <div className="absolute left-1/2 top-0 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full bg-[var(--color-tab-active)] px-5 py-1.5 shadow-[0_4px_12px_rgba(36,54,90,0.22)]">
-        <svg width="15" height="12" viewBox="0 0 26 20" aria-hidden className="text-white">
+      <div className="absolute left-1/2 top-0 z-10 flex w-max -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-[var(--color-tab-active)] px-6 py-2 shadow-[0_4px_12px_rgba(36,54,90,0.22)]">
+        <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
           <path
             d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
             stroke="currentColor"
@@ -61,8 +61,8 @@ export function VoyageInfoCard({
             strokeLinecap="round"
           />
         </svg>
-        <span className="text-[12px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
-        <svg width="15" height="12" viewBox="0 0 26 20" aria-hidden className="text-white">
+        <span className="text-[13px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
+        <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
           <path
             d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
             stroke="currentColor"
@@ -73,20 +73,32 @@ export function VoyageInfoCard({
         </svg>
       </div>
 
-      <div className="relative overflow-hidden rounded-[26px] border-2 border-white bg-gradient-to-b from-[#bfe6ff] to-[#eaf6ff] pb-4 pt-7 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
+      <div className="relative overflow-hidden rounded-[28px] border-2 border-white bg-gradient-to-b from-[#bfe6ff] to-[#eaf6ff] pb-5 pt-8 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
+        {!attended && (
+          <Image
+            src="/images/home/deco-sparkle-big.png"
+            alt=""
+            aria-hidden
+            width={440}
+            height={490}
+            unoptimized
+            className="pointer-events-none absolute right-[86px] top-1 z-10 w-6 animate-pulse"
+            style={{ height: "auto" }}
+          />
+        )}
         <button
           onClick={handleBoard}
           disabled={attended || loading}
-          className="absolute right-3 top-4 z-10 flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-dashed border-[var(--color-tab-active)] bg-white/90 text-center shadow-[0_4px_12px_rgba(36,54,90,0.14)] disabled:opacity-70"
+          className="absolute right-3 top-4 z-10 flex h-[72px] w-[72px] flex-col items-center justify-center rounded-full border-2 border-dashed border-[var(--color-tab-active)] bg-white/90 text-center shadow-[0_4px_12px_rgba(36,54,90,0.14)] disabled:opacity-70"
         >
           {attended ? (
-            <span className="text-[10px] font-extrabold leading-tight text-[var(--color-navy)]">
+            <span className="text-[11px] font-extrabold leading-tight text-[var(--color-navy)]">
               출항
               <br />
               완료
             </span>
           ) : (
-            <span className="text-[10px] font-extrabold leading-tight text-[var(--color-tab-active)]">
+            <span className="text-[11px] font-extrabold leading-tight text-[var(--color-tab-active)]">
               출항하기
               <br />
               +$1
@@ -102,7 +114,7 @@ export function VoyageInfoCard({
             width={2172}
             height={664}
             unoptimized
-            className="pointer-events-none absolute inset-x-4 bottom-6 h-6 w-[calc(100%-2rem)] opacity-95"
+            className="pointer-events-none absolute inset-x-4 bottom-7 h-7 w-[calc(100%-2rem)] opacity-95"
             style={{ objectFit: "fill" }}
           />
           <Image
@@ -112,7 +124,7 @@ export function VoyageInfoCard({
             width={1036}
             height={1170}
             unoptimized
-            className="pointer-events-none absolute bottom-3 left-3 w-[46px]"
+            className="pointer-events-none absolute bottom-4 left-3 w-[58px]"
             style={{ height: "auto" }}
           />
           <Image
@@ -122,14 +134,14 @@ export function VoyageInfoCard({
             width={997}
             height={1395}
             unoptimized
-            className="pointer-events-none absolute bottom-3 right-4 w-[38px]"
+            className="pointer-events-none absolute bottom-4 right-4 w-[48px]"
             style={{ height: "auto" }}
           />
 
-          <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-2">
+          <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-3">
             <div className="flex flex-col items-center">
-              <CharacterSprite appearance={voyage.haenyeoAppearance} kind="haenyeo" size={92} />
-              <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-navy)]">
+              <CharacterSprite appearance={voyage.haenyeoAppearance} kind="haenyeo" size={115} />
+              <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[12px] font-bold text-[var(--color-navy)]">
                 해녀 {voyage.haenyeoName}
               </p>
             </div>
@@ -140,29 +152,29 @@ export function VoyageInfoCard({
               width={623}
               height={490}
               unoptimized
-              className="pointer-events-none mb-7 w-4"
+              className="pointer-events-none mb-9 w-5"
               style={{ height: "auto" }}
             />
             <div className="flex flex-col items-center">
-              <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={92} />
-              <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-navy)]">
+              <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={115} />
+              <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[12px] font-bold text-[var(--color-navy)]">
                 해남 {voyage.haenamName}
               </p>
             </div>
           </div>
         </Link>
 
-        <div className="relative mx-4 mt-4 flex items-stretch justify-between gap-2 rounded-2xl bg-white/85 p-3">
+        <div className="relative mx-4 mt-5 flex items-stretch justify-between gap-2 rounded-2xl bg-white/85 p-4">
           <div className="flex-1 text-center">
-            <p className="text-[10px] font-bold text-[var(--color-navy-soft)]">승선</p>
-            <p className="text-[15px] font-extrabold text-[var(--color-coral)]">
+            <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">승선</p>
+            <p className="text-[18px] font-extrabold text-[var(--color-coral)]">
               {voyage.boardedDays !== null ? `D+${voyage.boardedDays}` : "정보 없음"}
             </p>
           </div>
           <div className="w-px bg-[var(--color-navy)]/10" />
           <div className="flex-1 text-center">
-            <p className="text-[10px] font-bold text-[var(--color-navy-soft)]">하선</p>
-            <p className="text-[15px] font-extrabold text-[var(--color-tab-active)]">
+            <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">하선</p>
+            <p className="text-[18px] font-extrabold text-[var(--color-tab-active)]">
               {voyage.signoffDays !== null ? `D-${voyage.signoffDays}` : "정보 없음"}
             </p>
           </div>

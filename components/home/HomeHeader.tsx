@@ -36,6 +36,46 @@ export function HomeHeader({ balance }: { balance: number }) {
         className="pointer-events-none absolute right-[4%] top-0 w-16"
         style={{ height: "auto" }}
       />
+      <Image
+        src="/images/home/cloud-1.png"
+        alt=""
+        aria-hidden
+        width={559}
+        height={310}
+        unoptimized
+        className="pointer-events-none absolute left-[2%] top-[26%] w-14 opacity-90"
+        style={{ height: "auto" }}
+      />
+      <Image
+        src="/images/home/deco-sparkle-small.png"
+        alt=""
+        aria-hidden
+        width={370}
+        height={326}
+        unoptimized
+        className="pointer-events-none absolute left-[46%] top-[6%] w-4"
+        style={{ height: "auto" }}
+      />
+      <Image
+        src="/images/home/deco-dot-blue.png"
+        alt=""
+        aria-hidden
+        width={244}
+        height={238}
+        unoptimized
+        className="pointer-events-none absolute left-[8%] top-[42%] w-2.5"
+        style={{ height: "auto" }}
+      />
+      <Image
+        src="/images/home/deco-dot-blue.png"
+        alt=""
+        aria-hidden
+        width={244}
+        height={238}
+        unoptimized
+        className="pointer-events-none absolute left-[52%] top-[16%] w-2"
+        style={{ height: "auto" }}
+      />
 
       <Image
         src="/images/home/lighthouse.png"
