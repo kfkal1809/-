@@ -9,7 +9,7 @@ export type EquipSlot = "hair" | "outfit" | "hat" | "accessory";
 export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>> = {
   // 해녀 옷
   haenyeo_outfit_overalls: { outfit: "haenyeo_overalls", outfitAssetKey: "haenyeo_outfit_02" },
-  haenyeo_outfit_dress: { outfit: "dress", outfitColor: "#f2b8c6", outfitAssetKey: "haenyeo_outfit_17" },
+  haenyeo_outfit_dress: { outfit: "dress", outfitColor: "#f2b8c6", outfitAssetKey: "haenyeo_outfit_17", fullPortraitKey: "haenyeo_dress_02" },
   haenyeo_outfit_sweatshirt: { outfit: "sweatshirt", outfitColor: "#e9d9c3", outfitAssetKey: "haenyeo_outfit_06" },
   haenyeo_outfit_pajama: { outfit: "pajama", outfitColor: "#cfe0ff", outfitAssetKey: "haenyeo_outfit_19" },
   // 해녀 헤어

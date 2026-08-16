@@ -33,6 +33,9 @@ export interface CharacterAppearance {
   // 실사 일러스트(kind가 있는 CharacterSprite) 전용: 목 아래 전신 의상 스프라이트 키.
   // public/images/character/outfit_full/<key>.png — 없으면 기존 색상 틴트 방식으로 폴백.
   outfitAssetKey?: string | null;
+  // 실사 일러스트 전용, outfitAssetKey보다 우선: 기본 체형 원본 위에 상의/원피스를 얹고
+  // 신발을 발 위치에 앵커링해 만든 완성된 전신 이미지 키(dress_full/<key>.png).
+  fullPortraitKey?: string | null;
 }
 
 const BASE: CharacterAppearance = {

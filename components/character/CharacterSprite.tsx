@@ -12,6 +12,7 @@ import {
   HEIGHT_SCALE_BY_KIND,
   headSrc,
   outfitFullSrc,
+  dressFullSrc,
 } from "@/lib/domain/characterFullBody";
 
 interface CharacterSpriteProps {
@@ -293,6 +294,31 @@ function Accessory({ style, cx, y }: { style: string; cx: number; y: number }) {
 }
 
 export function CharacterSprite({ appearance: a, size = 140, className, flip, kind, childGender, childStage }: CharacterSpriteProps) {
+  if (kind && a.fullPortraitKey) {
+    // 상의/원피스만 그려진 의상(팔다리 없음)을 기본 체형 원본 위에 얹어 미리 합성해둔 완성된
+    // 전신 이미지 — dressFullSrc 자체가 이미 얼굴/팔다리/신발까지 다 포함된 한 장이라 별도
+    // 헤어 레이어가 필요 없다(lib/domain/characterFullBody.ts 참고).
+    const dims = PORTRAIT_SIZE[characterPortraitKeyFor({ kind, childGender, childStage })];
+    const kindScale = HEIGHT_SCALE_BY_KIND[kind] ?? 1;
+    const height = size;
+    const width = Math.round(height * (dims.w / dims.h));
+    const innerHeight = height * kindScale;
+    const innerWidth = width * kindScale;
+    return (
+      <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
+        <Image
+          src={dressFullSrc(a.fullPortraitKey)}
+          alt=""
+          aria-hidden
+          width={dims.w}
+          height={dims.h}
+          unoptimized
+          style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}
+        />
+      </div>
+    );
+  }
+
   if (kind && a.outfitAssetKey) {
     // 목 아래(의상+체형)를 하나의 정규화된 전신 스프라이트로, 목 위(얼굴+헤어)는 모든 의상에
     // 대해 같은 위치에 고정 배치 — 개별 의상마다 팔다리가 이중으로 그려지던 문제를 근본적으로

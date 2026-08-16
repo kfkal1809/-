@@ -39,3 +39,11 @@ export function headSrc(key: CharacterPortraitKey): string {
 export function outfitFullSrc(assetKey: string): string {
   return `/images/character/outfit_full/${assetKey}.png`;
 }
+
+// "드레스 오버레이" 방식(scripts/asset-tools/normalize_dress_overlays.py) — 목 아래 전신
+// 인형이 아니라 상의/원피스만 그려진 의상 세트를, 기본 체형 원본(팔다리 포함) 위에 어깨폭
+// 기준으로 얹고 신발을 발 위치에 따로 앵커링해 만든 "완성된 전신 이미지". outfit_full의
+// 420x512 캔버스와 달리 각 kind의 기본 체형 원본과 동일한 실측 픽셀 크기를 그대로 쓴다.
+export function dressFullSrc(assetKey: string): string {
+  return `/images/character/dress_full/${assetKey}.png`;
+}
