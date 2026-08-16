@@ -51,3 +51,9 @@ export function characterPortraitKeyFor({ kind, childGender, childStage }: Chara
 export function characterPortraitSrc(key: CharacterPortraitKey): string {
   return `/images/character/base/${characterPortraitKeyFor(key)}.png`;
 }
+
+// 흰색 기본 의상(탱크탑+반바지) 영역만 골라낸 마스크 — outfitColor로 물들이는 데 사용.
+// (자세한 생성 방식은 docs/ASSET_PIPELINE.md)
+export function characterOutfitMaskSrc(key: CharacterPortraitKey): string {
+  return `/images/character/base/masks/${characterPortraitKeyFor(key)}_outfit_mask.png`;
+}

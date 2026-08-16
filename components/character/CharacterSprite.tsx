@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { CharacterAppearance, HairStyle, OutfitStyle } from "@/lib/domain/characterPresets";
 import type { ChildGender, ChildStage, CharacterKind } from "@/lib/domain/types";
-import { PORTRAIT_SIZE, characterPortraitKeyFor, characterPortraitSrc } from "@/lib/domain/characterPortrait";
+import { PORTRAIT_SIZE, characterPortraitKeyFor, characterPortraitSrc, characterOutfitMaskSrc } from "@/lib/domain/characterPortrait";
 
 interface CharacterSpriteProps {
   appearance: CharacterAppearance;
@@ -287,17 +287,38 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const dims = PORTRAIT_SIZE[key];
     const height = size;
     const width = Math.round(height * (dims.w / dims.h));
+    const maskSrc = characterOutfitMaskSrc({ kind, childGender, childStage });
     return (
-      <Image
-        src={characterPortraitSrc({ kind, childGender, childStage })}
-        alt=""
-        aria-hidden
-        width={dims.w}
-        height={dims.h}
-        unoptimized
+      <div
         className={className}
-        style={{ width, height, transform: flip ? "scaleX(-1)" : undefined }}
-      />
+        style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}
+      >
+        <Image
+          src={characterPortraitSrc({ kind, childGender, childStage })}
+          alt=""
+          aria-hidden
+          width={dims.w}
+          height={dims.h}
+          unoptimized
+          style={{ width, height, display: "block" }}
+        />
+        {/* 기본 의상(흰 탱크탑+반바지) 자리만 outfitColor로 물들인다 — 헤어/피부는 원본 그대로 */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundColor: a.outfitColor,
+            WebkitMaskImage: `url(${maskSrc})`,
+            maskImage: `url(${maskSrc})`,
+            WebkitMaskSize: "100% 100%",
+            maskSize: "100% 100%",
+            WebkitMaskRepeat: "no-repeat",
+            maskRepeat: "no-repeat",
+            mixBlendMode: "multiply",
+          }}
+        />
+      </div>
     );
   }
 
