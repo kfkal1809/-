@@ -55,12 +55,16 @@
   검증 후 +$1 지급(`app/api/attendance/kakao/{nonce,webhook}`, `lib/kakao/shareAuth.ts`).
   실제 카카오 디벨로퍼스 앱 등록·웹훅 URL 등록은 사용자가 직접 해야 함(계정 필요).
 
-### 캐릭터 레이어 아트 (진행 중)
+### 캐릭터 실제 일러스트 적용 (완료, 커스터마이징 반영은 다음 단계)
 
-- [x] 사용자 제공 원본 시트에서 헤어/의상 90장 크롭 (`public/images/character/**`)
-- [x] 합성 방식 확정 — 얼굴은 헤어 레이어에 이미 포함되어 있어 별도 얼굴 합성 불필요,
-  의상 위에 헤어를 약간 겹쳐 배치하면 됨 (자세한 내용은 `docs/PROGRESS.md`)
-- [ ] `CharacterSprite.tsx`를 이미지 레이어 합성으로 교체하고 전 화면에 반영 (다음 세션)
+- [x] 사용자 제공 "기본 캐릭터 얼굴 및 체형" 8장(해녀/해남/새싹 6종)을 크롭해
+  `public/images/character/base/*.png`로 저장, `CharacterSprite`가 `kind`/`childGender`/
+  `childStage`를 받으면 실제 일러스트를 그리도록 교체(값이 없으면 기존 벡터로 폴백)
+- [x] 오프닝/홈/선실/갑판 Presence/항해일지/승선확인증/캐릭터 커스터마이즈/온보딩 폼까지
+  캐릭터가 나오는 모든 화면에 실제 일러스트 반영
+- [ ] 사용자가 보내준 헤어/의상 낱개 90장(`public/images/character/{haenyeo,haenam,
+  child}/{hair,outfit}/*.png`)을 기본 체형 위에 얹어, 사용자가 커스터마이즈 화면에서 고른
+  헤어/의상이 실제로 반영되게 하기 (지금은 kind+성별+연령대가 같으면 다 같은 그림)
 
 ### 다음 — Sprint 6 (QA/PWA)
 
