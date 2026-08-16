@@ -73,6 +73,14 @@ export async function POST() {
         });
       }
     }
+
+    // 인테리어 소품 100종은 가방에 지급하고 배치는 방꾸미기에서 직접 하도록 둔다.
+    const { data: interiorPack } = await service.from("item_catalog").select("id").eq("subcategory", "interior_pack");
+    if (interiorPack?.length) {
+      await service
+        .from("inventory_items")
+        .insert(interiorPack.map((item) => ({ household_id: householdId, catalog_item_id: item.id, quantity: 1 })));
+    }
   }
 
   if (existingGrant) {
