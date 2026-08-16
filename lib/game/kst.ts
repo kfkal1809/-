@@ -13,7 +13,10 @@ export function daysSinceKstDate(dateStr: string): number {
 }
 
 // "2026년 8월 16일" 형식으로 표시 (승선확인증 등 인쇄용 문구에 사용).
+// dateStr(YYYY-MM-DD)은 이미 KST 기준 날짜이므로, Date 객체의 로컬 getter를 거치지 않고
+// 문자열에서 바로 값을 뽑는다 — 서버가 UTC로 도는 배포 환경(Vercel 기본값)에서
+// new Date(...).getDate() 등을 쓰면 KST 00~09시 사이에 하루 밀려 나오는 버그가 있었음.
 export function formatKoreanDate(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00+09:00");
-  return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return `${y}년 ${m}월 ${d}일`;
 }
