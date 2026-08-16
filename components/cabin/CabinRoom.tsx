@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { GameIcon } from "@/components/icons/GameIcon";
+import { RoomBackground } from "@/components/cabin/RoomBackground";
 import type { CabinData } from "@/lib/game/cabinData";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
@@ -18,8 +19,8 @@ export function CabinRoom({ data }: { data: CabinData }) {
         )}
       </div>
 
-      <div className="relative aspect-[4/5] w-full overflow-hidden rounded-[28px] border-2 border-white bg-gradient-to-b from-[#fff6e8] to-[#ffe9cf] shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
-        <div className="absolute left-1/2 top-4 h-14 w-14 -translate-x-1/2 rounded-full border-4 border-white/80 bg-[#bfe6ff]" />
+      <div className="relative aspect-[1473/909] w-full overflow-hidden rounded-[28px] border-2 border-white shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
+        <RoomBackground wallpaper={data.wallpaper} floor={data.floor} />
 
         {data.placedItems.map((item) => (
           <div
@@ -27,9 +28,9 @@ export function CabinRoom({ data }: { data: CabinData }) {
             className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
             style={{ left: `${item.x * 100}%`, top: `${item.y * 100}%`, transform: `translate(-50%, -50%) rotate(${item.rotation}deg)` }}
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/85 text-[11px] font-bold text-[var(--color-navy)] shadow">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/85 text-[9px] font-bold text-[var(--color-navy)] shadow">
               {itemIconSrc(item.sku) ? (
-                <Image src={itemIconSrc(item.sku)!} alt="" width={40} height={40} unoptimized style={{ width: "88%", height: "88%", objectFit: "contain" }} />
+                <Image src={itemIconSrc(item.sku)!} alt="" width={28} height={28} unoptimized style={{ width: "88%", height: "88%", objectFit: "contain" }} />
               ) : (
                 item.name.slice(0, 2)
               )}
@@ -37,17 +38,17 @@ export function CabinRoom({ data }: { data: CabinData }) {
           </div>
         ))}
 
-        <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-4">
+        <div className="absolute bottom-[6%] left-1/2 flex -translate-x-1/2 gap-3">
           {data.characters.map((c) =>
             data.isOwner ? (
               <Link key={c.id} href={`/character/${c.id}/customize`} className="flex flex-col items-center">
-                <CharacterSprite appearance={c.appearance} kind={c.kind} size={100} />
-                <p className="text-[12px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
+                <CharacterSprite appearance={c.appearance} kind={c.kind} size={70} />
+                <p className="rounded-full bg-white/85 px-2 text-[11px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
               </Link>
             ) : (
               <Link key={c.id} href={`/boarding-pass/${c.id}`} className="flex flex-col items-center">
-                <CharacterSprite appearance={c.appearance} kind={c.kind} size={100} />
-                <p className="text-[12px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
+                <CharacterSprite appearance={c.appearance} kind={c.kind} size={70} />
+                <p className="rounded-full bg-white/85 px-2 text-[11px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
               </Link>
             )
           )}

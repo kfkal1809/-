@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
+import { RoomBackground } from "@/components/cabin/RoomBackground";
+import { WALLPAPER_SWATCHES, FLOOR_SWATCHES } from "@/lib/domain/cabinDecor";
 import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
 
 let tempIdCounter = 0;
@@ -14,10 +16,14 @@ export function CabinEditor({
   spaceId,
   initialPlaced,
   initialUnplaced,
+  initialWallpaper,
+  initialFloor,
 }: {
   spaceId: string | null;
   initialPlaced: PlacedFurniture[];
   initialUnplaced: UnplacedFurniture[];
+  initialWallpaper: string | null;
+  initialFloor: string | null;
 }) {
   const router = useRouter();
   const roomRef = useRef<HTMLDivElement>(null);
@@ -27,6 +33,32 @@ export function CabinEditor({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [wallpaper, setWallpaper] = useState(initialWallpaper);
+  const [floor, setFloor] = useState(initialFloor);
+  const [decorSaving, setDecorSaving] = useState(false);
+
+  async function pickDecor(kind: "wallpaper" | "floor", key: string) {
+    if (!spaceId || decorSaving) return;
+    const prevWallpaper = wallpaper;
+    const prevFloor = floor;
+    if (kind === "wallpaper") setWallpaper(key);
+    else setFloor(key);
+    setDecorSaving(true);
+    try {
+      const res = await fetch("/api/cabin/decor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ spaceId, [kind]: key }),
+      });
+      if (!res.ok) throw new Error("failed");
+    } catch {
+      setWallpaper(prevWallpaper);
+      setFloor(prevFloor);
+      setMessage("벽지/바닥재 변경에 실패했어요.");
+    } finally {
+      setDecorSaving(false);
+    }
+  }
 
   function updateSelected(patch: Partial<PlacedFurniture>) {
     setPlaced((prev) => prev.map((p) => (p.id === selectedId ? { ...p, ...patch } : p)));
@@ -125,9 +157,9 @@ export function CabinEditor({
         onPointerMove={handlePointerMove}
         onPointerUp={() => setDraggingId(null)}
         onPointerLeave={() => setDraggingId(null)}
-        className="relative aspect-[4/5] w-full touch-none overflow-hidden rounded-[28px] border-2 border-white bg-gradient-to-b from-[#fff6e8] to-[#ffe9cf] shadow-[0_6px_20px_rgba(36,54,90,0.10)]"
+        className="relative aspect-[1473/909] w-full touch-none overflow-hidden rounded-[28px] border-2 border-white shadow-[0_6px_20px_rgba(36,54,90,0.10)]"
       >
-        <div className="absolute left-1/2 top-4 h-14 w-14 -translate-x-1/2 rounded-full border-4 border-white/80 bg-[#bfe6ff]" />
+        <RoomBackground wallpaper={wallpaper} floor={floor} />
 
         {[...placed]
           .sort((a, b) => a.zIndex - b.zIndex)
@@ -147,18 +179,52 @@ export function CabinEditor({
               }}
             >
               <div
-                className={`flex h-12 w-12 items-center justify-center rounded-2xl text-[11px] font-bold shadow ${
+                className={`flex h-8 w-8 items-center justify-center rounded-xl text-[9px] font-bold shadow ${
                   selectedId === item.id ? "bg-[var(--color-sky-new)] text-white" : "bg-white/90 text-[var(--color-navy)]"
                 }`}
               >
                 {itemIconSrc(item.sku) ? (
-                  <Image src={itemIconSrc(item.sku)!} alt="" width={40} height={40} unoptimized style={{ width: "88%", height: "88%", objectFit: "contain" }} />
+                  <Image src={itemIconSrc(item.sku)!} alt="" width={28} height={28} unoptimized style={{ width: "88%", height: "88%", objectFit: "contain" }} />
                 ) : (
                   item.name.slice(0, 2)
                 )}
               </div>
             </button>
           ))}
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className="text-[13px] font-extrabold text-[var(--color-navy)]">벽지</p>
+        <div className="scrollbar-none -mx-1 flex gap-2 overflow-x-auto px-1">
+          {WALLPAPER_SWATCHES.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => pickDecor("wallpaper", s.key)}
+              className={`h-11 w-11 shrink-0 overflow-hidden rounded-xl border-2 ${
+                wallpaper === s.key ? "border-[var(--color-tab-active)]" : "border-white"
+              }`}
+              style={{ backgroundImage: `url(${s.src})`, backgroundSize: "cover" }}
+              aria-label={s.key}
+            />
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className="text-[13px] font-extrabold text-[var(--color-navy)]">바닥재</p>
+        <div className="scrollbar-none -mx-1 flex gap-2 overflow-x-auto px-1">
+          {FLOOR_SWATCHES.map((s) => (
+            <button
+              key={s.key}
+              onClick={() => pickDecor("floor", s.key)}
+              className={`h-11 w-11 shrink-0 overflow-hidden rounded-xl border-2 ${
+                floor === s.key ? "border-[var(--color-tab-active)]" : "border-white"
+              }`}
+              style={{ backgroundImage: `url(${s.src})`, backgroundSize: "cover" }}
+              aria-label={s.key}
+            />
+          ))}
+        </div>
       </div>
 
       {selected && (

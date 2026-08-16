@@ -15,5 +15,13 @@ export default async function CabinEditPage() {
     );
   }
 
-  return <CabinEditor spaceId={data.spaceId} initialPlaced={data.placed} initialUnplaced={data.unplaced} />;
+  return (
+    <CabinEditor
+      spaceId={data.spaceId}
+      initialPlaced={data.placed}
+      initialUnplaced={data.unplaced}
+      initialWallpaper={data.wallpaper}
+      initialFloor={data.floor}
+    />
+  );
 }

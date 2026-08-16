@@ -33,6 +33,8 @@ export interface CabinData {
   spaceId: string | null;
   isOwner: boolean;
   cabinName: string;
+  wallpaper: string | null;
+  floor: string | null;
   characters: CabinCharacter[];
   placedItems: CabinPlacedItem[];
   guestbook: GuestbookEntryRow[];
@@ -46,6 +48,8 @@ const DEMO: CabinData = {
   spaceId: null,
   isOwner: false,
   cabinName: "우리 선실",
+  wallpaper: null,
+  floor: null,
   characters: [
     { id: "d1", nickname: "두부", roleLabel: "해녀", kind: "haenyeo", appearance: haenyeoPreset() },
     { id: "d2", nickname: "북극곰", roleLabel: "해남(항해사)", kind: "haenam", appearance: haenamDeckPreset() },
@@ -76,7 +80,7 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
 
     const { data: space } = await supabase
       .from("spaces")
-      .select("id, name")
+      .select("id, name, metadata")
       .eq("household_id", householdId)
       .eq("type", "cabin")
       .maybeSingle();
@@ -109,6 +113,8 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
       spaceId: space.id,
       isOwner,
       cabinName: space.name ?? "우리 선실",
+      wallpaper: (space.metadata as { wallpaper?: string } | null)?.wallpaper ?? null,
+      floor: (space.metadata as { floor?: string } | null)?.floor ?? null,
       characters: (characters ?? []).map((c) => ({
         id: c.id,
         nickname: c.nickname,

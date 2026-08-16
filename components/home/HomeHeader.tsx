@@ -5,7 +5,7 @@ import { GameIcon } from "@/components/icons/GameIcon";
 
 export function HomeHeader({ balance }: { balance: number }) {
   return (
-    <header className="relative overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#bfe6ff] via-[#e3f4ff] to-transparent px-4 pb-6 pt-4">
+    <header className="relative overflow-hidden rounded-b-[28px] bg-gradient-to-b from-[#bfe6ff] via-[#e3f4ff] to-transparent px-4 pb-5 pt-5">
       <Image
         src="/images/home/seagull-fly-1.png"
         alt=""
@@ -98,7 +98,7 @@ export function HomeHeader({ balance }: { balance: number }) {
         style={{ height: "auto" }}
       />
 
-      <div className="relative flex flex-col items-center pt-1">
+      <div className="relative flex flex-col items-center">
         <div className="absolute right-0 top-0 z-10 flex flex-col items-end gap-1.5">
           <Link
             href="/wallet"

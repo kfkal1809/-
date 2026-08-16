@@ -22,11 +22,13 @@ export interface UnplacedFurniture {
 export interface CabinEditData {
   canEdit: boolean;
   spaceId: string | null;
+  wallpaper: string | null;
+  floor: string | null;
   placed: PlacedFurniture[];
   unplaced: UnplacedFurniture[];
 }
 
-const EMPTY: CabinEditData = { canEdit: false, spaceId: null, placed: [], unplaced: [] };
+const EMPTY: CabinEditData = { canEdit: false, spaceId: null, wallpaper: null, floor: null, placed: [], unplaced: [] };
 
 export async function getCabinEditData(): Promise<CabinEditData> {
   try {
@@ -41,12 +43,12 @@ export async function getCabinEditData(): Promise<CabinEditData> {
 
     const { data: space } = await supabase
       .from("spaces")
-      .select("id")
+      .select("id, metadata")
       .eq("household_id", membership.household_id)
       .eq("type", "cabin")
       .maybeSingle();
 
-    if (!space) return { canEdit: true, spaceId: null, placed: [], unplaced: [] };
+    if (!space) return { canEdit: true, spaceId: null, wallpaper: null, floor: null, placed: [], unplaced: [] };
 
     const [{ data: placedRows }, { data: inventoryRows }] = await Promise.all([
       supabase
@@ -85,7 +87,15 @@ export async function getCabinEditData(): Promise<CabinEditData> {
       })
       .filter((v): v is UnplacedFurniture => !!v);
 
-    return { canEdit: true, spaceId: space.id, placed, unplaced };
+    const metadata = space.metadata as { wallpaper?: string; floor?: string } | null;
+    return {
+      canEdit: true,
+      spaceId: space.id,
+      wallpaper: metadata?.wallpaper ?? null,
+      floor: metadata?.floor ?? null,
+      placed,
+      unplaced,
+    };
   } catch {
     return EMPTY;
   }

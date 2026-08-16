@@ -28,9 +28,9 @@ export function BottomNav() {
             className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[12px] font-bold"
           >
             <span
-              className={`flex h-9 w-9 items-center justify-center rounded-full ${active ? "bg-white shadow-[0_2px_8px_rgba(15,33,54,0.25)]" : ""}`}
+              className={`flex h-11 w-11 items-center justify-center rounded-full ${active ? "bg-white shadow-[0_2px_8px_rgba(15,33,54,0.25)]" : ""}`}
             >
-              <GameIcon name={tab.icon as never} size={26} withBadge={false} />
+              <GameIcon name={tab.icon as never} size={34} withBadge={false} />
             </span>
             <span className={active ? "text-white" : "text-white/70"}>{tab.label}</span>
           </Link>
