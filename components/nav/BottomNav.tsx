@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BOTTOM_TABS } from "@/lib/domain/constants";
 import { GameIcon } from "@/components/icons/GameIcon";
+import { playSfx } from "@/lib/audio/audioManager";
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -25,6 +26,9 @@ export function BottomNav() {
           <Link
             key={tab.key}
             href={tab.href}
+            onClick={() => {
+              if (!active) playSfx("ui-click");
+            }}
             className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[12px] font-bold"
           >
             <span

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { playSfx } from "@/lib/audio/audioManager";
 
 export function RingBuyButton({ sku, price }: { sku: string; price: number }) {
   const router = useRouter();
@@ -20,6 +21,7 @@ export function RingBuyButton({ sku, price }: { sku: string; price: number }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
       setMessage("구매 완료!");
+      playSfx("purchase");
       router.refresh();
     } catch (e) {
       setMessage(e instanceof Error && e.message === "insufficient_funds" ? "선용금이 부족해요." : "구매에 실패했어요.");

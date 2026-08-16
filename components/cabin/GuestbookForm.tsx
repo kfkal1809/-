@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { playSfx } from "@/lib/audio/audioManager";
 
 export function GuestbookForm({ cabinSpaceId }: { cabinSpaceId: string }) {
   const router = useRouter();
@@ -23,6 +24,7 @@ export function GuestbookForm({ cabinSpaceId }: { cabinSpaceId: string }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error === "rate_limited" ? "잠시 후 다시 작성해주세요." : "작성에 실패했어요.");
       setText("");
+      playSfx("guestbook");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "작성에 실패했어요.");

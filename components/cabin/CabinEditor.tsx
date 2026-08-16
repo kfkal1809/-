@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
 import { WALLPAPER_SWATCHES, FLOOR_SWATCHES } from "@/lib/domain/cabinDecor";
+import { playSfx } from "@/lib/audio/audioManager";
 import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
 
 let tempIdCounter = 0;
@@ -89,6 +90,7 @@ export function CabinEditor({
     setPlaced((prev) => [...prev, newItem]);
     setUnplaced((prev) => prev.filter((u) => u.inventoryItemId !== item.inventoryItemId));
     setSelectedId(newItem.id);
+    playSfx("furniture-place");
   }
 
   function removeSelected() {
@@ -97,6 +99,7 @@ export function CabinEditor({
     setPlaced((prev) => prev.filter((p) => p.id !== selectedId));
     setUnplaced((prev) => [...prev, { inventoryItemId: item.inventoryItemId, sku: item.sku, name: item.name }]);
     setSelectedId(null);
+    playSfx("furniture-pickup");
   }
 
   function bringForward() {

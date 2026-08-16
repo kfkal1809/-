@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { MESS_ROOM_MENU } from "@/lib/domain/constants";
 import { RARITY_LABEL } from "@/lib/domain/types";
+import { playSfx } from "@/lib/audio/audioManager";
 
 export function MessRoomOrder() {
   const router = useRouter();
@@ -25,6 +26,7 @@ export function MessRoomOrder() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
       setResult(data.reward);
+      playSfx("food");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error && e.message === "insufficient_funds" ? "선용금이 부족해요." : "주문에 실패했어요.");

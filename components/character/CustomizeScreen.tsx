@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { Card } from "@/components/ui/Card";
+import { playSfx } from "@/lib/audio/audioManager";
 import type { CustomizeData, EquipCandidate } from "@/lib/game/customizeData";
 
 const CATEGORY_LABEL: Record<string, string> = { hair: "헤어", outfit: "한벌옷", hat: "모자", accessory: "소품" };
@@ -26,6 +27,7 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
       const result = await res.json();
       if (!res.ok) throw new Error(result.error ?? "failed");
       setAppearance(result.appearance);
+      playSfx("equip");
     } catch {
       setError("착용에 실패했어요. 다시 시도해주세요.");
     } finally {

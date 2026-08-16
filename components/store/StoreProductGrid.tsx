@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { GameIcon } from "@/components/icons/GameIcon";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
+import { playSfx } from "@/lib/audio/audioManager";
 import type { StoreProduct } from "@/lib/game/storeData";
 
 export function StoreProductGrid({ storeSlug, products }: { storeSlug: string; products: StoreProduct[] }) {
@@ -25,6 +26,7 @@ export function StoreProductGrid({ storeSlug, products }: { storeSlug: string; p
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
       setMessage(`${product.name}을(를) 구매했어요! 선실에 배치할 수 있어요.`);
+      playSfx("purchase");
       router.refresh();
     } catch (e) {
       setMessage(e instanceof Error && e.message === "insufficient_funds" ? "선용금이 부족해요." : "구매에 실패했어요.");

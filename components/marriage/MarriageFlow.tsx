@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { MARRIAGE_DOCUMENT_PRICE } from "@/lib/domain/constants";
+import { playSfx } from "@/lib/audio/audioManager";
 import type { MarriageData } from "@/lib/game/marriageData";
 
 export function MarriageFlow({ data }: { data: MarriageData }) {
@@ -20,6 +21,7 @@ export function MarriageFlow({ data }: { data: MarriageData }) {
       const res = await fetch("/api/marriage/buy-document", { method: "POST" });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "failed");
+      playSfx("purchase");
       router.refresh();
     } catch (e) {
       const err = e instanceof Error ? e.message : "";
@@ -42,7 +44,12 @@ export function MarriageFlow({ data }: { data: MarriageData }) {
       const res = await fetch("/api/marriage/sign", { method: "POST" });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "failed");
-      if (body.married) setMessage("혼인신고가 완료됐어요! 축하해요!");
+      if (body.married) {
+        setMessage("혼인신고가 완료됐어요! 축하해요!");
+        playSfx("marriage");
+      } else {
+        playSfx("notification");
+      }
       router.refresh();
     } catch {
       setMessage("서명에 실패했어요.");

@@ -442,3 +442,57 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
   포함한 "전체 캔버스" 기준으로 계산되도록 `CharacterSprite`/`characterFullBody.ts`를 고쳐
   세 렌더링 방식(구버전 단일 포트레이트/outfitAssetKey/fullPortraitKey) 모두 같은 `size`에서
   같은 머리~발끝 높이가 나오도록 통일했다. 홈/선실 화면 스크린샷으로 회귀 없음 확인.
+
+## 게임 효과음(SFX)/배경음악(BGM) 시스템 (이후 세션)
+
+- 사용자가 상세 스펙(공용 AudioManager, SFX 16종 키, BGM 6종, 겹쳐 재생 가능, autoplay 제약
+  대응, 파일 없어도 안 깨짐, 설정 화면 ON/OFF+볼륨, localStorage 저장)을 줘서 그대로 구현.
+  새 의존성(Howler.js 등) 없이 `HTMLAudioElement` 기반으로 구현 — 이 프로젝트가 필요한 건
+  "짧은 효과음 겹쳐 재생 pool"과 "루프 배경음악 한 트랙" 정도라 Web Audio API/Howler는
+  과함(package.json에 오디오 라이브러리가 아예 없었음, zustand는 있지만 오디오와 무관).
+- **구조**: `lib/audio/manifest.ts`(SFX 16개/BGM 6개 키→경로 매핑, 경로를 코드에서 직접 안 쓰고
+  이 파일 하나로만 관리) → `lib/audio/audioManager.ts`(싱글턴 `AudioManager` 클래스 —
+  `playSfx(key)`/`playBgm(key)`/`stopBgm()`/설정 getter-setter, 절대 throw 안 함) →
+  `lib/audio/useAudioSettings.ts`(`useSyncExternalStore`로 설정 화면이 반응형으로 구독) →
+  `components/audio/AudioBootstrap.tsx`(루트 레이아웃에 마운트, 첫 사용자 제스처 리스너 등록 +
+  자주 쓰는 효과음 프리로드) + `components/audio/BgmController.tsx`(경로별 BGM 자동 전환).
+  SFX는 키마다 `HTMLAudioElement` 4개짜리 pool을 round-robin으로 돌려 같은 효과음이 빠르게
+  겹쳐도 안 끊기게 했고, 음원 파일이 없으면(`error` 이벤트) 그 키를 `unavailable`로 표시해
+  이후 재생 시도를 아예 건너뛴다(네트워크 재시도도 없음, 콘솔에 브라우저 자체 404 로그만
+  남고 앱 로직에는 전혀 영향 없음 — Playwright로 `pageerror` 0건 확인).
+- **모바일 autoplay 대응**: `pointerdown`/`touchstart`/`keydown` 중 아무거나 첫 제스처가
+  오면 이미 만들어둔 오디오 엘리먼트를 무음으로 한 번 재생→정지해서 "이 페이지는 오디오
+  허가받음" 상태를 만들어둔다(iOS Safari/Chrome 공통 unlock 트릭). `visibilitychange`로
+  탭이 다시 보일 때 BGM이 멈춰 있으면 재생 재시도.
+- **설정 화면**: `/settings`(신규, `components/menu/SettingsScreen.tsx`) — 효과음/배경음악
+  각각 ON/OFF 토글 + 0~100% 볼륨 슬라이더, `localStorage`(`hgs-audio-settings-v1`)에 저장돼
+  새로고침해도 유지(Playwright로 확인: 40%로 바꾸고 새로고침해도 40% 유지). 메뉴 화면에
+  링크 추가.
+- **이벤트 연결**(서버가 성공을 확정한 시점에만 재생 — 구매 실패/중복 출석 등에는 성공음 안 남,
+  자세한 근거는 각 파일의 `if (!res.ok) throw` 다음 줄에 재생 코드 위치):
+  - 출항하기 성공(중복 제외) → `attendance` + 180ms 후 `coin` (`VoyageInfoCard.tsx`)
+  - 상점 구매/커플링 구매/혼인신고서 구매 성공 → `purchase` (`StoreProductGrid.tsx`,
+    `RingBuyButton.tsx`, `MarriageFlow.tsx`)
+  - 낚시 판매 → `coin`, 조리 → `food`, 복원 → 희귀도별(`item-get`/`rare-item`/
+    `fishing-legendary`) (`LootActions.tsx`, 공용 로직은 `lib/audio/rarity.ts`)
+  - 캐릭터 옷/헤어/모자/소품 장착 성공 → `equip` (`CustomizeScreen.tsx`)
+  - 가구를 방에 배치 → `furniture-place`, 가방으로 회수 → `furniture-pickup`
+    (`CabinEditor.tsx` — 서버 저장은 "저장" 버튼을 눌러야 확정되지만, 배치/회수 자체는
+    100% 로컬 상태 조작이라 실패할 수 없어 그 자리에서 바로 재생하는 게 사용자 의도와
+    더 맞다고 판단함)
+  - 자동조업 시작 → `fishing-start`, 결과 수령 → `fishing-result`(+전설급 있으면
+    250ms 후 `fishing-legendary` 추가) (`FishingScreen.tsx`)
+  - 선내식당 주문 결과 → `food` (`MessRoomOrder.tsx`)
+  - 방명록 등록 → `guestbook` (`GuestbookForm.tsx`)
+  - 혼인신고 서명: 양쪽 다 완료 → `marriage`, 한쪽만 완료 → `notification`
+    (`MarriageFlow.tsx`)
+  - 주요 내비게이션(하단 탭, 홈 메뉴 그리드) → `ui-click`
+  - `mission-complete`는 정의는 해뒀지만 미션/듀티 보상 수령 기능 자체가 아직 서버에
+    구현 안 돼 있어(코드 조사로 확인, `app/(game)/duties/page.tsx`가 정적 안내만 표시)
+    연결할 곳이 없음 — 기능이 생기면 그때 연결.
+- **테스트**: `lib/audio/manifest.test.ts`(vitest, 순수 로직 — 매니페스트 키 스펙 일치,
+  경로별 BGM 매핑) + Playwright로 설정 화면 토글/볼륨/새로고침 유지, SFX ON/OFF일 때 실제
+  네트워크 요청 유무, 음원 파일 전무 상태에서 `pageerror` 0건, 프로덕션 빌드 통과 확인.
+- **실제 음원 파일 넣는 곳**: `public/audio/sfx/*.mp3`(16개), `public/audio/bgm/*.mp3`(6개) —
+  정확한 파일명/용도는 `public/audio/README.md`에 표로 정리해둠. 파일만 그 경로에 넣으면
+  코드 변경 없이 바로 재생된다.

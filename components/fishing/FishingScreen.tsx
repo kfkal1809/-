@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { RARITY_LABEL } from "@/lib/domain/types";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
+import { playSfx } from "@/lib/audio/audioManager";
 import type { FishingData } from "@/lib/game/fishingData";
 
 function formatRemaining(ms: number): string {
@@ -45,6 +46,7 @@ export function FishingScreen({ data }: { data: FishingData }) {
       });
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "failed");
+      playSfx("fishing-start");
       router.refresh();
     } catch {
       setError("낚시를 시작하지 못했어요.");
@@ -66,6 +68,10 @@ export function FishingScreen({ data }: { data: FishingData }) {
       const body = await res.json();
       if (!res.ok) throw new Error(body.error ?? "failed");
       setResult(body.loot);
+      playSfx("fishing-result");
+      if ((body.loot as { rarity: string }[]).some((r) => r.rarity === "legendary")) {
+        setTimeout(() => playSfx("fishing-legendary"), 250);
+      }
     } catch {
       setError("결과를 받지 못했어요.");
     } finally {

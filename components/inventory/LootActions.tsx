@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { playSfx } from "@/lib/audio/audioManager";
+import { playItemGetSfx } from "@/lib/audio/rarity";
 
 export function LootActions({ inventoryItemId, subcategory }: { inventoryItemId: string; subcategory: string | null }) {
   const router = useRouter();
@@ -22,9 +24,16 @@ export function LootActions({ inventoryItemId, subcategory }: { inventoryItemId:
         setMessage(data.error === "insufficient_funds" ? "선용금이 부족해요." : "처리에 실패했어요.");
         return;
       }
-      if (action === "sell") setMessage(`+$${data.earned}`);
-      else if (action === "cook") setMessage(data.reward ? `${data.reward.name} 획득!` : "조리 완료");
-      else if (action === "restore") setMessage(data.message);
+      if (action === "sell") {
+        setMessage(`+$${data.earned}`);
+        playSfx("coin");
+      } else if (action === "cook") {
+        setMessage(data.reward ? `${data.reward.name} 획득!` : "조리 완료");
+        playSfx("food");
+      } else if (action === "restore") {
+        setMessage(data.message);
+        playItemGetSfx(data.itemReward?.rarity);
+      }
       router.refresh();
     } finally {
       setLoading(null);

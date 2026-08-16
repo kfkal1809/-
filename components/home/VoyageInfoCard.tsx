@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
+import { playSfx } from "@/lib/audio/audioManager";
 import type { HomeVoyageCard } from "@/lib/game/homeData";
 
 export function VoyageInfoCard({
@@ -31,6 +32,8 @@ export function VoyageInfoCard({
         setAttended(true);
         setToast("선용금 지급 완료 +$1");
         setLoading(false);
+        playSfx("attendance");
+        setTimeout(() => playSfx("coin"), 180);
       }, 400);
       return;
     }
@@ -42,6 +45,11 @@ export function VoyageInfoCard({
       setAttended(true);
       onBalanceChange?.(data.balance);
       setToast(data.already ? "이미 오늘 출항했어요." : "선용금 지급 완료 +$1");
+      // 서버가 실제로 오늘자 신규 출석을 확정한 경우에만(중복 출석 제외) 효과음 재생
+      if (!data.already) {
+        playSfx("attendance");
+        setTimeout(() => playSfx("coin"), 180);
+      }
     } catch {
       setToast("출항에 실패했어요.");
     } finally {

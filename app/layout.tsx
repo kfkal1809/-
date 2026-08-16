@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Gowun_Dodum } from "next/font/google";
+import { AudioBootstrap } from "@/components/audio/AudioBootstrap";
+import { BgmController } from "@/components/audio/BgmController";
 import "./globals.css";
 
 // 기존 서체(Pretendard)보다 살짝 동글동글한 인상을 주는 한글 서체 — globals.css의
@@ -32,7 +34,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={`h-full antialiased ${fontBody.variable}`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AudioBootstrap />
+        <BgmController />
+        {children}
+      </body>
     </html>
   );
 }
