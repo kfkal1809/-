@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/Button";
 import { ChildCharacterForm, type ChildPayload } from "@/components/onboarding/ChildCharacterForm";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
+import type { ChildGender, ChildStage } from "@/lib/domain/types";
 
 interface ChildRow {
   id: string;
   nickname: string;
+  child_gender: ChildGender;
+  child_stage: ChildStage;
   appearance_json: CharacterAppearance;
 }
 
@@ -35,7 +38,16 @@ export default function OnboardingChildrenPage() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "failed");
-    setChildren((prev) => [...prev, { id: data.characterId, nickname: payload.nickname, appearance_json: payload.appearance }]);
+    setChildren((prev) => [
+      ...prev,
+      {
+        id: data.characterId,
+        nickname: payload.nickname,
+        child_gender: payload.gender,
+        child_stage: payload.stage as ChildStage,
+        appearance_json: payload.appearance,
+      },
+    ]);
     setShowForm(false);
   }
 
@@ -50,7 +62,7 @@ export default function OnboardingChildrenPage() {
           <div className="mt-4 flex flex-wrap justify-center gap-3">
             {children.map((c) => (
               <div key={c.id} className="flex flex-col items-center">
-                <CharacterSprite appearance={c.appearance_json} size={64} />
+                <CharacterSprite appearance={c.appearance_json} kind="child" childGender={c.child_gender} childStage={c.child_stage} size={100} />
                 <p className="text-[11px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
               </div>
             ))}

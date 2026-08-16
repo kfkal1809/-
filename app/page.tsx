@@ -34,16 +34,20 @@ export default function OpeningPage() {
 
         <div className="mt-8 flex items-end justify-center gap-1">
           <div className="animate-floaty" style={{ animationDelay: "0s" }}>
-            <CharacterSprite appearance={haenyeoPreset()} size={92} />
+            <CharacterSprite appearance={haenyeoPreset()} kind="haenyeo" size={130} />
           </div>
           <div className="animate-floaty" style={{ animationDelay: "0.4s" }}>
-            <CharacterSprite appearance={haenamDeckPreset()} size={100} />
+            <CharacterSprite appearance={haenamDeckPreset()} kind="haenam" size={140} />
           </div>
           <div className="animate-floaty" style={{ animationDelay: "0.2s" }}>
-            <CharacterSprite appearance={haenamEnginePreset()} size={96} />
+            <CharacterSprite appearance={haenamEnginePreset()} kind="haenam" size={140} />
           </div>
           <div className="animate-floaty" style={{ animationDelay: "0.6s" }}>
-            <CharacterSprite appearance={haenyeoPreset({ hairStyle: "pony", hairColor: "#463527", outfitColor: "#9cc9ef" })} size={90} />
+            <CharacterSprite
+              appearance={haenyeoPreset({ hairStyle: "pony", hairColor: "#463527", outfitColor: "#9cc9ef" })}
+              kind="haenyeo"
+              size={130}
+            />
           </div>
         </div>
 

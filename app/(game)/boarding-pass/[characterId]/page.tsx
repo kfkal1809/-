@@ -7,6 +7,7 @@ import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import { Card } from "@/components/ui/Card";
 import { formatKoreanDate } from "@/lib/game/kst";
 import { SHIP_NAME } from "@/lib/domain/constants";
+import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 
 const RELATION_LABEL: Record<string, string> = { dating: "연애중", engaged: "약혼", married: "부부" };
 
@@ -31,6 +32,8 @@ interface BoardingPassData {
     kind: string;
     nickname: string;
     department: string | null;
+    child_gender: string | null;
+    child_stage: string | null;
     appearance_json: CharacterAppearance;
     household_id: string;
   };
@@ -48,7 +51,7 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
 
     const { data: character } = await supabase
       .from("characters")
-      .select("id, kind, nickname, department, appearance_json, household_id")
+      .select("id, kind, nickname, department, child_gender, child_stage, appearance_json, household_id")
       .eq("id", characterId)
       .maybeSingle();
 
@@ -128,7 +131,13 @@ export default async function BoardingPassPage({ params }: PageProps<"/boarding-
             height: `${FRAME.photo.height}%`,
           }}
         >
-          <CharacterSprite appearance={(character.appearance_json as CharacterAppearance) ?? haenyeoPreset()} size={90} />
+          <CharacterSprite
+            appearance={(character.appearance_json as CharacterAppearance) ?? haenyeoPreset()}
+            kind={character.kind as CharacterKind}
+            childGender={character.child_gender as ChildGender | null}
+            childStage={character.child_stage as ChildStage | null}
+            size={115}
+          />
         </div>
 
         <p

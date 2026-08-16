@@ -6,6 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
+import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 import type { DeckSelf, DeckChatMessage } from "@/lib/game/deckData";
 
 interface PresenceMeta {
@@ -13,6 +14,9 @@ interface PresenceMeta {
   nickname: string;
   characterId: string | null;
   appearance: CharacterAppearance;
+  kind: CharacterKind;
+  childGender: ChildGender | null;
+  childStage: ChildStage | null;
   joinedAt: string;
 }
 
@@ -82,6 +86,9 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
             nickname: self.nickname,
             characterId: self.characterId,
             appearance: self.appearance,
+            kind: self.kind,
+            childGender: self.childGender,
+            childStage: self.childStage,
             joinedAt: new Date().toISOString(),
           } satisfies PresenceMeta);
         }
@@ -135,7 +142,7 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
           <div className="scrollbar-none absolute bottom-4 left-3 right-3 flex gap-3 overflow-x-auto">
             {onlineOthers.map((p) => (
               <button key={p.userId} onClick={() => setActiveCharacter(p)} className="flex shrink-0 flex-col items-center">
-                <CharacterSprite appearance={p.appearance} size={52} />
+                <CharacterSprite appearance={p.appearance} kind={p.kind} childGender={p.childGender} childStage={p.childStage} size={80} />
                 <p className="rounded-full bg-white/85 px-2 text-[10px] font-bold text-[var(--color-navy)]">{p.nickname}</p>
               </button>
             ))}

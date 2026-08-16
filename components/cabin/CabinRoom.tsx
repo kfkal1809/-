@@ -41,12 +41,12 @@ export function CabinRoom({ data }: { data: CabinData }) {
           {data.characters.map((c) =>
             data.isOwner ? (
               <Link key={c.id} href={`/character/${c.id}/customize`} className="flex flex-col items-center">
-                <CharacterSprite appearance={c.appearance} size={70} />
+                <CharacterSprite appearance={c.appearance} kind={c.kind} size={100} />
                 <p className="text-[11px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
               </Link>
             ) : (
               <Link key={c.id} href={`/boarding-pass/${c.id}`} className="flex flex-col items-center">
-                <CharacterSprite appearance={c.appearance} size={70} />
+                <CharacterSprite appearance={c.appearance} kind={c.kind} size={100} />
                 <p className="text-[11px] font-bold text-[var(--color-navy)]">{c.nickname}</p>
               </Link>
             )

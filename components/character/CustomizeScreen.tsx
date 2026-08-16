@@ -42,7 +42,13 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
 
       <div className="flex justify-center">
         <div className="rounded-[28px] bg-white p-3 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
-          <CharacterSprite appearance={appearance} size={140} />
+          <CharacterSprite
+            appearance={appearance}
+            kind={data.kind}
+            childGender={data.childGender}
+            childStage={data.childStage}
+            size={170}
+          />
         </div>
       </div>
 

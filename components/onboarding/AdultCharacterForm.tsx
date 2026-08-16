@@ -93,7 +93,7 @@ export function AdultCharacterForm({
 
       <div className="flex justify-center">
         <div className="rounded-[28px] bg-white p-3 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
-          <CharacterSprite appearance={appearance} size={130} />
+          <CharacterSprite appearance={appearance} kind={kind} size={160} />
         </div>
       </div>
 

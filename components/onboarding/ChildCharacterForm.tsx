@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { childPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
+import type { ChildStage } from "@/lib/domain/types";
 import { Button } from "@/components/ui/Button";
 import { SKIN_SWATCHES, HAIR_SWATCHES, CHILD_HAIR_STYLES, CHILD_OUTFIT_SWATCHES } from "./swatches";
 
@@ -27,7 +28,7 @@ export interface ChildPayload {
 export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayload) => Promise<void> | void }) {
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "unset">("unset");
-  const [stage, setStage] = useState("toddler");
+  const [stage, setStage] = useState<ChildStage>("toddler");
   const [skinTone, setSkinTone] = useState(SKIN_SWATCHES[0]);
   const [hairColor, setHairColor] = useState(HAIR_SWATCHES[2]);
   const [hairStyle, setHairStyle] = useState<(typeof CHILD_HAIR_STYLES)[number]>("twin");
@@ -61,7 +62,7 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
     <div className="flex flex-col gap-4">
       <div className="flex justify-center">
         <div className="rounded-[24px] bg-white p-2.5 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
-          <CharacterSprite appearance={appearance} size={100} />
+          <CharacterSprite appearance={appearance} kind="child" childGender={gender} childStage={stage} size={130} />
         </div>
       </div>
 
@@ -90,7 +91,7 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
 
       <select
         value={stage}
-        onChange={(e) => setStage(e.target.value)}
+        onChange={(e) => setStage(e.target.value as ChildStage)}
         className="w-full rounded-2xl border-2 border-[var(--color-navy)]/10 bg-white px-4 py-2.5 text-center text-[13px] font-bold text-[var(--color-navy)]"
       >
         {STAGES.map((s) => (

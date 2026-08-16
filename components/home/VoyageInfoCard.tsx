@@ -122,7 +122,7 @@ export function VoyageInfoCard({
 
           <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-2">
             <div className="flex flex-col items-center">
-              <CharacterSprite appearance={voyage.haenyeoAppearance} size={64} />
+              <CharacterSprite appearance={voyage.haenyeoAppearance} kind="haenyeo" size={92} />
               <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-navy)]">
                 해녀 {voyage.haenyeoName}
               </p>
@@ -137,7 +137,7 @@ export function VoyageInfoCard({
               </svg>
             </div>
             <div className="flex flex-col items-center">
-              <CharacterSprite appearance={voyage.haenamAppearance} size={64} />
+              <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={92} />
               <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2.5 py-0.5 text-[11px] font-bold text-[var(--color-navy)]">
                 해남 {voyage.haenamName}
               </p>

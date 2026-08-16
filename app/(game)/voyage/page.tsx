@@ -19,7 +19,7 @@ export default async function VoyagePage() {
       {data.voyages.map((v) => (
         <Card key={v.characterId} className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <CharacterSprite appearance={v.appearance} size={64} />
+            <CharacterSprite appearance={v.appearance} kind="haenam" size={80} />
             <div>
               <p className="text-[15px] font-extrabold text-[var(--color-navy)]">{v.nickname}</p>
               <p className="text-[11px] text-[var(--color-navy-soft)]">{v.roleLabel}</p>

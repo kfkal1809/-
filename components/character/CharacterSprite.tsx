@@ -1,10 +1,18 @@
+import Image from "next/image";
 import type { CharacterAppearance, HairStyle, OutfitStyle } from "@/lib/domain/characterPresets";
+import type { ChildGender, ChildStage, CharacterKind } from "@/lib/domain/types";
+import { PORTRAIT_SIZE, characterPortraitKeyFor, characterPortraitSrc } from "@/lib/domain/characterPortrait";
 
 interface CharacterSpriteProps {
   appearance: CharacterAppearance;
   size?: number;
   className?: string;
   flip?: boolean;
+  // kind가 주어지면 사용자가 그려준 실제 일러스트를 렌더링한다(없으면 기존 벡터로 폴백).
+  // size는 세로 높이 기준(실사 일러스트는 벡터보다 훨씬 슬림해서 가로 기준이면 레이아웃이 깨짐).
+  kind?: CharacterKind;
+  childGender?: ChildGender | null;
+  childStage?: ChildStage | null;
 }
 
 const NAVY = "#2a3552";
@@ -273,7 +281,26 @@ function Accessory({ style, cx, y }: { style: string; cx: number; y: number }) {
   return null;
 }
 
-export function CharacterSprite({ appearance: a, size = 140, className, flip }: CharacterSpriteProps) {
+export function CharacterSprite({ appearance: a, size = 140, className, flip, kind, childGender, childStage }: CharacterSpriteProps) {
+  if (kind) {
+    const key = characterPortraitKeyFor({ kind, childGender, childStage });
+    const dims = PORTRAIT_SIZE[key];
+    const height = size;
+    const width = Math.round(height * (dims.w / dims.h));
+    return (
+      <Image
+        src={characterPortraitSrc({ kind, childGender, childStage })}
+        alt=""
+        aria-hidden
+        width={dims.w}
+        height={dims.h}
+        unoptimized
+        className={className}
+        style={{ width, height, transform: flip ? "scaleX(-1)" : undefined }}
+      />
+    );
+  }
+
   const cx = 110;
   const headCy = 96;
   const headR = 60 * (0.9 + a.bodyScale * 0.1);

@@ -1,11 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { haenyeoPreset, haenamDeckPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
+import type { CharacterKind } from "@/lib/domain/types";
 
 export interface CabinCharacter {
   id: string;
   nickname: string;
   roleLabel: string;
+  kind: CharacterKind;
   appearance: CharacterAppearance;
 }
 
@@ -45,8 +47,8 @@ const DEMO: CabinData = {
   isOwner: false,
   cabinName: "우리 선실",
   characters: [
-    { id: "d1", nickname: "두부", roleLabel: "해녀", appearance: haenyeoPreset() },
-    { id: "d2", nickname: "북극곰", roleLabel: "해남(항해사)", appearance: haenamDeckPreset() },
+    { id: "d1", nickname: "두부", roleLabel: "해녀", kind: "haenyeo", appearance: haenyeoPreset() },
+    { id: "d2", nickname: "북극곰", roleLabel: "해남(항해사)", kind: "haenam", appearance: haenamDeckPreset() },
   ],
   placedItems: [
     { id: "f1", sku: "furniture_bed", name: "침대", x: 0.24, y: 0.62, rotation: 0 },
@@ -111,6 +113,7 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
         id: c.id,
         nickname: c.nickname,
         roleLabel: c.kind === "haenam" ? (c.department === "engine" ? "해남(기관사)" : "해남(항해사)") : ROLE_LABEL[c.kind] ?? c.kind,
+        kind: c.kind as CharacterKind,
         appearance: (c.appearance_json as CharacterAppearance) ?? haenyeoPreset(),
       })),
       placedItems: (placed ?? []).map((p) => {

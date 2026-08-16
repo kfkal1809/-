@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { haenyeoPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
+import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 
 export interface EquipCandidate {
   inventoryItemId: string;
@@ -16,6 +17,9 @@ export interface CustomizeData {
   characterId: string;
   nickname: string;
   roleLabel: string;
+  kind: CharacterKind;
+  childGender: ChildGender | null;
+  childStage: ChildStage | null;
   appearance: CharacterAppearance;
   candidates: EquipCandidate[];
 }
@@ -26,6 +30,9 @@ const NOT_FOUND = (characterId: string): CustomizeData => ({
   characterId,
   nickname: "",
   roleLabel: "",
+  kind: "haenyeo",
+  childGender: null,
+  childStage: null,
   appearance: haenyeoPreset(),
   candidates: [],
 });
@@ -39,7 +46,7 @@ export async function getCustomizeData(characterId: string): Promise<CustomizeDa
 
     const { data: character } = await supabase
       .from("characters")
-      .select("id, kind, nickname, department, appearance_json, household_id")
+      .select("id, kind, nickname, department, child_gender, child_stage, appearance_json, household_id")
       .eq("id", characterId)
       .maybeSingle();
 
@@ -92,6 +99,9 @@ export async function getCustomizeData(characterId: string): Promise<CustomizeDa
       characterId,
       nickname: character.nickname,
       roleLabel,
+      kind: character.kind as CharacterKind,
+      childGender: character.child_gender as ChildGender | null,
+      childStage: character.child_stage as ChildStage | null,
       appearance: (character.appearance_json as CharacterAppearance) ?? haenyeoPreset(),
       candidates,
     };
