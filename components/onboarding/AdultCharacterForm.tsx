@@ -13,6 +13,9 @@ import {
   HAENYEO_OUTFIT_SWATCHES,
   HAENAM_DECK_OUTFIT_SWATCHES,
   HAENAM_ENGINE_OUTFIT_SWATCHES,
+  HAENYEO_OUTFIT_ASSET_BY_SWATCH,
+  HAENAM_DECK_OUTFIT_ASSET_BY_SWATCH,
+  HAENAM_ENGINE_OUTFIT_ASSET_BY_SWATCH,
 } from "./swatches";
 
 type Kind = "haenyeo" | "haenam";
@@ -55,6 +58,12 @@ export function AdultCharacterForm({
   const hairStyles = kind === "haenyeo" ? HAENYEO_HAIR_STYLES : HAENAM_HAIR_STYLES;
   const outfitSwatches =
     kind === "haenyeo" ? HAENYEO_OUTFIT_SWATCHES : department === "engine" ? HAENAM_ENGINE_OUTFIT_SWATCHES : HAENAM_DECK_OUTFIT_SWATCHES;
+  const outfitAssetBySwatch =
+    kind === "haenyeo"
+      ? HAENYEO_OUTFIT_ASSET_BY_SWATCH
+      : department === "engine"
+        ? HAENAM_ENGINE_OUTFIT_ASSET_BY_SWATCH
+        : HAENAM_DECK_OUTFIT_ASSET_BY_SWATCH;
 
   const appearance: CharacterAppearance = useMemo(() => {
     const base =
@@ -65,8 +74,9 @@ export function AdultCharacterForm({
       hairColor,
       hairStyle,
       outfitColor,
+      outfitAssetKey: outfitAssetBySwatch[outfitColor] ?? base.outfitAssetKey,
     };
-  }, [kind, department, skinTone, hairColor, hairStyle, outfitColor]);
+  }, [kind, department, skinTone, hairColor, hairStyle, outfitColor, outfitAssetBySwatch]);
 
   async function handleSubmit() {
     if (!nickname.trim()) {

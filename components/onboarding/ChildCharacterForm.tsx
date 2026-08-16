@@ -6,7 +6,7 @@ import { childPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { ChildStage } from "@/lib/domain/types";
 import { Button } from "@/components/ui/Button";
-import { SKIN_SWATCHES, HAIR_SWATCHES, CHILD_HAIR_STYLES, CHILD_OUTFIT_SWATCHES } from "./swatches";
+import { SKIN_SWATCHES, HAIR_SWATCHES, CHILD_HAIR_STYLES, CHILD_OUTFIT_SWATCHES, CHILD_OUTFIT_ASSET_BY_SWATCH } from "./swatches";
 
 const STAGES: { value: string; label: string }[] = [
   { value: "infant", label: "영아" },
@@ -37,7 +37,7 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
   const [error, setError] = useState<string | null>(null);
 
   const appearance = useMemo(
-    () => childPreset({ skinTone, hairColor, hairStyle, outfitColor }),
+    () => childPreset({ skinTone, hairColor, hairStyle, outfitColor, outfitAssetKey: CHILD_OUTFIT_ASSET_BY_SWATCH[outfitColor] }),
     [skinTone, hairColor, hairStyle, outfitColor]
   );
 

@@ -30,6 +30,9 @@ export interface CharacterAppearance {
   eyeScale: number; // 1 = 기본, 아랍처럼 눈이 더 큰 경우 1.3
   bodyScale: number; // 새싹은 더 작게
   toned: boolean; // 리리처럼 팔뚝에 살짝 근육 표현
+  // 실사 일러스트(kind가 있는 CharacterSprite) 전용: 목 아래 전신 의상 스프라이트 키.
+  // public/images/character/outfit_full/<key>.png — 없으면 기존 색상 틴트 방식으로 폴백.
+  outfitAssetKey?: string | null;
 }
 
 const BASE: CharacterAppearance = {
@@ -45,6 +48,7 @@ const BASE: CharacterAppearance = {
   eyeScale: 1,
   bodyScale: 1,
   toned: false,
+  outfitAssetKey: null,
 };
 
 export function haenyeoPreset(overrides: Partial<CharacterAppearance> = {}): CharacterAppearance {
@@ -56,6 +60,7 @@ export function haenyeoPreset(overrides: Partial<CharacterAppearance> = {}): Cha
     outfitColor: "#7fa8dd",
     outfitAccent: "#ffffff",
     eyelash: true,
+    outfitAssetKey: "haenyeo_outfit_02",
     ...overrides,
   };
 }
@@ -70,6 +75,7 @@ export function haenamDeckPreset(overrides: Partial<CharacterAppearance> = {}): 
     outfitColor: "#2c3f66",
     outfitAccent: "#ffffff",
     hat: "captain",
+    outfitAssetKey: "haenam_deck_outfit_04",
     ...overrides,
   };
 }
@@ -84,6 +90,7 @@ export function haenamEnginePreset(overrides: Partial<CharacterAppearance> = {})
     outfitColor: "#ff9a4d",
     outfitAccent: "#3b2f28",
     accessory: "wrench",
+    outfitAssetKey: "haenam_engine_outfit_01",
     ...overrides,
   };
 }
@@ -98,6 +105,7 @@ export function childPreset(overrides: Partial<CharacterAppearance> = {}): Chara
     outfitAccent: "#ffffff",
     bodyScale: 0.86,
     eyelash: false,
+    outfitAssetKey: "child_outfit_02",
     ...overrides,
   };
 }

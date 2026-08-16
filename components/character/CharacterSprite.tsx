@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { CharacterAppearance, HairStyle, OutfitStyle } from "@/lib/domain/characterPresets";
 import type { ChildGender, ChildStage, CharacterKind } from "@/lib/domain/types";
 import { PORTRAIT_SIZE, characterPortraitKeyFor, characterPortraitSrc, characterOutfitMaskSrc } from "@/lib/domain/characterPortrait";
+import { OUTFIT_CANVAS_W, OUTFIT_CANVAS_H, NECK_Y, HEAD_WIDTH, HEAD_OVERLAP, HEAD_SIZE, headSrc, outfitFullSrc } from "@/lib/domain/characterFullBody";
 
 interface CharacterSpriteProps {
   appearance: CharacterAppearance;
@@ -282,6 +283,45 @@ function Accessory({ style, cx, y }: { style: string; cx: number; y: number }) {
 }
 
 export function CharacterSprite({ appearance: a, size = 140, className, flip, kind, childGender, childStage }: CharacterSpriteProps) {
+  if (kind && a.outfitAssetKey) {
+    // 목 아래(의상+체형)를 하나의 정규화된 전신 스프라이트로, 목 위(얼굴+헤어)는 모든 의상에
+    // 대해 같은 위치에 고정 배치 — 개별 의상마다 팔다리가 이중으로 그려지던 문제를 근본적으로
+    // 없앤다(lib/domain/characterFullBody.ts, scripts/normalize_outfits.py 참고).
+    const portraitKey = { kind, childGender, childStage };
+    const headKey = characterPortraitKeyFor(portraitKey);
+    const headDims = HEAD_SIZE[headKey];
+    const scale = size / OUTFIT_CANVAS_H;
+    const width = Math.round(OUTFIT_CANVAS_W * scale);
+    const height = Math.round(OUTFIT_CANVAS_H * scale);
+    const headRenderW = HEAD_WIDTH * scale;
+    const headRenderH = (headDims.h / headDims.w) * headRenderW;
+    const headLeft = ((OUTFIT_CANVAS_W - HEAD_WIDTH) / 2) * scale;
+    const headTop = (NECK_Y + HEAD_OVERLAP) * scale - headRenderH;
+
+    return (
+      <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
+        <Image
+          src={outfitFullSrc(a.outfitAssetKey)}
+          alt=""
+          aria-hidden
+          width={OUTFIT_CANVAS_W}
+          height={OUTFIT_CANVAS_H}
+          unoptimized
+          style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+        />
+        <Image
+          src={headSrc(portraitKey)}
+          alt=""
+          aria-hidden
+          width={headDims.w}
+          height={headDims.h}
+          unoptimized
+          style={{ position: "absolute", left: headLeft, top: headTop, width: headRenderW, height: headRenderH }}
+        />
+      </div>
+    );
+  }
+
   if (kind) {
     const key = characterPortraitKeyFor({ kind, childGender, childStage });
     const dims = PORTRAIT_SIZE[key];
