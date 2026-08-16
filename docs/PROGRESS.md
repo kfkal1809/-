@@ -432,3 +432,13 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
   포인트가 하나 더 필요함)은 아직 미처리 — 스크립트는 시트 경로+kind만 인자로 받으면 되므로
   `python3 scripts/asset-tools/normalize_dress_overlays.py "design-assets/캐릭터 의상 (N).png" <kind>`
   형태로 재사용 가능하나, 모자 앵커링 로직 추가 + kind별 그리드 클러스터링 검증이 필요.
+- **캐릭터 렌더링 크기 불일치 버그 발견 및 수정**: `outfitAssetKey`(목 아래 전신 스프라이트)
+  렌더링에서 머리 이미지가 목선 위로 올라가는 만큼(해녀 기준 최대 ~84px) 컨테이너 상단을
+  벗어나 오버플로되고 있었다 — `overflow:hidden`이 없어서 화면엔 안 잘리고 다 보였지만,
+  그만큼 `size` prop이 실제 렌더링 높이(머리~발끝)를 과소평가하게 되어 같은 `size`를 줘도
+  `outfitAssetKey` 캐릭터가 `fullPortraitKey`(드레스 오버레이)나 기존 단일 포트레이트
+  캐릭터보다 눈에 띄게 커 보였다(`preview-size-check` 임시 라우트로 재현 확인). 8종 체형의
+  머리 크기를 다 계산해 필요한 최대 여유(`HEAD_MARGIN_TOP=90`)를 구하고, `size`가 이 여유까지
+  포함한 "전체 캔버스" 기준으로 계산되도록 `CharacterSprite`/`characterFullBody.ts`를 고쳐
+  세 렌더링 방식(구버전 단일 포트레이트/outfitAssetKey/fullPortraitKey) 모두 같은 `size`에서
+  같은 머리~발끝 높이가 나오도록 통일했다. 홈/선실 화면 스크린샷으로 회귀 없음 확인.

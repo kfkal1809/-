@@ -8,6 +8,7 @@ import {
   NECK_Y,
   HEAD_WIDTH,
   HEAD_OVERLAP,
+  HEAD_MARGIN_TOP,
   HEAD_SIZE,
   HEIGHT_SCALE_BY_KIND,
   headSrc,
@@ -326,19 +327,25 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const portraitKey = { kind, childGender, childStage };
     const headKey = characterPortraitKeyFor(portraitKey);
     const headDims = HEAD_SIZE[headKey];
-    const scale = size / OUTFIT_CANVAS_H;
+    // 머리가 목선 위로 올라가는 만큼(HEAD_MARGIN_TOP) 항상 포함한 "전체 캔버스" 기준으로
+    // scale을 잡아야, size가 다른 렌더링 방식(fullPortraitKey 등)과 똑같이 "머리~발끝 실제
+    // 높이"를 의미하게 된다 — 안 그러면 머리가 컨테이너 밖으로 넘쳐서 size가 같아도
+    // outfitAssetKey 캐릭터만 유독 커 보이는 버그가 생긴다.
+    const totalCanvasH = OUTFIT_CANVAS_H + HEAD_MARGIN_TOP;
+    const scale = size / totalCanvasH;
+    const width = Math.round(OUTFIT_CANVAS_W * scale);
+    const height = size;
     // 바깥 박스는 항상 같은 크기(레이아웃 자리 유지)로 두고, 안쪽 캐릭터만 kindScale로
     // 줄여서 하단(발 기준선) 정렬 — 해남/해녀가 같은 바닥선에 서 있으면서 키 차이만 남는다.
-    const width = Math.round(OUTFIT_CANVAS_W * scale);
-    const height = Math.round(OUTFIT_CANVAS_H * scale);
     const kindScale = HEIGHT_SCALE_BY_KIND[kind] ?? 1;
     const innerScale = scale * kindScale;
     const innerWidth = OUTFIT_CANVAS_W * innerScale;
-    const innerHeight = OUTFIT_CANVAS_H * innerScale;
+    const innerHeight = totalCanvasH * innerScale;
+    const outfitTop = HEAD_MARGIN_TOP * innerScale;
     const headRenderW = HEAD_WIDTH * innerScale;
     const headRenderH = (headDims.h / headDims.w) * headRenderW;
     const headLeft = (OUTFIT_CANVAS_W - HEAD_WIDTH) / 2 * innerScale;
-    const headTop = (NECK_Y + HEAD_OVERLAP) * innerScale - headRenderH;
+    const headTop = (HEAD_MARGIN_TOP + NECK_Y + HEAD_OVERLAP) * innerScale - headRenderH;
 
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
@@ -350,7 +357,7 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
             width={OUTFIT_CANVAS_W}
             height={OUTFIT_CANVAS_H}
             unoptimized
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+            style={{ position: "absolute", top: outfitTop, left: 0, width: innerWidth, height: OUTFIT_CANVAS_H * innerScale }}
           />
           <Image
             src={headSrc(portraitKey)}
