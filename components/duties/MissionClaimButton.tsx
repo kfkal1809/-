@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { playSfx } from "@/lib/audio/audioManager";
+import { RewardPopup } from "@/components/ui/RewardPopup";
 
 export function MissionClaimButton({ missionKey, reward }: { missionKey: string; reward: number }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
+  const [claimed, setClaimed] = useState(false);
 
   async function handleClaim() {
     if (submitting) return;
@@ -23,11 +25,16 @@ export function MissionClaimButton({ missionKey, reward }: { missionKey: string;
       if (!res.ok) throw new Error(data.error ?? "failed");
       // 서버가 지급을 확정한 뒤에만 재생 — 실패/중복 요청 시 소리가 울리지 않게 한다.
       playSfx("mission-complete");
-      router.refresh();
+      setClaimed(true);
     } catch {
       setError(true);
       setSubmitting(false);
     }
+  }
+
+  function handlePopupClose() {
+    setClaimed(false);
+    router.refresh();
   }
 
   return (
@@ -40,6 +47,14 @@ export function MissionClaimButton({ missionKey, reward }: { missionKey: string;
         {submitting ? "수령 중..." : `+$${reward} 받기`}
       </button>
       {error && <p className="text-[11px] font-bold text-[var(--color-danger)]">수령 실패</p>}
+      {claimed && (
+        <RewardPopup
+          title="임무 완료 보상"
+          amountLabel={`+$${reward}`}
+          description="선용금이 지갑에 들어왔어요!"
+          onClose={handlePopupClose}
+        />
+      )}
     </div>
   );
 }

@@ -1269,3 +1269,25 @@ assetKey 선택 → 바닥/벽 anchor 유지 → 같은 위치에서 이미지 �
   비교해 다리/잎/기둥이 전부 온전히 들어오는 것을 눈으로 재확인.
   `public/images/items/`의 87개 파일을 전부 교체 후 `tsc`/`eslint`/`vitest run`(222개)/
   `next build` 다시 전부 통과.
+
+## 보상 팝업 배경 프레임 연결
+
+`design-assets/ui&오프닝 배경.png`(모서리만 장식되고 가운데는 투명한 액자형 테두리, 941×1672)를
+공용 보상 팝업에 연결했다 — GitHub 웹 업로드가 일시적으로 막혀 있는 동안 진행 가능한 작업으로
+사용자가 직접 지정.
+
+- **에셋**: 480×853로 리사이즈해 `public/images/ui/reward_popup_frame.png`(약 240KB)에 저장.
+  alpha bbox가 캔버스 전체에 걸쳐 있어(모서리 장식이 네 변에 다 붙어 있음) 별도 트림 불필요.
+- **컴포넌트**: `components/ui/RewardPopup.tsx` 신규 — 기존 `ShipEventOverlay.tsx`의 팝업
+  스타일(`bg-black/30` 오버레이, `rounded-[26px]`, navy/coral 텍스트 색)을 그대로 따르되,
+  카드 배경을 단색 대신 이 프레임 이미지로 교체. 프레임의 실측 비율(480:853)을 CSS
+  `aspect-ratio`로 고정해 반응형 폭에서도 모서리 장식이 안 찌그러지게 함.
+- **연결 지점**: `components/duties/MissionClaimButton.tsx` — 기존엔 보상 수령 시 화면 새로고침만
+  하고 별도 피드백이 없었는데(`+$3 받기` 버튼 옆에 텍스트 메시지도 없었음), 수령 성공 시
+  `RewardPopup`을 띄우고 팝업 닫을 때 `router.refresh()`하도록 변경. 사용처가
+  `app/(game)/duties/page.tsx` 한 곳뿐이라 다른 화면에 영향 없음.
+- **검증**: `tsc`/`eslint`/`vitest run`(222개, 회귀 없음)/`next build` 전부 통과. 실제 Supabase
+  DB 연결이 없어 미션 수령 API를 직접 호출해보는 라이브 검증은 못 했음(정직하게 기록) — 컴포넌트
+  자체는 `RewardPopup`을 독립적으로 렌더링하는 방식이라 API 응답 형태와 무관하게 동작.
+  같은 프레임 에셋을 쓰는 정적 프리뷰(Artifact)를 만들어 실제 그림이 잘리거나 비율이 깨지지
+  않는지 사용자에게 먼저 확인시킴.
