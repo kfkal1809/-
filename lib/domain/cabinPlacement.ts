@@ -265,7 +265,13 @@ const SKU_OVERRIDES: Record<string, Partial<PlacementDef>> = {
   interior_nightstand_clock: { placementType: "floor", preferredZone: "floor", allowedZones: ["floor"], baseHeightFrac: 0.12 },
   // 빈티지 가구 시리즈 원본 시트에 실제로 좌/우로 튼 3/4 각도 그림이 따로 있는 유일한 아이템 —
   // furnitureFacingAssets.ts의 FURNITURE_FACING_ASSETS와 짝을 맞춰 방향 전환을 지원한다.
-  vintage_shell_bed: { defaultFacing: "front", supportedFacings: ["front", "front-left", "front-right"] },
+  // baseHeightFrac은 bed 기본값(0.34)의 약 1.2배 — 선실 대비 작아 보인다는 피드백으로 20% 확대
+  // (furniture_bed 등 다른 침대 sku는 건드리지 않음, 이 sku에만 적용).
+  vintage_shell_bed: {
+    defaultFacing: "front",
+    supportedFacings: ["front", "front-left", "front-right"],
+    baseHeightFrac: 0.41,
+  },
 };
 
 export function getPlacementDef(sku: string | null | undefined): PlacementDef {

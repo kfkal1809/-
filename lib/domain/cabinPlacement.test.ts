@@ -18,6 +18,13 @@ describe("getPlacementDef", () => {
     expect(def.baseHeightFrac).toBeGreaterThan(0.25);
   });
 
+  it("조개 침대(vintage_shell_bed)는 선실 대비 작아 보인다는 피드백으로 기본 침대보다 20% 크다", () => {
+    const bed = getPlacementDef("furniture_bed");
+    const shellBed = getPlacementDef("vintage_shell_bed");
+    expect(shellBed.baseHeightFrac).toBeGreaterThan(bed.baseHeightFrac);
+    expect(shellBed.baseHeightFrac).toBeCloseTo(bed.baseHeightFrac * 1.2, 1);
+  });
+
   it("현창/액자류는 wall로 분류된다", () => {
     expect(getPlacementDef("furniture_porthole").placementType).toBe("wall");
     expect(getPlacementDef("interior_lighthouse_frame").placementType).toBe("wall");
