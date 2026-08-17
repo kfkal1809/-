@@ -1,7 +1,14 @@
 import Image from "next/image";
 import type { CharacterAppearance, HairStyle, OutfitStyle } from "@/lib/domain/characterPresets";
 import type { ChildGender, ChildStage, CharacterKind } from "@/lib/domain/types";
-import { PORTRAIT_SIZE, characterPortraitKeyFor, characterPortraitSrc, characterOutfitMaskSrc } from "@/lib/domain/characterPortrait";
+import {
+  PORTRAIT_SIZE,
+  characterPortraitKeyFor,
+  characterPortraitSrc,
+  characterOutfitMaskSrc,
+  characterSkinMaskSrc,
+  characterHairMaskSrc,
+} from "@/lib/domain/characterPortrait";
 import {
   OUTFIT_CANVAS_W,
   OUTFIT_CANVAS_H,
@@ -392,6 +399,46 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
             height={headDims.h}
             unoptimized
             style={{ position: "absolute", left: headLeft, top: headTop, width: headRenderW, height: headRenderH }}
+          />
+          {/* 피부톤/헤어컬러는 얼굴·머리 마스크 위에 mix-blend-mode:multiply로 입힌다 —
+              outfitColor와 같은 방식(마스크 자체는 흰색+alpha, RGB는 항상 흰색). 헤어스타일은
+              머리 그림 자체가 kind당 한 장뿐이라 색상만 바뀌고 스타일(웨이브/포니 등)은
+              바뀌지 않는다 — 실제 그림이 없어 코드로 해결 불가(정직하게 기록). */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: headLeft,
+              top: headTop,
+              width: headRenderW,
+              height: headRenderH,
+              backgroundColor: a.skinTone,
+              WebkitMaskImage: `url(${characterSkinMaskSrc(portraitKey)})`,
+              maskImage: `url(${characterSkinMaskSrc(portraitKey)})`,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              mixBlendMode: "multiply",
+            }}
+          />
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: headLeft,
+              top: headTop,
+              width: headRenderW,
+              height: headRenderH,
+              backgroundColor: a.hairColor,
+              WebkitMaskImage: `url(${characterHairMaskSrc(portraitKey)})`,
+              maskImage: `url(${characterHairMaskSrc(portraitKey)})`,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              mixBlendMode: "multiply",
+            }}
           />
           {a.hatAssetKey && hatDims && (
             <Image

@@ -57,3 +57,15 @@ export function characterPortraitSrc(key: CharacterPortraitKey): string {
 export function characterOutfitMaskSrc(key: CharacterPortraitKey): string {
   return `/images/character/base/masks/${characterPortraitKeyFor(key)}_outfit_mask.png`;
 }
+
+// 얼굴/목 피부 영역만 골라낸 마스크 — skinTone으로 물들이는 데 사용(outfit_mask와 같은 방식,
+// RGB는 항상 흰색이고 alpha만 마스크 강도). 새싹 정수리의 새싹 아이콘(초록)은 제외됨.
+export function characterSkinMaskSrc(key: CharacterPortraitKey): string {
+  return `/images/character/base/masks/${characterPortraitKeyFor(key)}_skin_mask.png`;
+}
+
+// 머리카락 영역만 골라낸 마스크 — hairColor로 물들이는 데 사용. 외곽선(검정 스트로크)과
+// 눈동자, 새싹 아이콘은 제외됨.
+export function characterHairMaskSrc(key: CharacterPortraitKey): string {
+  return `/images/character/base/masks/${characterPortraitKeyFor(key)}_hair_mask.png`;
+}
