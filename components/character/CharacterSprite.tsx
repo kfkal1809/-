@@ -13,10 +13,14 @@ import {
   HEIGHT_SCALE_BY_KIND,
   HAT_SIZE,
   HAT_PLACEMENT,
+  HAND_SIZE,
+  HAND_PLACEMENT,
+  HAND_ACCESSORY_ANCHOR,
   headSrc,
   outfitFullSrc,
   dressFullSrc,
   hatSrc,
+  handAccessorySrc,
 } from "@/lib/domain/characterFullBody";
 
 interface CharacterSpriteProps {
@@ -358,6 +362,15 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const hatBottom = hatPlacement ? headTop + headRenderH * hatPlacement.bottomFrac : 0;
     const hatTop = hatBottom - hatRenderH;
 
+    const handDims = a.handAssetKey ? HAND_SIZE[a.handAssetKey] : null;
+    const handPlacement = a.handAssetKey ? HAND_PLACEMENT[a.handAssetKey] : null;
+    const handRenderW = handDims && handPlacement ? innerWidth * handPlacement.widthFrac : 0;
+    const handRenderH = handDims ? (handDims.h / handDims.w) * handRenderW : 0;
+    const handAnchorPxX = HAND_ACCESSORY_ANCHOR.x * innerScale;
+    const handAnchorPxY = outfitTop + HAND_ACCESSORY_ANCHOR.y * innerScale;
+    const handLeft = handPlacement ? handAnchorPxX - handRenderW * handPlacement.anchorX : 0;
+    const handTop = handPlacement ? handAnchorPxY - handRenderH * handPlacement.anchorY : 0;
+
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
         <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}>
@@ -388,6 +401,17 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
               height={hatDims.h}
               unoptimized
               style={{ position: "absolute", left: hatLeft, top: hatTop, width: hatRenderW, height: hatRenderH }}
+            />
+          )}
+          {a.handAssetKey && handDims && (
+            <Image
+              src={handAccessorySrc(a.handAssetKey)}
+              alt=""
+              aria-hidden
+              width={handDims.w}
+              height={handDims.h}
+              unoptimized
+              style={{ position: "absolute", left: handLeft, top: handTop, width: handRenderW, height: handRenderH }}
             />
           )}
         </div>

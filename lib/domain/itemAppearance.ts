@@ -25,7 +25,7 @@ export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>>
   haenam_deck_outfit_shirt: { outfit: "haenam_deck_uniform", outfitColor: "#3a5a8c", outfitAssetKey: "haenam_deck_outfit_08" },
   // 해남 기관사
   haenam_engine_outfit_overalls: { outfit: "haenam_engine_overalls", outfitAssetKey: "haenam_engine_outfit_01" },
-  haenam_engine_acc_wrench: { accessory: "wrench" },
+  haenam_engine_acc_wrench: { accessory: "wrench", handAssetKey: "hand_tool_pouch" },
   haenam_engine_hat_helmet: { hat: "hardhat", hatAssetKey: "hat_hardhat" },
   haenam_engine_outfit_casual: { outfit: "sweatshirt", outfitColor: "#ff9a4d", outfitAssetKey: "haenam_engine_outfit_03" },
   // 새싹

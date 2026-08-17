@@ -40,6 +40,10 @@ export interface CharacterAppearance {
   // public/images/character/hats/<key>.png. HatStyle(hat 필드)은 벡터 폴백 렌더링에서만 쓰이고,
   // 실사 캐릭터는 이 필드가 있어야 실제로 모자가 보인다(lib/domain/characterFullBody.ts 참고).
   hatAssetKey?: string | null;
+  // 실사 일러스트 전용 손소품 오버레이 키 — public/images/character/hand_accessories/<key>.png.
+  // AccessoryStyle(accessory 필드)과 마찬가지로 벡터 폴백에서는 accessory 필드가, 실사
+  // 캐릭터에서는 이 필드가 있어야 실제로 보인다.
+  handAssetKey?: string | null;
 }
 
 const BASE: CharacterAppearance = {
@@ -57,6 +61,7 @@ const BASE: CharacterAppearance = {
   toned: false,
   outfitAssetKey: null,
   hatAssetKey: null,
+  handAssetKey: null,
 };
 
 export function haenyeoPreset(overrides: Partial<CharacterAppearance> = {}): CharacterAppearance {
