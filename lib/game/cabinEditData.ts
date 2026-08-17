@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Facing } from "@/lib/domain/cabinPlacement";
 
 export interface PlacedFurniture {
   id: string; // space_items.id (temp client id for new placements: "new:<inventoryItemId>")
@@ -11,6 +12,7 @@ export interface PlacedFurniture {
   rotation: number;
   flipX: boolean;
   zIndex: number;
+  facing: Facing | null;
 }
 
 export interface UnplacedFurniture {
@@ -53,7 +55,7 @@ export async function getCabinEditData(): Promise<CabinEditData> {
     const [{ data: placedRows }, { data: inventoryRows }] = await Promise.all([
       supabase
         .from("space_items")
-        .select("id, inventory_item_id, x, y, scale, rotation, flip_x, z_index, item_catalog(sku, name)")
+        .select("id, inventory_item_id, x, y, scale, rotation, flip_x, z_index, metadata, item_catalog(sku, name)")
         .eq("space_id", space.id),
       supabase
         .from("inventory_items")
@@ -63,6 +65,7 @@ export async function getCabinEditData(): Promise<CabinEditData> {
 
     const placed: PlacedFurniture[] = (placedRows ?? []).map((row) => {
       const catalog = Array.isArray(row.item_catalog) ? row.item_catalog[0] : row.item_catalog;
+      const metadata = row.metadata as { facing?: Facing } | null;
       return {
         id: row.id,
         inventoryItemId: row.inventory_item_id,
@@ -74,6 +77,7 @@ export async function getCabinEditData(): Promise<CabinEditData> {
         rotation: Number(row.rotation),
         flipX: row.flip_x,
         zIndex: row.z_index,
+        facing: metadata?.facing ?? null,
       };
     });
 

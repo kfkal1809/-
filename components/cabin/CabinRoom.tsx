@@ -5,8 +5,8 @@ import { GameIcon } from "@/components/icons/GameIcon";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
 import type { CabinData } from "@/lib/game/cabinData";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
-import { itemIconSrc } from "@/lib/domain/itemIcons";
 import { getPlacementDef, furnitureWrapperStyle, depthOf } from "@/lib/domain/cabinPlacement";
+import { furnitureImageSrc } from "@/lib/domain/furnitureFacingAssets";
 
 // 캐릭터 열을 방 바닥의 이 y위치에 서 있는 것으로 취급해 가구와 같은 depth 계산식을 쓴다
 // (예: 등대 액자처럼 y가 작은 벽 장식은 항상 캐릭터 뒤, 러그처럼 y가 큰 바닥 가구는 앞).
@@ -31,7 +31,7 @@ export function CabinRoom({ data }: { data: CabinData }) {
 
         {data.placedItems.map((item) => {
           const def = getPlacementDef(item.sku);
-          const src = itemIconSrc(item.sku);
+          const src = item.sku ? furnitureImageSrc(item.sku, item.facing ?? def.defaultFacing) : null;
           return (
             <div
               key={item.id}

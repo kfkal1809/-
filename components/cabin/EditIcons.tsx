@@ -28,6 +28,15 @@ export function RotateRightIcon() {
   );
 }
 
+export function FacingIcon() {
+  return (
+    <Base>
+      <path d="M3 20 L12 4 L21 20 Z" />
+      <path d="M12 4 L12 14" />
+    </Base>
+  );
+}
+
 export function FlipIcon() {
   return (
     <Base>

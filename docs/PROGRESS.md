@@ -1040,3 +1040,54 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
   `tsc`/`eslint`/`vitest run`(121개)/`next build` 전부 통과.
 - **남은 백로그**: 선박모형 7종("선박모형 (1) LNG선.png" 등)과 "모자 소품.png"(모자/헤드밴드/
   가방 등 40여 종)은 저장소에 들어와 있지만 베타 핵심 루프 밖이라 이번엔 처리하지 않음.
+
+## 가구 방향 전환(facing) 기능
+
+사용자 요청: "가구를 사용자가 방향 변경 → furniture direction 값 변경 → 해당 direction의
+assetKey 선택 → 바닥/벽 anchor 유지 → 같은 위치에서 이미지 교체"할 수 있게 구성.
+
+- **자산 실태부터 먼저 확인**: 빈티지 가구 22종을 만들 때 "같은 가구의 다른 각도" 중복이라며
+  버렸던 원본 크롭들을 다시 열어 하나씩 비교해봤다 — 실제로 카메라를 좌/우로 튼 진짜 다른
+  구도인 것은 조개 침대(`vintage_shell_bed`) 하나뿐이었다(나머지 "각도 변형"들은 눈으로
+  비교해보니 카메라 각도가 아니라 비슷한 그림을 다시 그린 것). 그림이 없는데 "방향 전환"
+  버튼만 만들면 눌러도 아무것도 안 바뀌는 가짜 기능이 되므로, 침대의 좌/우 3/4 각도 원본
+  2장을 추가로 크롭해 `vintage_shell_bed_left.png`/`vintage_shell_bed_right.png`로 저장했다.
+- **구조(새 파일 `lib/domain/furnitureFacingAssets.ts`)**: `FURNITURE_FACING_ASSETS: Record<sku,
+  Partial<Record<Facing, assetFileName>>>` — 방향별 그림이 실제로 있는 sku만 등록한다(현재는
+  `vintage_shell_bed` 하나). `availableFacings(sku)`가 `cabinPlacement.ts`의
+  `supportedFacings`(어떤 방향이 배치상 자연스러운가)와 실제 등록된 그림을 둘 다 확인해서
+  방향 목록을 돌려주고, `cycleFacing(sku, current)`이 다음 방향으로 순환, `furnitureImageSrc
+  (sku, facing)`가 실제 렌더링에 쓸 이미지 경로를 계산한다(`itemIconSrc`와 같은 화이트리스트
+  규칙을 그대로 따름 — 미등록 sku는 null). `cabinPlacement.ts`의 `SKU_OVERRIDES`에
+  `vintage_shell_bed: { supportedFacings: ["front","front-left","front-right"] }` 추가.
+- **바닥/벽 anchor 유지**: 방향이 바뀌어도 `x`/`y`/`scale`/`rotation`/`flipX`는 그대로 두고
+  `facing`만 바뀐다 — `furnitureWrapperStyle`(위치 계산)과 `furnitureImageSrc`(그림 선택)가
+  완전히 분리된 함수라, 그림만 같은 자리에서 교체되고 위치/크기는 절대 안 흔들린다.
+  CSS `rotate()`로 다른 방향인 척 만드는 방식은 여전히 안 씀(기존 원칙 유지) — 진짜 다른
+  각도로 그려진 그림을 통째로 교체하는 방식.
+  기존 `rotation` 필드(±15° 단위 장식용 기울기, `furnitureWrapperStyle`에서 CSS
+  `rotate(Ndeg)`로 적용)와는 별개 기능 — 방향 전환은 그림 자체를 바꾸고, 기울기 회전은 지금
+  보이는 그림을 살짝 기울인다. 서로 간섭하지 않음.
+  **참고**: 이번 조사로 CSS 회전이 이미 존재한다는 걸 재확인했다 — 앞선 세션에서 "방향별
+  스프라이트가 없어서 CSS rotate로 다른 방향인 척 만들지 않는다"고 명시한 원칙은 위치 회전
+  방식 자체가 아니라 "각도가 다른 그림을 흉내 내는 용도로 CSS 회전을 쓰지 않는다"는 뜻이었고,
+  이번 facing 기능은 그 원칙을 그대로 지키면서 진짜 다른 각도 그림으로 구현했다.
+- **데이터 저장(새 마이그레이션 불필요)**: `space_items.metadata`(기존 jsonb 컬럼, 스키마
+  변경 없음)에 `{"facing": "front-left"}` 형태로 저장. `/api/cabin/save-layout`이 `facing`을
+  받아 `metadata`에 실어 저장하고, `getCabinData`/`getCabinEditData`가 다시 읽어
+  `CabinPlacedItem.facing`/`PlacedFurniture.facing`으로 노출한다.
+- **UI**: `CabinEditor`의 선택 아이템 툴바에 새 "방향" 버튼(`FacingIcon`, 나침반 모양) 추가 —
+  `availableFacings(sku).length < 2`면 자동으로 비활성화(방향 전환 미지원 가구는 버튼이 회색
+  처리). 클릭 시 `cycleFacing`으로 다음 방향으로 순환하고 `furniture-place` 효과음 재생.
+  `CabinRoom`(일반 보기)도 같은 `furnitureImageSrc`로 렌더링해서 저장된 방향이 그대로 보인다.
+- **검증**: 임시 `app/(dev)/facing-preview`(커밋 전 삭제)에서 실제 `CabinEditor`에 조개
+  침대를 놓고 "방향" 버튼을 3번 연속 클릭 — front→front-left→front-right→front로 정확히
+  순환하고, 매번 같은 위치/같은 선택 테두리를 유지한 채 그림만 바뀌는 것을 스크린샷으로 확인.
+  한 바퀴 돌아 원래 상태로 복귀하자 "저장 필요" 상태(dirty)도 정확히 false로 돌아가는 것까지
+  확인(직렬화 비교라 완전히 같은 상태로 판정됨). `lib/domain/furnitureFacingAssets.test.ts`
+  (7개)로 `availableFacings`/`cycleFacing`/`furnitureImageSrc`의 순환·폴백·화이트리스트 동작을
+  회귀 테스트로 고정. `tsc`/`eslint`/`vitest run`(128개)/`next build` 전부 통과.
+- **범위**: 지금은 방향 전환이 가능한 가구가 조개 침대 1종뿐이다 — 구조 자체는 어떤 가구든
+  `FURNITURE_FACING_ASSETS`에 항목을 추가하기만 하면 바로 지원되도록 만들어뒀지만, 실제 좌/우
+  각도 그림이 없는 다른 21종 빈티지 가구·기존 인테리어 소품들은 여전히 단일 방향이다(억지로
+  같은 그림을 재사용해 가짜 방향을 만들지 않음 — 그림이 진짜 있는 만큼만 지원).

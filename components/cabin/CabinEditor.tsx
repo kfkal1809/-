@@ -10,12 +10,14 @@ import { itemIconSrc } from "@/lib/domain/itemIcons";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
 import { WALLPAPER_SWATCHES, FLOOR_SWATCHES, clampToZone, isInKeepOutZone } from "@/lib/domain/cabinDecor";
 import { getPlacementDef, furnitureWrapperStyle, depthOf, zoneBoundsFor } from "@/lib/domain/cabinPlacement";
+import { furnitureImageSrc, availableFacings, cycleFacing } from "@/lib/domain/furnitureFacingAssets";
 import { playSfx } from "@/lib/audio/audioManager";
 import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
 import {
   RotateLeftIcon,
   RotateRightIcon,
   FlipIcon,
+  FacingIcon,
   ShrinkIcon,
   GrowIcon,
   LayerForwardIcon,
@@ -123,6 +125,7 @@ export function CabinEditor({
       rotation: 0,
       flipX: false,
       zIndex: maxZ + 1,
+      facing: def.defaultFacing,
     };
     setPlaced((prev) => [...prev, newItem]);
     setUnplaced((prev) => prev.filter((u) => u.inventoryItemId !== item.inventoryItemId));
@@ -147,6 +150,17 @@ export function CabinEditor({
   function sendBackward() {
     const minZ = placed.reduce((min, p) => Math.min(min, p.zIndex), 0);
     updateSelected({ zIndex: minZ - 1 });
+  }
+
+  // 방향 전환 — 실제로 다른 각도 그림이 있는 가구(furnitureFacingAssets.ts)만 다음 방향으로
+  // 순환한다. x/y/scale/rotation/flipX는 그대로 두고 facing만 바꾸므로 바닥/벽 anchor는
+  // furnitureWrapperStyle 계산에서 안 흔들린다 — 그림만 같은 자리에서 바뀐다.
+  function cycleSelectedFacing() {
+    if (!selected || !selected.sku) return;
+    const next = cycleFacing(selected.sku, selected.facing ?? getPlacementDef(selected.sku).defaultFacing);
+    if (next === selected.facing) return;
+    updateSelected({ facing: next });
+    playSfx("furniture-place");
   }
 
   function handleCancel() {
@@ -175,6 +189,7 @@ export function CabinEditor({
             rotation: p.rotation,
             flipX: p.flipX,
             zIndex: p.zIndex,
+            facing: p.facing,
           })),
         }),
       });
@@ -223,7 +238,7 @@ export function CabinEditor({
           .sort((a, b) => depthOf(a.y, a.zIndex) - depthOf(b.y, b.zIndex))
           .map((item) => {
             const def = getPlacementDef(item.sku);
-            const src = itemIconSrc(item.sku);
+            const src = item.sku ? furnitureImageSrc(item.sku, item.facing ?? def.defaultFacing) : null;
             const isSelected = selectedId === item.id;
             const style = furnitureWrapperStyle({
               x: item.x,
@@ -311,6 +326,13 @@ export function CabinEditor({
               onClick={() => updateSelected({ flipX: !selected.flipX })}
             >
               <FlipIcon />
+            </IconBtn>
+            <IconBtn
+              label="방향"
+              disabled={!selected.sku || availableFacings(selected.sku).length < 2}
+              onClick={cycleSelectedFacing}
+            >
+              <FacingIcon />
             </IconBtn>
             <IconBtn
               label="작게"

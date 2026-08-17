@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { haenyeoPreset, haenamDeckPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { CharacterKind } from "@/lib/domain/types";
+import type { Facing } from "@/lib/domain/cabinPlacement";
 
 export interface CabinCharacter {
   id: string;
@@ -21,6 +22,9 @@ export interface CabinPlacedItem {
   rotation: number;
   flipX: boolean;
   zIndex: number;
+  // 방향 전환을 지원하는 가구(vintage_shell_bed 등)의 현재 방향. 지원 안 하는 가구는 항상
+  // null이고, 렌더링 쪽에서 getPlacementDef(sku).defaultFacing으로 안전하게 대체된다.
+  facing: Facing | null;
 }
 
 export interface GuestbookEntryRow {
@@ -58,12 +62,12 @@ const DEMO: CabinData = {
     { id: "d2", nickname: "북극곰", roleLabel: "해남(항해사)", kind: "haenam", appearance: haenamDeckPreset() },
   ],
   placedItems: [
-    { id: "f1", sku: "furniture_bed", name: "침대", x: 0.22, y: 0.62, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
-    { id: "f2", sku: "furniture_desk", name: "책상", x: 0.64, y: 0.56, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
-    { id: "f6", sku: "furniture_chair", name: "의자", x: 0.64, y: 0.72, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
-    { id: "f3", sku: "furniture_rug", name: "러그", x: 0.46, y: 0.84, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
-    { id: "f4", sku: "interior_plant_side_table", name: "화분 사이드테이블", x: 0.1, y: 0.76, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
-    { id: "f5", sku: "interior_lighthouse_frame", name: "등대 액자", x: 0.5, y: 0.18, scale: 1, rotation: 0, flipX: false, zIndex: 0 },
+    { id: "f1", sku: "furniture_bed", name: "침대", x: 0.22, y: 0.62, scale: 1, rotation: 0, flipX: false, zIndex: 0, facing: null },
+    { id: "f2", sku: "furniture_desk", name: "책상", x: 0.64, y: 0.56, scale: 1, rotation: 0, flipX: false, zIndex: 0, facing: null },
+    { id: "f6", sku: "furniture_chair", name: "의자", x: 0.64, y: 0.72, scale: 1, rotation: 0, flipX: false, zIndex: 0, facing: null },
+    { id: "f3", sku: "furniture_rug", name: "러그", x: 0.46, y: 0.84, scale: 1, rotation: 0, flipX: false, zIndex: 0, facing: null },
+    { id: "f4", sku: "interior_plant_side_table", name: "화분 사이드테이블", x: 0.1, y: 0.76, scale: 1, rotation: 0, flipX: false, zIndex: 0, facing: null },
+    { id: "f5", sku: "interior_lighthouse_frame", name: "등대 액자", x: 0.5, y: 0.18, scale: 1, rotation: 0, flipX: false, zIndex: 0, facing: null },
   ],
   guestbook: [],
 };
@@ -102,7 +106,7 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
 
     const { data: placed } = await supabase
       .from("space_items")
-      .select("id, x, y, scale, rotation, flip_x, z_index, item_catalog(sku, name)")
+      .select("id, x, y, scale, rotation, flip_x, z_index, metadata, item_catalog(sku, name)")
       .eq("space_id", space.id);
 
     const { data: guestbookRows } = await supabase
@@ -130,6 +134,7 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
       })),
       placedItems: (placed ?? []).map((p) => {
         const catalog = Array.isArray(p.item_catalog) ? p.item_catalog[0] : p.item_catalog;
+        const metadata = p.metadata as { facing?: Facing } | null;
         return {
           id: p.id,
           sku: catalog?.sku ?? null,
@@ -140,6 +145,7 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
           rotation: Number(p.rotation),
           flipX: p.flip_x,
           zIndex: p.z_index,
+          facing: metadata?.facing ?? null,
         };
       }),
       guestbook: (guestbookRows ?? []).map((g) => {

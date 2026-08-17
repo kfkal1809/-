@@ -263,6 +263,9 @@ const SKU_OVERRIDES: Record<string, Partial<PlacementDef>> = {
   interior_baby_crib: { baseHeightFrac: 0.3 },
   // 협탁 위에 놓는 소형 탁상시계 — "clock" 정규식이 벽시계로 잘못 분류하는 것을 바로잡음.
   interior_nightstand_clock: { placementType: "floor", preferredZone: "floor", allowedZones: ["floor"], baseHeightFrac: 0.12 },
+  // 빈티지 가구 시리즈 원본 시트에 실제로 좌/우로 튼 3/4 각도 그림이 따로 있는 유일한 아이템 —
+  // furnitureFacingAssets.ts의 FURNITURE_FACING_ASSETS와 짝을 맞춰 방향 전환을 지원한다.
+  vintage_shell_bed: { defaultFacing: "front", supportedFacings: ["front", "front-left", "front-right"] },
 };
 
 export function getPlacementDef(sku: string | null | undefined): PlacementDef {

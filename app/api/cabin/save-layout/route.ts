@@ -9,6 +9,7 @@ interface PlacedPayload {
   rotation: number;
   flipX: boolean;
   zIndex: number;
+  facing?: string | null;
 }
 
 // 기획서 3.18 / FR-CABIN-002: 본인 가족의 선실만 편집 가능, 소유권을 서버가 재검증한다.
@@ -76,6 +77,7 @@ export async function POST(request: Request) {
       rotation: i.rotation,
       flip_x: i.flipX,
       z_index: i.zIndex,
+      metadata: i.facing ? { facing: i.facing } : {},
     }));
 
     const { error: insertError } = await service.from("space_items").insert(rows);
