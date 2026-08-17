@@ -9,7 +9,7 @@ import { ClothingTabs } from "@/components/store/ClothingTabs";
 import { ClothingProductCard } from "@/components/store/ClothingProductCard";
 import { ClothingStoreDetail } from "@/components/store/ClothingStoreDetail";
 import { playSfx } from "@/lib/audio/audioManager";
-import { ITEM_APPEARANCE_PATCH } from "@/lib/domain/itemAppearance";
+import { bodyPresetKeyFor, resolveAppearancePatch } from "@/lib/domain/itemAppearanceVariants";
 import type { ClothingTabKey } from "@/lib/domain/clothingStoreCategories";
 import type { ClothingStoreData, ClothingProduct } from "@/lib/game/clothingStoreData";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
@@ -41,11 +41,22 @@ export function ClothingStoreScreen({ data }: { data: ClothingStoreData }) {
 
   const filtered = useMemo(() => (tab === "all" ? products : products.filter((p) => p.tab === tab)), [products, tab]);
   const selected = products.find((p) => p.catalogItemId === selectedProductId) ?? null;
+  const bodyPresetKey = useMemo(
+    () => bodyPresetKeyFor(data.selectedKind, data.selectedChildGender, data.selectedChildStage),
+    [data.selectedKind, data.selectedChildGender, data.selectedChildStage]
+  );
 
   function previewProduct(product: ClothingProduct) {
     playSfx("ui-click");
+    // 서버 목록 단계에서 이미 이 캐릭터 체형과 호환되는 상품만 내려오지만, 클라이언트에서도
+    // 한 번 더 확인해서 일치하는 variant가 없으면 다른 체형 그림으로 대체하지 않고 안전하게
+    // 처리한다.
+    const patch = resolveAppearancePatch(product.sku, bodyPresetKey);
+    if (patch === null) {
+      setMessage("이 체형에서는 착용할 수 없는 아이템이에요.");
+      return;
+    }
     setSelectedProductId(product.catalogItemId);
-    const patch = ITEM_APPEARANCE_PATCH[product.sku] ?? {};
     setPreviewAppearance((prev) => (prev ? { ...prev, ...patch } : prev));
   }
 

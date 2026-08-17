@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getWalletBalance } from "@/lib/game/wallet";
 import { compatKeyFor, clothingTabFor, type CompatKey, type ClothingTabKey } from "@/lib/domain/clothingStoreCategories";
+import { bodyPresetKeyFor, isCompatibleWithBody } from "@/lib/domain/itemAppearanceVariants";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 import { haenyeoPreset } from "@/lib/domain/characterPresets";
@@ -147,10 +148,16 @@ export async function getClothingStoreData(requestedCharacterId?: string): Promi
         .filter((id): id is string => !!id)
     );
 
+    const bodyPresetKey = bodyPresetKeyFor(selected.kind, selected.childGender, selected.childStage);
+
     const products: ClothingProduct[] = (listings ?? [])
       .map((row) => {
         const catalog = Array.isArray(row.item_catalog) ? row.item_catalog[0] : row.item_catalog;
         if (!catalog || catalog.subcategory !== selected.compatKey) return null;
+        // 체형별 전용 그림(appearance variant)이 있는 상품은 지금 선택된 캐릭터의 체형과
+        // 맞는 variant가 있을 때만 목록에 노출한다 — 안 맞는 체형 그림을 보여주는 대신
+        // 아예 그 캐릭터에게는 상품 자체를 숨긴다(옷가게 목록 단계에서 이미 걸러짐).
+        if (!isCompatibleWithBody(catalog.sku, bodyPresetKey)) return null;
         const metadata = catalog.metadata_json as { new?: boolean } | null;
         const category = catalog.category as "outfit" | "hat" | "accessory";
         return {

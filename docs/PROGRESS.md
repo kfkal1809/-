@@ -941,3 +941,67 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
   여전히 사용자 작화 대기.
 - 코드 변경: `scripts/asset-tools/normalize_dress_overlays.py`만 수정(신발/모자 분류 로직).
   앱 런타임 코드 변경 없음 — `tsc`/`vitest run`(83개) 통과 확인.
+
+## 아이템 appearance variant 시스템 도입 — 63벌 카탈로그 실제 연결
+
+위에서 "카탈로그 연결 보류"로 남겨뒀던 문제(`item_catalog.kind='child'`가 새싹 8체형을 하나로
+묶어 관리하는데, 특정 체형 전용으로 이미 합성된 그림을 범용 SKU에 그대로 연결하면 다른 체형이
+착용했을 때 그림이 안 맞는 문제)를 사용자 요청으로 구조적으로 해결하고, 보류했던 63벌을 실제
+옷가게/인벤토리/구매 흐름에 연결했다.
+
+- **핵심 아이디어**: "논리적 상품(item_catalog, 구매/소유 단위)"과 "체형별 렌더링 자산(어떤
+  체형에 어떤 그림을 쓸지)"을 분리했다. `item_catalog`는 지금처럼 sku 하나당 한 행만 유지하고
+  (스키마 변경 없음), 새 파일 `lib/domain/itemAppearanceVariants.ts`가 "sku → 체형별 patch"
+  매핑을 관리한다. 기존 `ITEM_APPEARANCE_PATCH`(해녀/해남/범용 새싹 상품, 체형 상관없이 같은
+  자산이 이미 잘 동작하던 것들)는 그대로 두고 건드리지 않았다 — 이 새 구조는 "체형별로 다른
+  그림이 필요한" 상품에만 추가로 적용된다.
+- **`BodyPresetKey`(8종)**: 새 체형 체계를 만들지 않고 기존 `characterPortrait.ts`의
+  `PORTRAIT_SIZE`/`HEAD_SIZE`에 이미 있던 8개 키(`haenyeo`/`haenam`/새싹 3단계×2성별)를 그대로
+  재사용. `bodyPresetKeyFor(kind, childGender, childStage)`는 기존 `characterPortraitKeyFor`를
+  감싸기만 해서 "base 이미지 경로 계산에 쓰는 체형 키"와 "appearance variant 조회에 쓰는 체형
+  키"가 절대 어긋나지 않는다.
+- **`ITEM_APPEARANCE_VARIANTS`**: `sku -> { bodyPresetKey, assetKey, patch }[]` 형태(한 상품이
+  여러 체형 variant를 가질 수 있는 배열 구조로 설계 — 지금 63벌은 시트 하나당 체형 하나라
+  실제로는 상품마다 variant가 1개씩이지만, 같은 디자인을 여러 체형으로 반복 제작할 미래 대비).
+  `resolveAppearancePatch(sku, bodyPresetKey)`가 일치하는 variant만 반환하고, **없으면 다른
+  체형 그림으로 강제 대체하지 않고 `null`을 반환**한다. variant가 아예 등록 안 된 sku(기존
+  상품)는 `ITEM_APPEARANCE_PATCH`로 폴백 — 회귀 없음.
+- **착용 로직 안전장치**: `POST /api/character/equip`이 캐릭터의 `kind`/`child_gender`/
+  `child_stage`를 실제 DB에서 읽어 `bodyPresetKey`를 계산하고, `resolveAppearancePatch`가
+  `null`을 반환하면(이 체형에 안 맞는 상품) `character_equipment` upsert도, `appearance_json`
+  갱신도 하지 않고 `400 incompatible_body`로 거부한다 — 잘못된 체형 그림이 저장되는 경로 자체를
+  차단.
+- **옷가게 목록 필터링**: `getClothingStoreData`가 선택된 캐릭터의 `bodyPresetKey`를 계산해서,
+  `isCompatibleWithBody(sku, bodyPresetKey)`가 `false`인 상품은 아예 목록에서 뺀다(다른 체형
+  상품이 목록에 뜨는 일 자체가 없음). 클라이언트(`ClothingStoreScreen.previewProduct`)도 같은
+  `resolveAppearancePatch`로 한 번 더 확인해서, 혹시 불일치가 있어도 다른 체형 그림으로
+  바뀌는 대신 "이 체형에서는 착용할 수 없는 아이템이에요" 메시지로 안전하게 처리한다.
+- **검수 매니페스트**: `OUTFIT_VARIANT_MANIFEST`(같은 파일)에 63개 항목을
+  `{ sourceSheet, cellIndex, logicalItemKey, bodyPresetKey, assetKey, slot, reviewStatus }`로
+  전부 기록했다 — 전부 위 "시트 2/4/6/9 추가 처리" 절에서 실제 전체 해상도로 열어 눈으로 확인한
+  것들이라 `reviewStatus: "verified"`. `lib/domain/itemAppearanceVariants.test.ts`(vitest)가
+  매니페스트 63개 전부가 `ITEM_APPEARANCE_VARIANTS`와 정확히 대응하는지(누락/여분 없음),
+  `logicalItemKey` 중복이 없는지, `resolveAppearancePatch`/`isCompatibleWithBody`가 체형
+  불일치 시 정확히 거부하는지, 기존 해녀/해남/범용 새싹 상품이 여전히 폴백으로 동작하는지를
+  자동 검증한다.
+- **마이그레이션(`0010_outfit_variant_pack.sql`, 미적용)**: 63벌을 `item_catalog`에
+  `category='outfit', subcategory='child'`로 추가(가격 7~16 선용금, 희귀 등급은 블레이저/캡틴
+  유니폼/한복/블레이저 6종만 rare)하고, `stores.slug='clothing'`의 `store_products`에 연결.
+  스키마 변경(새 테이블)은 없다 — appearance variant 매핑 자체는 기존 `ITEM_APPEARANCE_PATCH`와
+  같은 방식으로 코드 쪽(TS 상수)에 있고, DB는 "논리적 상품"만 관리한다.
+- **검증**: 임시 `app/(dev)/body-variant-preview`(8체형 각각 실제 `CharacterSprite`로 렌더링,
+  커밋 전 삭제)로 8체형 contact sheet 스크린샷 확인 — 새 variant가 있는 3체형(유아 남/여,
+  초등 남)은 해당 체형 전용 그림이 정확히 뜨고, variant가 없는 5체형(해녀/해남/유치원 남·여/
+  초등 여)은 기존 기본 outfit으로 정상 폴백(깨짐 없음). 임시
+  `app/(dev)/clothing-store-preview`(캐릭터 3종 mock 데이터, 커밋 전 삭제)로 옷가게 상품
+  목록이 캐릭터 체형에 따라 완전히 다르게 뜨는 것(유아남 캐릭터는 s3/s5/s8/s4만, 유아여는
+  s6/s2만)과, 상품 클릭 시 미리보기가 그 상품의 정확한 체형 그림으로만 바뀌는 것을 Playwright
+  스크린샷으로 확인. `pageerror` 0건. `tsc`/`eslint`/`vitest run`(99개)/`next build` 전부 통과.
+- **범위상 하지 않은 것(다음 단계 후보, 사용자가 명시적으로 후순위 지정)**: 우산/인형/선글라스
+  같은 이 게임 캐릭터 렌더러에 대응 슬롯이 없는 소품(`pending-face-accessory`/
+  `pending-hand-accessory` 분류)은 이번 범위에 넣지 않았다 — "8체형 variant 시스템부터 완벽하게
+  만드는 게 우선"이라는 사용자 지시에 따름. 해남(항해사/기관사) 팔 길이 비율 조정도 별도 요청으로
+  들어와 있으나 아직 착수 전(캐릭터 렌더링 구조 확인부터 필요, 적용 전 비교 이미지를 먼저
+  보여드리기로 함). 사용자가 업로드한 "빈티지 가구 시리즈.png"/"모자 소품.png"/선박모형 7종은
+  저장소에 들어와 있지만("베타에 꼭 필요한 것만 먼저" 지시에 따라 핵심 루프 — 캐릭터→옷 입기→
+  돈 벌기→쇼핑→선실 꾸미기 — 우선 처리 후) 아직 크롭/카탈로그화하지 않았다.
