@@ -32,6 +32,28 @@ export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>>
   child_outfit_overalls: { outfit: "child_overalls", outfitAssetKey: "child_outfit_02" },
   child_outfit_dress: { outfit: "dress", outfitColor: "#f2b8c6", outfitAssetKey: "child_outfit_04" },
   child_outfit_hoodie: { outfit: "hoodie", outfitColor: "#a7d8c9", outfitAssetKey: "child_outfit_05" },
+  // 모자 소품 21종 (0016_hat_accessory_pack) — HatStyle 벡터 폴백 대응이 없어 hatAssetKey만 연결.
+  haenam_deck_hat_sailor_cap: { hatAssetKey: "hat_sailor_cap" },
+  haenam_deck_hat_bucket: { hatAssetKey: "hat_bucket" },
+  haenam_engine_hat_aviator_white: { hatAssetKey: "hat_aviator_white" },
+  haenam_engine_hat_aviator_blue: { hatAssetKey: "hat_aviator_blue" },
+  haenam_engine_hat_goggles_brown: { hatAssetKey: "hat_goggles_brown" },
+  haenam_engine_hat_goggles_red: { hatAssetKey: "hat_goggles_red" },
+  haenam_engine_hat_wrench_gray: { hatAssetKey: "hat_wrench_headband_gray" },
+  haenam_engine_hat_wrench_red: { hatAssetKey: "hat_wrench_headband_red" },
+  haenam_engine_hat_wrench_star: { hatAssetKey: "hat_wrench_headband_star" },
+  haenyeo_hat_sailor_bow: { hatAssetKey: "hat_sailor_bow" },
+  haenyeo_hat_straw: { hatAssetKey: "hat_straw" },
+  haenyeo_hat_bow_headband_navy: { hatAssetKey: "hat_bow_headband_navy" },
+  haenyeo_hat_bow_headband_small: { hatAssetKey: "hat_bow_headband_small" },
+  haenyeo_hat_bow_headband_floral: { hatAssetKey: "hat_bow_headband_floral" },
+  haenyeo_hat_anchor_clip_1: { hatAssetKey: "hat_anchor_clip_1" },
+  haenyeo_hat_anchor_clip_2: { hatAssetKey: "hat_anchor_clip_2" },
+  haenyeo_hat_shell_clip: { hatAssetKey: "hat_shell_clip" },
+  haenyeo_hat_starfish_clip: { hatAssetKey: "hat_starfish_clip" },
+  haenyeo_hat_daisy_clip: { hatAssetKey: "hat_daisy_clip" },
+  haenyeo_hat_shell_cluster_clip: { hatAssetKey: "hat_shell_cluster_clip" },
+  haenyeo_hat_bow_clip_navy: { hatAssetKey: "hat_bow_clip_navy" },
 };
 
 export const CATEGORY_TO_SLOT: Record<string, EquipSlot> = {

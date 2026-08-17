@@ -48,6 +48,27 @@ export function headSrc(key: CharacterPortraitKey): string {
 export const HAT_SIZE: Record<string, { w: number; h: number }> = {
   hat_captain: { w: 284, h: 169 },
   hat_hardhat: { w: 251, h: 203 },
+  hat_sailor_cap: { w: 300, h: 209 },
+  hat_sailor_bow: { w: 267, h: 231 },
+  hat_bucket: { w: 290, h: 177 },
+  hat_straw: { w: 300, h: 197 },
+  hat_aviator_white: { w: 245, h: 200 },
+  hat_aviator_blue: { w: 252, h: 197 },
+  hat_goggles_brown: { w: 269, h: 112 },
+  hat_goggles_red: { w: 245, h: 146 },
+  hat_wrench_headband_gray: { w: 192, h: 174 },
+  hat_wrench_headband_red: { w: 199, h: 174 },
+  hat_wrench_headband_star: { w: 198, h: 181 },
+  hat_bow_headband_navy: { w: 226, h: 150 },
+  hat_bow_headband_small: { w: 207, h: 168 },
+  hat_bow_headband_floral: { w: 218, h: 188 },
+  hat_anchor_clip_1: { w: 167, h: 128 },
+  hat_anchor_clip_2: { w: 160, h: 112 },
+  hat_shell_clip: { w: 165, h: 93 },
+  hat_starfish_clip: { w: 167, h: 103 },
+  hat_daisy_clip: { w: 157, h: 109 },
+  hat_shell_cluster_clip: { w: 176, h: 96 },
+  hat_bow_clip_navy: { w: 171, h: 127 },
 };
 
 export function hatSrc(key: string): string {
@@ -56,11 +77,35 @@ export function hatSrc(key: string): string {
 
 // 모자별 배치값 — widthFrac: 렌더된 머리 폭(headRenderW) 대비 모자 폭 비율.
 // bottomFrac: 머리 렌더 높이(headRenderH) 대비, 머리 top에서 얼마나 내려온 지점에 모자
-// 밑단을 맞출지(앞머리와 자연스럽게 겹치도록 살짝 내려서 얹음). 라이브 브라우저로 픽셀
-// 단위까지 검증하지 못해 어림값으로 잡았다 — 실제로 보면서 미세조정 필요할 수 있음(정직하게 기록).
-export const HAT_PLACEMENT: Record<string, { widthFrac: number; bottomFrac: number }> = {
+// 밑단을 맞출지(앞머리와 자연스럽게 겹치도록 살짝 내려서 얹음, 고글류는 이 값을 크게 잡아
+// 눈높이 부근까지 내림). offsetXFrac(선택, 기본 0): 헤어핀처럼 정중앙이 아니라 옆으로
+// 치우쳐 꽂는 소품 전용 — 렌더된 머리 폭 대비 좌우 이동량(양수 = 오른쪽). 라이브 브라우저로
+// 캡틴모자/안전모/손소품 3종만 실제 확인했고, 나머지 21종은 같은 공식으로 어림값만 잡았다 —
+// 실제로 보면서 미세조정 필요할 수 있음(정직하게 기록).
+export const HAT_PLACEMENT: Record<string, { widthFrac: number; bottomFrac: number; offsetXFrac?: number }> = {
   hat_captain: { widthFrac: 1.08, bottomFrac: 0.34 },
   hat_hardhat: { widthFrac: 0.96, bottomFrac: 0.4 },
+  hat_sailor_cap: { widthFrac: 1.02, bottomFrac: 0.34 },
+  hat_sailor_bow: { widthFrac: 1.0, bottomFrac: 0.34 },
+  hat_bucket: { widthFrac: 1.05, bottomFrac: 0.36 },
+  hat_straw: { widthFrac: 1.15, bottomFrac: 0.32 },
+  hat_aviator_white: { widthFrac: 0.95, bottomFrac: 0.42 },
+  hat_aviator_blue: { widthFrac: 0.95, bottomFrac: 0.42 },
+  hat_goggles_brown: { widthFrac: 0.85, bottomFrac: 0.58 },
+  hat_goggles_red: { widthFrac: 0.8, bottomFrac: 0.58 },
+  hat_wrench_headband_gray: { widthFrac: 0.85, bottomFrac: 0.3 },
+  hat_wrench_headband_red: { widthFrac: 0.85, bottomFrac: 0.3 },
+  hat_wrench_headband_star: { widthFrac: 0.85, bottomFrac: 0.3 },
+  hat_bow_headband_navy: { widthFrac: 0.8, bottomFrac: 0.28 },
+  hat_bow_headband_small: { widthFrac: 0.8, bottomFrac: 0.28 },
+  hat_bow_headband_floral: { widthFrac: 0.8, bottomFrac: 0.28 },
+  hat_anchor_clip_1: { widthFrac: 0.4, bottomFrac: 0.5, offsetXFrac: 0.35 },
+  hat_anchor_clip_2: { widthFrac: 0.4, bottomFrac: 0.5, offsetXFrac: -0.35 },
+  hat_shell_clip: { widthFrac: 0.4, bottomFrac: 0.5, offsetXFrac: 0.35 },
+  hat_starfish_clip: { widthFrac: 0.4, bottomFrac: 0.5, offsetXFrac: -0.35 },
+  hat_daisy_clip: { widthFrac: 0.4, bottomFrac: 0.5, offsetXFrac: 0.35 },
+  hat_shell_cluster_clip: { widthFrac: 0.42, bottomFrac: 0.5, offsetXFrac: -0.35 },
+  hat_bow_clip_navy: { widthFrac: 0.45, bottomFrac: 0.5, offsetXFrac: 0.35 },
 };
 
 // public/images/character/hand_accessories/*.png 실측 크기(design-assets/모자 소품.png에서 크롭).

@@ -358,7 +358,8 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const hatPlacement = a.hatAssetKey ? HAT_PLACEMENT[a.hatAssetKey] : null;
     const hatRenderW = hatDims && hatPlacement ? headRenderW * hatPlacement.widthFrac : 0;
     const hatRenderH = hatDims ? (hatDims.h / hatDims.w) * hatRenderW : 0;
-    const hatLeft = headLeft + headRenderW / 2 - hatRenderW / 2;
+    const hatOffsetX = hatPlacement?.offsetXFrac ? headRenderW * hatPlacement.offsetXFrac : 0;
+    const hatLeft = headLeft + headRenderW / 2 - hatRenderW / 2 + hatOffsetX;
     const hatBottom = hatPlacement ? headTop + headRenderH * hatPlacement.bottomFrac : 0;
     const hatTop = hatBottom - hatRenderH;
 
