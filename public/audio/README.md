@@ -37,6 +37,7 @@
 | `bonppuri.mp3` | `/stores/bonppuri` | 꽃집 카페 |
 | `liri-gopchang.mp3` | `/stores/liri-gopchang` | 살짝 신나는 포장마차 |
 | `fishing.mp3` | `/fishing` | 느긋한 바다 |
+| `clothing.mp3` | `/stores/clothing` (옷가게) | 옷/꾸미기 아이템 쇼핑 |
 
 그 외 화면(온보딩, 지갑, 승선확인증, 메뉴 등)은 지정된 분위기가 없어서 재생 중이던 BGM을 자연스럽게 멈춥니다.
 

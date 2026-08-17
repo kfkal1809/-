@@ -39,9 +39,9 @@ describe("SFX_MANIFEST", () => {
 });
 
 describe("BGM_MANIFEST", () => {
-  it("6개 배경음악 키가 스펙과 일치한다(홈/선실/갑판/본뿌리/리리양곱창/낚시터)", () => {
+  it("7개 배경음악 키가 스펙과 일치한다(홈/선실/갑판/본뿌리/리리양곱창/낚시터/옷가게)", () => {
     expect(Object.keys(BGM_MANIFEST).sort()).toEqual(
-      ["home", "cabin", "deck", "bonppuri", "liri-gopchang", "fishing"].sort()
+      ["home", "cabin", "deck", "bonppuri", "liri-gopchang", "fishing", "clothing"].sort()
     );
   });
 
@@ -62,6 +62,7 @@ describe("bgmKeyForPath", () => {
     expect(bgmKeyForPath("/stores/bonppuri")).toBe("bonppuri");
     expect(bgmKeyForPath("/stores/liri-gopchang")).toBe("liri-gopchang");
     expect(bgmKeyForPath("/fishing")).toBe("fishing");
+    expect(bgmKeyForPath("/stores/clothing")).toBe("clothing");
   });
 
   it("BGM이 지정되지 않은 화면은 null을 반환한다(엉뚱한 분위기 음악 대신 무음)", () => {

@@ -48,7 +48,7 @@ export const SFX_MANIFEST: Record<SfxKey, string> = {
 // 미리 로드한다 — 나머지는 처음 재생 요청이 올 때 그때 로드(lazy)한다.
 export const SFX_PRELOAD: SfxKey[] = ["ui-click", "coin", "attendance"];
 
-export type BgmKey = "home" | "cabin" | "deck" | "bonppuri" | "liri-gopchang" | "fishing";
+export type BgmKey = "home" | "cabin" | "deck" | "bonppuri" | "liri-gopchang" | "fishing" | "clothing";
 
 export const BGM_MANIFEST: Record<BgmKey, string> = {
   home: "/audio/bgm/home.mp3",
@@ -57,6 +57,7 @@ export const BGM_MANIFEST: Record<BgmKey, string> = {
   bonppuri: "/audio/bgm/bonppuri.mp3",
   "liri-gopchang": "/audio/bgm/liri-gopchang.mp3",
   fishing: "/audio/bgm/fishing.mp3",
+  clothing: "/audio/bgm/clothing.mp3",
 };
 
 // 경로(pathname) → 재생할 BGM. 여기 없는 화면(온보딩, 지갑, 승선확인증 등)은 지정된 분위기가
@@ -68,6 +69,7 @@ export const BGM_ROUTE_MAP: { test: (pathname: string) => boolean; key: BgmKey }
   { test: (p) => p.startsWith("/stores/bonppuri"), key: "bonppuri" },
   { test: (p) => p.startsWith("/stores/liri-gopchang"), key: "liri-gopchang" },
   { test: (p) => p === "/fishing", key: "fishing" },
+  { test: (p) => p.startsWith("/stores/clothing"), key: "clothing" },
 ];
 
 export function bgmKeyForPath(pathname: string): BgmKey | null {
