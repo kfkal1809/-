@@ -33,7 +33,7 @@ export default function JewelryPage() {
             />
             <div className="flex-1">
               <p className="text-[14px] font-bold text-[var(--color-navy)]">{r.name}</p>
-              <p className="text-[12px] text-[var(--color-navy-soft)]">둘이 함께 맞추는 커플링이에요</p>
+              <p className="text-[12px] text-[var(--color-navy-soft)]">{r.description}</p>
             </div>
             <RingBuyButton sku={r.sku} price={r.price} />
           </Card>
