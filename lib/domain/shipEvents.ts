@@ -15,6 +15,12 @@ export interface ShipTypeConfig {
   cashMax: number;
   catalogSubcategory: string;
   itemChance: number; // 현금 보상 외 아이템이 함께 나올 확률(0~1)
+  // 실제 일러스트(design-assets/선박모형 (N).png에서 정리, public/images/ships/ship_<key>.png).
+  // 없으면 ShipSprite가 기존 hullColor/deckColor/accentColor/hullShape 기반 절차적 SVG로
+  // 폴백한다 — hullColor 등 필드를 지우지 않고 그대로 둔 이유이기도 하다.
+  imageSrc?: string;
+  // 원본 그림의 실측 가로:세로 비율(w/h) — width만 주고 height를 비율대로 계산할 때 씀.
+  imageAspect?: number;
 }
 
 export const SHIP_TYPES: ShipTypeConfig[] = [
@@ -31,6 +37,8 @@ export const SHIP_TYPES: ShipTypeConfig[] = [
     cashMax: 1.5,
     catalogSubcategory: "ship_container",
     itemChance: 0.35,
+    imageSrc: "/images/ships/ship_container.png",
+    imageAspect: 1.481,
   },
   {
     key: "bulk",
@@ -45,6 +53,8 @@ export const SHIP_TYPES: ShipTypeConfig[] = [
     cashMax: 1.2,
     catalogSubcategory: "ship_bulk",
     itemChance: 0.3,
+    imageSrc: "/images/ships/ship_bulk.png",
+    imageAspect: 1.667,
   },
   {
     key: "tanker",
@@ -59,6 +69,8 @@ export const SHIP_TYPES: ShipTypeConfig[] = [
     cashMax: 1.8,
     catalogSubcategory: "ship_tanker",
     itemChance: 0.3,
+    imageSrc: "/images/ships/ship_tanker.png",
+    imageAspect: 1.524,
   },
   {
     key: "car_carrier",
@@ -73,6 +85,8 @@ export const SHIP_TYPES: ShipTypeConfig[] = [
     cashMax: 2,
     catalogSubcategory: "ship_car_carrier",
     itemChance: 0.45,
+    imageSrc: "/images/ships/ship_car_carrier.png",
+    imageAspect: 1.811,
   },
   {
     key: "chemical",
@@ -87,6 +101,8 @@ export const SHIP_TYPES: ShipTypeConfig[] = [
     cashMax: 2.2,
     catalogSubcategory: "ship_chemical",
     itemChance: 0.4,
+    imageSrc: "/images/ships/ship_chemical.png",
+    imageAspect: 1.5,
   },
   {
     key: "lng",
@@ -101,6 +117,8 @@ export const SHIP_TYPES: ShipTypeConfig[] = [
     cashMax: 3,
     catalogSubcategory: "ship_lng",
     itemChance: 0.5,
+    imageSrc: "/images/ships/ship_lng.png",
+    imageAspect: 1.678,
   },
   {
     key: "vlcc",
@@ -115,6 +133,8 @@ export const SHIP_TYPES: ShipTypeConfig[] = [
     cashMax: 5,
     catalogSubcategory: "ship_vlcc",
     itemChance: 0.6,
+    imageSrc: "/images/ships/ship_vlcc.png",
+    imageAspect: 2.162,
   },
 ];
 

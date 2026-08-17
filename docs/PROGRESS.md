@@ -1128,3 +1128,40 @@ assetKey 선택 → 바닥/벽 anchor 유지 → 같은 위치에서 이미지 �
   이번엔 이미지만 바꿨으므로 별도 변경 없음 — 다만 실제 라이브 Supabase가 없어 진짜 저장→
   새로고침을 눈으로 재현하지는 못했다(정직하게 기록).
   `tsc`/`eslint`/`vitest run`(129개)/`next build` 전부 통과.
+
+## 선박 일러스트 7종 실제 적용 (선상 이벤트)
+
+"베타에 꼭 필요한 것만 먼저"라는 우선순위 지시 이후, 유저가 `design-assets/선박모형 (N) TYPE.png`
+7장(1254×1254, RGBA)을 업로드해줬다. 옷 63벌/가구 22종/방향 전환/침대 anchor 수정까지 우선순위
+작업이 끝난 상태였고, 이 7장은 이미 코드 쪽(`SHIP_TYPES` 7종, `catalogSubcategory` 등)이 정확히
+7종 구조로 맞춰져 있어 별다른 설계 없이 바로 연결 가능한 "할 수 있는 작업"이라 자율적으로 진행했다
+(핵심 루프에 필수는 아니지만 이전에 스펙만 전달하고 대기 중이던 항목).
+
+- **매핑 확인**: 업로드된 7장 파일명(컨테이너/벌크/탱커/카캐리/케미컬/LNG/VLCC)이 `shipEvents.ts`의
+  기존 `SHIP_TYPES` 7개 key(container/bulk/tanker/car_carrier/chemical/lng/vlcc)와 1:1로
+  정확히 대응 — 새 항목을 추가하거나 순서를 바꿀 필요 없이 그대로 매핑.
+- **방향(뱃머리) 규칙 확인**: 새 그림을 쓰기 전에 실제 애니메이션이 어느 방향으로 배를 움직이는지부터
+  코드(`app/globals.css`의 `@keyframes ship-cross`: `left: -140px` → `left: calc(100% + 20px)`,
+  즉 왼쪽→오른쪽 이동)를 직접 확인했다. 왼쪽에서 나타나 오른쪽으로 지나가려면 뱃머리가
+  오른쪽을 향해야 자연스럽다. 7장을 육안으로 확인한 결과 6장(컨테이너/탱커/벌크/케미컬/LNG/VLCC)은
+  이미 조타실이 왼쪽·뱃머리가 오른쪽으로 올바른 방향이었지만, 카캐리선만 뱃머리가 왼쪽(조타실이
+  오른쪽)이라 좌우 반전이 필요했다 — 짐작하지 않고 실제 keyframes를 읽어서 판단한 것이 핵심.
+- **이미지 가공**: Python(Pillow)으로 알파 bbox 기준 트림(pad=2) → 카캐리선만 좌우 반전
+  (`Image.transpose(FLIP_LEFT_RIGHT)`) → 가로 480px로 리사이즈(세로는 원본 비율 유지, 222~324px) →
+  `optimize=True`로 저장. 결과물 7장을 `public/images/ships/ship_<key>.png`(127~208KB)에 배치.
+- **코드 연결**: `ShipTypeConfig`(`lib/domain/shipEvents.ts`)에 `imageSrc?`/`imageAspect?`
+  (실측 가로:세로 비율, width만 주고 height를 비율 계산하기 위함) 두 필드 추가, 7종 전부에 값 채움.
+  기존 `hullColor`/`deckColor`/`accentColor`/`hullShape` 필드는 지우지 않고 그대로 둠 —
+  `ShipSprite.tsx`가 `imageSrc`가 있으면 Next `<Image>`로 실제 PNG를 렌더링하고, 없으면 기존
+  절차적 SVG로 폴백하는 구조라 이 필드들이 여전히 폴백 경로에서 쓰인다(다른 선종을 나중에 추가할 때
+  그림이 아직 없어도 바로 동작하게 하는 안전장치이기도 함).
+- **뒤집기 방식**: `flip` prop은 이미 `ShipSprite`에 있던 것을 그대로 재사용(`transform: scaleX(-1)`) —
+  카캐리선 원본 자체를 미리 반전해서 저장했으므로, 게임 내에서 실제 조우 시 쓰는 `flip` prop은
+  기존처럼 이벤트 연출용(예: 반대 방향으로 등장하는 연출)으로만 별도 사용되고 이번 파일 반전과는
+  무관하게 독립적으로 동작.
+- **검증**: 임시 dev 라우트(`app/(dev)/ship-preview`, 커밋 전 삭제)에서 두 가지를 Playwright
+  스크린샷으로 확인 — (1) 7종을 세로로 나열한 정적 리스트: 전부 정상 렌더링, 뱃머리가 일관되게
+  오른쪽(카캐리선 포함), 잘림/왜곡 없음. (2) 실제 `animate-ship-cross` CSS 클래스를 그대로 적용한
+  `overflow-hidden` 컨테이너 안에서 LNG선이 지나가는 크로싱 애니메이션 재현 — 임의 시점 캡처에서도
+  잘리거나 찌그러지지 않음을 확인.
+  `tsc`/`eslint`/`vitest run`(129개)/`next build` 전부 통과.

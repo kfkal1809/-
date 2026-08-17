@@ -1,8 +1,24 @@
+import Image from "next/image";
 import type { ShipTypeConfig } from "@/lib/domain/shipEvents";
 
 // 선종 7종을 위한 단일 제네릭 선박 스프라이트. 선종별 if문을 흩어놓지 않고,
 // hullShape(boxy/tanker/carrier) 한 값으로만 갑판 디테일을 분기한다.
+// 실제 일러스트(imageSrc)가 있으면 그걸 쓰고, 없으면 기존 절차적 SVG로 폴백한다.
 export function ShipSprite({ ship, width = 120, flip = false }: { ship: ShipTypeConfig; width?: number; flip?: boolean }) {
+  if (ship.imageSrc) {
+    const height = Math.round(width / (ship.imageAspect ?? 1.6));
+    return (
+      <Image
+        src={ship.imageSrc}
+        alt={ship.name}
+        width={width}
+        height={height}
+        unoptimized
+        style={{ width, height, objectFit: "contain", transform: flip ? "scaleX(-1)" : undefined }}
+      />
+    );
+  }
+
   const height = width * (56 / 132);
 
   return (
