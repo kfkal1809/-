@@ -182,3 +182,36 @@ describe("isInKeepOutZone", () => {
     expect(isInKeepOutZone(0.22, 0.65)).toBe(false); // 기본 침대 자리
   });
 });
+
+// 빈티지 가구 시리즈(22종, supabase/migrations/0011_vintage_furniture_pack.sql) — sku 이름
+// 패턴만으로 새 규칙 추가 없이 전부 올바르게 분류되는지 회귀 검증.
+describe("빈티지 가구 시리즈 furnitureKind 분류", () => {
+  const expected: Record<string, string> = {
+    vintage_shell_bed: "bed",
+    vintage_shell_deco: "smallDeco",
+    vintage_stripe_loveseat: "seat",
+    vintage_stripe_armchair: "seat",
+    vintage_wood_chair: "seat",
+    vintage_plant_side_table: "table",
+    vintage_shell_floor_lamp: "lamp",
+    vintage_anchor_desk: "table",
+    vintage_nightstand_plain: "table",
+    vintage_nightstand_drawer: "storage",
+    vintage_book_boat_shelf: "storage",
+    vintage_potted_plant: "smallDeco",
+    vintage_oval_mirror: "wallDeco",
+    vintage_round_mirror: "wallDeco",
+    vintage_curtains_blue: "wallDeco",
+    vintage_lighthouse_frame: "wallDeco",
+    vintage_wood_door: "smallDeco",
+    vintage_treasure_chest: "storage",
+    vintage_anchor_fridge: "appliance",
+    vintage_travel_luggage: "smallDeco",
+    vintage_wheel_rug: "rug",
+    vintage_office_chair: "seat",
+  };
+
+  it.each(Object.entries(expected))("%s는 %s로 분류된다", (sku, kind) => {
+    expect(getPlacementDef(sku).furnitureKind).toBe(kind);
+  });
+});

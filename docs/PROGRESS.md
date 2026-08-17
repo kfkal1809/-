@@ -1002,6 +1002,41 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
   `pending-hand-accessory` 분류)은 이번 범위에 넣지 않았다 — "8체형 variant 시스템부터 완벽하게
   만드는 게 우선"이라는 사용자 지시에 따름. 해남(항해사/기관사) 팔 길이 비율 조정도 별도 요청으로
   들어와 있으나 아직 착수 전(캐릭터 렌더링 구조 확인부터 필요, 적용 전 비교 이미지를 먼저
-  보여드리기로 함). 사용자가 업로드한 "빈티지 가구 시리즈.png"/"모자 소품.png"/선박모형 7종은
-  저장소에 들어와 있지만("베타에 꼭 필요한 것만 먼저" 지시에 따라 핵심 루프 — 캐릭터→옷 입기→
-  돈 벌기→쇼핑→선실 꾸미기 — 우선 처리 후) 아직 크롭/카탈로그화하지 않았다.
+  보여드리기로 함).
+
+## 빈티지 가구 시리즈 22종 카탈로그 연결 (선실 꾸미기)
+
+사용자가 "베타에 꼭 필요한 것만 먼저 완성해줘 — 1순위: 캐릭터→옷 입기→돈 벌기→쇼핑→선실
+꾸미기"로 우선순위를 명확히 해서, 업로드된 "빈티지 가구 시리즈.png"를 가구상점/선실 꾸미기에
+바로 연결했다(선박모형 7종·모자 소품 시트는 이 핵심 루프 밖이라 이번엔 보류).
+
+- **원본 분석**: 1536×1024 시트에 60개의 연결 컴포넌트가 6행으로 배치되어 있었는데, 상당수가
+  "같은 가구의 다른 각도" 중복이었다(예: 조개 침대 5각도, 우드 체어 4각도, 협탁류 6장 등).
+  connected-component bbox를 행 단위로 자동 클러스터링한 뒤, 각 행을 실제 색상 이미지로
+  다시 잘라 직접 확인하며 "이게 각도 중복인지, 진짜 다른 가구인지"를 하나씩 판단했다(예:
+  스트라이프 소파 3장 중 2장은 러브시트 각도 중복, 나머지 1장은 진짜 다른 가구인 안락의자;
+  협탁 6장은 사실 2개 디자인×각도 중복). 최종적으로 22개의 서로 다른 가구/소품으로 정리해
+  각각 가장 선명한 각도 1장씩만 크롭했다(`public/images/items/vintage_*.png`).
+- **furnitureKind 자동 분류**: 새 규칙을 추가하지 않고 기존 `cabinPlacement.ts`의 sku 정규식
+  규칙만으로 22종 전부가 의도한 대로 분류됨을 확인(`vintage_shell_bed`→bed,
+  `vintage_stripe_armchair`→seat, `vintage_anchor_desk`→table,
+  `vintage_nightstand_drawer`→storage, `vintage_oval_mirror`/`vintage_curtains_blue`/
+  `vintage_lighthouse_frame`→wallDeco, `vintage_anchor_fridge`→appliance,
+  `vintage_wheel_rug`→rug, 나머지 소품류→smallDeco). `cabinPlacement.test.ts`에 22개 전부의
+  기대 분류를 회귀 테스트로 고정.
+- **아이콘 노출 화이트리스트**: `lib/domain/itemIcons.ts`의 `ITEM_ICON_SKUS`(sku별로 실제
+  일러스트가 있는지 명시적으로 등록하는 목록 — 없으면 인벤토리/상점에서 희귀도 배지
+  플레이스홀더로 대체됨)에 22개 sku를 전부 추가하지 않으면 아이콘이 안 뜨는 기존 구조를
+  파악하고 빠짐없이 등록.
+- **마이그레이션(`0011_vintage_furniture_pack.sql`, 미적용)**: 기존 `interior_pack`/
+  `furniture_store` 마이그레이션과 같은 패턴 — `item_catalog`에 `category='furniture',
+  subcategory='shop'`으로 22종을 추가(가격 5~30 선용금, 조개 침대만 rare)하고
+  `stores.slug='furniture'`의 `store_products`에 연결. 새 테이블/스키마 변경 없음.
+- **검증**: 임시 `app/(dev)/furniture-store-preview`(가구상점 mock 22종, 커밋 전 삭제)로
+  실제 `FurnitureStoreScreen`에서 아이콘·탭(침대/책상/의자/수납/장식/벽바닥) 정상 노출 확인.
+  임시 `app/(dev)/cabin-furniture-preview`(대표 11종을 실제 `CabinRoom`에 배치, 커밋 전 삭제)로
+  기존 선실 배경 아트와 색감이 잘 어울리고 크기/위치가 자연스러운 것을 스크린샷으로 확인 —
+  기존 파스텔 블루·네이비 톤 선실과 빈티지 가구의 블루·핑크 톤이 잘 어울림. `pageerror` 0건.
+  `tsc`/`eslint`/`vitest run`(121개)/`next build` 전부 통과.
+- **남은 백로그**: 선박모형 7종("선박모형 (1) LNG선.png" 등)과 "모자 소품.png"(모자/헤드밴드/
+  가방 등 40여 종)은 저장소에 들어와 있지만 베타 핵심 루프 밖이라 이번엔 처리하지 않음.
