@@ -1188,3 +1188,54 @@ assetKey 선택 → 바닥/벽 anchor 유지 → 같은 위치에서 이미지 �
 - **결정**: 사용자에게 BEFORE/AFTER 비교(현재 그림 vs 자동 스크립트 결과물)를 보여준 뒤
   "기존 비율 그대로 가자"는 답변을 받아 **수정하지 않고 보류**하기로 확정. 에셋 교체·코드
   변경 없음.
+
+## 테마 가구 시리즈 4종 87종 카탈로그 연결 (선실 꾸미기)
+
+사용자가 저장소 루트에 새로 올려준 4개 테마 시트(마린/코티지/숲의요정/캐리비안)를
+0011_vintage_furniture_pack과 같은 패턴으로 가구상점에 연결했다. 벽지/바닥재(`벽지와
+바닥재 (1~5).png`)는 확인해보니 이전 세션에서 이미 완전히 처리되어(`WALLPAPER_SWATCHES`
+30장 + `FLOOR_SWATCHES` 20장, `CabinEditor`/`RoomBackground`/`app/api/cabin/decor`까지
+전부 연결됨) 이번엔 손댈 게 없었음.
+
+- **크롭**: `scripts/asset-tools/crop_sheet.py`의 `remove_bg_and_trim`을 재사용하되, 각도
+  중복(같은 가구를 다른 3/4 각도로 그린 것)을 제외하고 실제로 다른 가구/소품만 골라 alpha
+  bbox로 잘랐다 — 캐리비안 해적 16종(단일 시트), 숲의 요정 18종(단일 시트), 마린 30종(3장),
+  코티지 23종(3장), 총 87종.
+  - 숲의 요정 시트는 알파 채널이 없는 순수 RGB 파일에 체커보드 배경 텍스처가 그대로
+    박혀 있어서(투명 미리보기를 실수로 구운 형태로 추정) 기존 스크립트의 "테두리 단색 배경"
+    가정이 안 맞았다 — 배경을 "채도 낮고 밝은(minc>220, max-min<12) 픽셀"로 판정하는 별도
+    함수를 만들어 대응.
+  - 셀 경계를 넉넉하게 잡고 "가장 큰 connected component만 남기기"로 옆 셀 잔상을
+    제거했는데, 첫 시도에서 원본 시트 안에 진짜로 서로 다른 아이템 3개가 나란히 붙어있던
+    구간(액자 3종, 벽등 3종 각도dup가 아니라 진짜 다른 디자인)을 largest-CC가 1개만 남기고
+    나머지를 지워버리는 사고가 있었음 — 좌표 그리드를 오버레이해서 픽셀 단위로 다시 확인하고
+    셀 경계를 개별 아이템 단위로 쪼개 재작업(`fairy_frame_leaf/flower/mushroom` 3종 분리).
+- **분류 검증**: `lib/domain/cabinPlacement.ts`의 `classify()` 정규식만으로 87종 대부분이
+  올바르게 분류됐지만, 이름 패턴이 우연히 다른 규칙과 충돌하는 소수만 `SKU_OVERRIDES`에 추가
+  (기존 `interior_nightstand_clock`과 같은 이유):
+  - `marine_anchor_clock_deco`: "clock"이 벽시계 규칙에 걸려 wallDeco로 오분류 → floor로 보정.
+  - `marine_ship_wheel_deco`/`marine_wall_lamp`/`pirate_wall_lantern`/`fairy_wall_lantern`/
+    `cottage_wall_sconce`: 실제로는 벽걸이인데 정규식이 못 잡아서(각각 wheel/wall_lamp/
+    wall_lantern/wall_sconce는 규칙에 없는 단어) smallDeco로 떨어짐 → wall로 보정.
+  - `marine_mailbox`/`cottage_mailbox`: 기둥형이라 smallDeco 기본 높이(0.14)보다 세로로
+    길어 0.26으로 확대.
+  - `fairy_mushroom_stand_light`는 규칙 수정 대신 sku 이름에 `stand_light`를 포함시켜
+    기존 lamp 정규식이 그대로 잡도록 함(케이스 추가 없이 이름만으로 해결).
+  - `pirate_gold_hoard_deco`는 원래 `pirate_gold_chest_deco`로 지으려 했으나 "chest"가
+    storage 규칙과 충돌해 smallDeco여야 할 장식품이 수납가구로 잘못 분류되는 걸 발견,
+    이름을 바꿔 회피.
+- **마이그레이션**: `0012_pirate_furniture_pack.sql`~`0015_cottage_furniture_pack.sql`
+  4개(미적용) — 0011과 동일하게 `item_catalog`(category='furniture', subcategory='shop')에
+  추가하고 `stores.slug='furniture'`의 `store_products`에 연결. 새 테이블/스키마 변경 없음.
+- **아이콘 화이트리스트**: `lib/domain/itemIcons.ts`의 `ITEM_ICON_SKUS`에 87종 전부 등록.
+- **검증**: `cabinPlacement.test.ts`에 4개 시리즈별 `describe` 블록 추가해 87종 전부의
+  기대 furnitureKind와 override 대상(wall 배치 6종, floor 보정 1종)을 회귀 테스트로 고정.
+  마이그레이션 SQL의 sku 목록·`ITEM_ICON_SKUS`·`public/images/items/`의 실제 파일 개수를
+  시리즈별로 대조해 16/18/30/23 전부 일치 확인. `tsc`/`eslint`/`vitest run`(222개)/`next build`
+  전부 통과.
+- **커밋 전 아직 안 한 것**: 마이그레이션 SQL은 실제 Supabase 프로젝트에 미적용 상태(로컬
+  저장소 파일만 존재) — 사용자가 대시보드에서 직접 적용하거나 별도 요청 시 적용 안내 필요.
+  사용자가 함께 요청한 "가방/인벤토리, 이벤트 배너, 빈상태 미니 일러스트, 성공 보상 팝업,
+  명예의 전당 기념 오브젝트" 5개 이미지는 이 세션의 컨테이너 파일시스템 어디에도 없어서
+  (재첨부했다는 안내를 받은 뒤 다시 검색해도 안 나타남) 착수하지 못함 — 첨부 방식을 다시
+  확인해야 함.

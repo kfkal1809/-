@@ -272,6 +272,17 @@ const SKU_OVERRIDES: Record<string, Partial<PlacementDef>> = {
     supportedFacings: ["front", "front-left", "front-right"],
     baseHeightFrac: 0.41,
   },
+  // 앵커 탁상시계 — "clock" 정규식이 벽시계로 잘못 분류하는 것을 바로잡음(interior_nightstand_clock과 동일 이유).
+  marine_anchor_clock_deco: { placementType: "floor", preferredZone: "floor", allowedZones: ["floor"], baseHeightFrac: 0.12 },
+  // 벽걸이형 소품 — classify() 정규식이 커버하지 못해 wall로 강제 지정.
+  marine_ship_wheel_deco: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.18 },
+  marine_wall_lamp: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.16 },
+  pirate_wall_lantern: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.16 },
+  fairy_wall_lantern: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.16 },
+  cottage_wall_sconce: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.16 },
+  // 기둥형 우편함 — smallDeco 기본값(0.14)보다 세로로 길어서 살짝 키움.
+  marine_mailbox: { baseHeightFrac: 0.26 },
+  cottage_mailbox: { baseHeightFrac: 0.26 },
 };
 
 export function getPlacementDef(sku: string | null | undefined): PlacementDef {

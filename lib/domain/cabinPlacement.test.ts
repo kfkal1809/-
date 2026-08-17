@@ -222,3 +222,152 @@ describe("빈티지 가구 시리즈 furnitureKind 분류", () => {
     expect(getPlacementDef(sku).furnitureKind).toBe(kind);
   });
 });
+
+// 캐리비안의 해적 시리즈(16종) — sku 이름 패턴 분류 회귀 검증.
+describe("캐리비안의 해적 시리즈 furnitureKind 분류", () => {
+  const expected: Record<string, string> = {
+    pirate_bed: "bed",
+    pirate_book_lantern_shelf: "storage",
+    pirate_compass_deco: "smallDeco",
+    pirate_compass_rug: "rug",
+    pirate_desk: "table",
+    pirate_floor_lamp: "lamp",
+    pirate_gold_hoard_deco: "smallDeco",
+    pirate_loveseat: "seat",
+    pirate_map_frame: "wallDeco",
+    pirate_money_stack_deco: "smallDeco",
+    pirate_office_chair: "seat",
+    pirate_potted_plant: "smallDeco",
+    pirate_ship_bottle_deco: "smallDeco",
+    pirate_treasure_chest: "storage",
+    pirate_trunk_table: "table",
+    pirate_wall_lantern: "smallDeco",
+  };
+
+  it.each(Object.entries(expected))("%s는 %s로 분류된다", (sku, kind) => {
+    expect(getPlacementDef(sku).furnitureKind).toBe(kind);
+  });
+
+  it("pirate_wall_lantern은 SKU_OVERRIDES로 벽 배치가 된다", () => {
+    const def = getPlacementDef("pirate_wall_lantern");
+    expect(def.placementType).toBe("wall");
+  });
+});
+
+// 숲의 요정 시리즈(18종) — sku 이름 패턴 분류 회귀 검증.
+describe("숲의 요정 시리즈 furnitureKind 분류", () => {
+  const expected: Record<string, string> = {
+    fairy_acorn_box_deco: "smallDeco",
+    fairy_bed: "bed",
+    fairy_book_lantern_shelf: "storage",
+    fairy_desk: "table",
+    fairy_drawer_cabinet: "storage",
+    fairy_floor_lamp: "lamp",
+    fairy_frame_flower: "wallDeco",
+    fairy_frame_leaf: "wallDeco",
+    fairy_frame_mushroom: "wallDeco",
+    fairy_leaf_deco: "smallDeco",
+    fairy_loveseat: "seat",
+    fairy_mushroom_stand_light: "lamp",
+    fairy_potted_flower: "smallDeco",
+    fairy_round_rug: "rug",
+    fairy_round_table: "table",
+    fairy_stool_chair: "seat",
+    fairy_teacup_deco: "smallDeco",
+    fairy_wall_lantern: "smallDeco",
+  };
+
+  it.each(Object.entries(expected))("%s는 %s로 분류된다", (sku, kind) => {
+    expect(getPlacementDef(sku).furnitureKind).toBe(kind);
+  });
+
+  it("fairy_wall_lantern은 SKU_OVERRIDES로 벽 배치가 된다", () => {
+    const def = getPlacementDef("fairy_wall_lantern");
+    expect(def.placementType).toBe("wall");
+  });
+});
+
+// 마린시리즈(30종) — sku 이름 패턴 분류 회귀 검증.
+describe("마린시리즈 furnitureKind 분류", () => {
+  const expected: Record<string, string> = {
+    marine_anchor_clock_deco: "wallDeco",
+    marine_bed: "bed",
+    marine_chair: "seat",
+    marine_coffee_table: "table",
+    marine_compass_deco: "smallDeco",
+    marine_coral_deco: "smallDeco",
+    marine_desk: "table",
+    marine_floor_lamp: "lamp",
+    marine_fridge: "appliance",
+    marine_jar_shell_deco: "smallDeco",
+    marine_lantern_deco: "smallDeco",
+    marine_life_ring_deco: "smallDeco",
+    marine_loveseat: "seat",
+    marine_mailbox: "smallDeco",
+    marine_mug_deco: "smallDeco",
+    marine_porthole_mirror: "wallDeco",
+    marine_potted_plant: "smallDeco",
+    marine_round_rug: "rug",
+    marine_shelf: "storage",
+    marine_shell_pillow_deco: "smallDeco",
+    marine_shell_spiral_deco: "smallDeco",
+    marine_shell_teal_deco: "smallDeco",
+    marine_ship_bottle_deco: "smallDeco",
+    marine_ship_wheel_deco: "smallDeco",
+    marine_sideboard: "table",
+    marine_starfish_deco: "smallDeco",
+    marine_wall_lamp: "smallDeco",
+    marine_wave_pillow_deco: "smallDeco",
+    marine_whale_books_deco: "smallDeco",
+    marine_whale_pillow_deco: "smallDeco",
+  };
+
+  it.each(Object.entries(expected))("%s는 %s로 분류된다", (sku, kind) => {
+    expect(getPlacementDef(sku).furnitureKind).toBe(kind);
+  });
+
+  it("marine_anchor_clock_deco는 SKU_OVERRIDES로 바닥 배치가 된다(clock 정규식이 벽시계로 오분류하는 것을 보정)", () => {
+    expect(getPlacementDef("marine_anchor_clock_deco").placementType).toBe("floor");
+  });
+
+  it.each(["marine_ship_wheel_deco", "marine_wall_lamp"])("%s는 SKU_OVERRIDES로 벽 배치가 된다", (sku) => {
+    expect(getPlacementDef(sku).placementType).toBe("wall");
+  });
+});
+
+// 방선에서 생긴일(코티지) 시리즈(23종) — sku 이름 패턴 분류 회귀 검증.
+describe("방선에서 생긴일 시리즈 furnitureKind 분류", () => {
+  const expected: Record<string, string> = {
+    cottage_basket_deco: "smallDeco",
+    cottage_bed: "bed",
+    cottage_book_boat_shelf: "storage",
+    cottage_chair: "seat",
+    cottage_coffee_table: "table",
+    cottage_desk: "table",
+    cottage_floor_lamp: "lamp",
+    cottage_folded_blanket_deco: "smallDeco",
+    cottage_lemon_frame_deco: "wallDeco",
+    cottage_lighthouse_frame: "wallDeco",
+    cottage_loveseat: "seat",
+    cottage_mailbox: "smallDeco",
+    cottage_mug_deco: "smallDeco",
+    cottage_nightstand: "table",
+    cottage_pillow_deco: "smallDeco",
+    cottage_porthole_window: "wallDeco",
+    cottage_potted_plant: "smallDeco",
+    cottage_round_rug: "rug",
+    cottage_sailboat_deco: "smallDeco",
+    cottage_shell_frame_deco: "wallDeco",
+    cottage_side_table: "table",
+    cottage_sideboard: "table",
+    cottage_wall_sconce: "smallDeco",
+  };
+
+  it.each(Object.entries(expected))("%s는 %s로 분류된다", (sku, kind) => {
+    expect(getPlacementDef(sku).furnitureKind).toBe(kind);
+  });
+
+  it("cottage_wall_sconce는 SKU_OVERRIDES로 벽 배치가 된다", () => {
+    expect(getPlacementDef("cottage_wall_sconce").placementType).toBe("wall");
+  });
+});
