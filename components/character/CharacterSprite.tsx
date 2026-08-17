@@ -11,9 +11,12 @@ import {
   HEAD_MARGIN_TOP,
   HEAD_SIZE,
   HEIGHT_SCALE_BY_KIND,
+  HAT_SIZE,
+  HAT_PLACEMENT,
   headSrc,
   outfitFullSrc,
   dressFullSrc,
+  hatSrc,
 } from "@/lib/domain/characterFullBody";
 
 interface CharacterSpriteProps {
@@ -347,6 +350,14 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const headLeft = (OUTFIT_CANVAS_W - HEAD_WIDTH) / 2 * innerScale;
     const headTop = (HEAD_MARGIN_TOP + NECK_Y + HEAD_OVERLAP) * innerScale - headRenderH;
 
+    const hatDims = a.hatAssetKey ? HAT_SIZE[a.hatAssetKey] : null;
+    const hatPlacement = a.hatAssetKey ? HAT_PLACEMENT[a.hatAssetKey] : null;
+    const hatRenderW = hatDims && hatPlacement ? headRenderW * hatPlacement.widthFrac : 0;
+    const hatRenderH = hatDims ? (hatDims.h / hatDims.w) * hatRenderW : 0;
+    const hatLeft = headLeft + headRenderW / 2 - hatRenderW / 2;
+    const hatBottom = hatPlacement ? headTop + headRenderH * hatPlacement.bottomFrac : 0;
+    const hatTop = hatBottom - hatRenderH;
+
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
         <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}>
@@ -368,6 +379,17 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
             unoptimized
             style={{ position: "absolute", left: headLeft, top: headTop, width: headRenderW, height: headRenderH }}
           />
+          {a.hatAssetKey && hatDims && (
+            <Image
+              src={hatSrc(a.hatAssetKey)}
+              alt=""
+              aria-hidden
+              width={hatDims.w}
+              height={hatDims.h}
+              unoptimized
+              style={{ position: "absolute", left: hatLeft, top: hatTop, width: hatRenderW, height: hatRenderH }}
+            />
+          )}
         </div>
       </div>
     );

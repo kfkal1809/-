@@ -1291,3 +1291,34 @@ assetKey 선택 → 바닥/벽 anchor 유지 → 같은 위치에서 이미지 �
   자체는 `RewardPopup`을 독립적으로 렌더링하는 방식이라 API 응답 형태와 무관하게 동작.
   같은 프레임 에셋을 쓰는 정적 프리뷰(Artifact)를 만들어 실제 그림이 잘리거나 비율이 깨지지
   않는지 사용자에게 먼저 확인시킴.
+
+## 모자 실사 렌더링 연동 (캡틴모자·안전모 2종)
+
+"모자/우산/인형 액세서리가 캐릭터에 실제로 착용 안 됨" 백로그 제보를 조사하다가 중요한 사실을
+발견했다: `CharacterSprite.tsx`에 `Hat`/`Accessory` SVG 컴포넌트와 `hat`/`accessory` 필드가
+이미 있었지만, **실제 게임이 쓰는 일러스트 PNG 렌더링 경로(outfitAssetKey/fullPortraitKey
+분기) 어디에도 연결되어 있지 않았다** — 그 두 컴포넌트는 `kind`가 없을 때만 타는 구버전 벡터
+폴백 경로에서만 그려진다. 즉 `haenam_deck_hat_cap`(`hat: "captain"`)을 구매해 착용해도 실사
+캐릭터에서는 모자가 전혀 안 보이는 상태였다 — 데이터는 있는데 그릴 레이어가 없었던 것.
+
+- **에셋**: `design-assets/모자 소품.png`(1448×1086, 헤드기어류 23종 + 가방/손소품류 14종
+  혼재)에서 우선 기존에 이미 데이터로 존재하던 2종만 크롭 — `hat_captain`(캡틴모자),
+  `hat_hardhat`(안전모). `public/images/character/hats/`에 저장. 나머지 21종(헬멧/버킷햇/
+  헤어핀/헤드밴드 등)과 손소품 14종(쌍안경/가방/무전기 등)은 이번 범위에 넣지 않음 —
+  손소품은 여전히 렌더 슬롯 자체가 없는 `pending-hand-accessory`로 남음.
+- **렌더링 구조**: `outfitAssetKey` 분기에서 이미 계산해두던 머리 위치(`headTop`/
+  `headRenderW`/`headLeft`)를 그대로 재사용해 모자 이미지를 그 위에 앵커링. 모자별
+  `widthFrac`(머리 폭 대비 모자 폭 비율)/`bottomFrac`(머리 top 기준 모자 밑단이 내려오는
+  비율)을 `HAT_PLACEMENT`에 분리해둬서, 다른 모자를 추가할 때 코드 수정 없이 값만 추가하면
+  되도록 함(furniture SKU_OVERRIDES와 같은 확장 패턴). `fullPortraitKey`(드레스 오버레이)
+  분기는 별도 머리 레이어가 없어 이번엔 모자 미지원으로 남김 — 정직하게 기록.
+- **데이터 연결**: `CharacterAppearance`에 `hatAssetKey` 필드 추가, `itemAppearance.ts`의
+  기존 `haenam_deck_hat_cap`/`haenam_engine_hat_helmet` 패치에 각각 연결.
+- **라이브 검증**: 이번엔 실제로 `npm run dev` + Playwright(전역 설치된 playwright, 사전 설치된
+  `/opt/pw-browsers/chromium` 사용)로 임시 `app/(dev)/hat-preview`(커밋 전 삭제)를 띄워
+  스크린샷 확인 — 캡틴모자/안전모 둘 다 머리 위에 자연스럽게 얹힌 채로 렌더링되고, 콘솔 에러도
+  없음(무관한 오디오 sfx 파일 404 4건만 있었고 이번 변경과 무관). 별도 좌표 미세조정 없이도
+  첫 시도에서 자연스러운 결과가 나왔다.
+- **범위상 하지 않은 것**: 나머지 헤드기어 21종의 카탈로그 연결(마이그레이션/상점 등록)은
+  이번에 하지 않음 — 인프라만 만들어뒀고, 다음 단계는 `HAT_SIZE`/`HAT_PLACEMENT`에 항목
+  추가 + 새 상품 마이그레이션만 하면 됨.

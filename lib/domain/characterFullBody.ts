@@ -44,6 +44,25 @@ export function headSrc(key: CharacterPortraitKey): string {
   return `/images/character/base/head/${characterPortraitKeyFor(key)}.png`;
 }
 
+// public/images/character/hats/*.png 실측 크기(design-assets/모자 소품.png에서 크롭).
+export const HAT_SIZE: Record<string, { w: number; h: number }> = {
+  hat_captain: { w: 284, h: 169 },
+  hat_hardhat: { w: 251, h: 203 },
+};
+
+export function hatSrc(key: string): string {
+  return `/images/character/hats/${key}.png`;
+}
+
+// 모자별 배치값 — widthFrac: 렌더된 머리 폭(headRenderW) 대비 모자 폭 비율.
+// bottomFrac: 머리 렌더 높이(headRenderH) 대비, 머리 top에서 얼마나 내려온 지점에 모자
+// 밑단을 맞출지(앞머리와 자연스럽게 겹치도록 살짝 내려서 얹음). 라이브 브라우저로 픽셀
+// 단위까지 검증하지 못해 어림값으로 잡았다 — 실제로 보면서 미세조정 필요할 수 있음(정직하게 기록).
+export const HAT_PLACEMENT: Record<string, { widthFrac: number; bottomFrac: number }> = {
+  hat_captain: { widthFrac: 1.08, bottomFrac: 0.34 },
+  hat_hardhat: { widthFrac: 0.96, bottomFrac: 0.4 },
+};
+
 export function outfitFullSrc(assetKey: string): string {
   return `/images/character/outfit_full/${assetKey}.png`;
 }

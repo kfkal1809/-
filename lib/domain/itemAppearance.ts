@@ -20,13 +20,13 @@ export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>>
   haenyeo_hair_bun: { hairStyle: "bun" },
   // 해남 항해사
   haenam_deck_outfit_uniform: { outfit: "haenam_deck_uniform", outfitColor: "#2c3f66", outfitAssetKey: "haenam_deck_outfit_04" },
-  haenam_deck_hat_cap: { hat: "captain" },
+  haenam_deck_hat_cap: { hat: "captain", hatAssetKey: "hat_captain" },
   haenam_deck_outfit_casual: { outfit: "sweatshirt", outfitColor: "#7fa8dd", outfitAssetKey: "haenam_deck_outfit_02" },
   haenam_deck_outfit_shirt: { outfit: "haenam_deck_uniform", outfitColor: "#3a5a8c", outfitAssetKey: "haenam_deck_outfit_08" },
   // 해남 기관사
   haenam_engine_outfit_overalls: { outfit: "haenam_engine_overalls", outfitAssetKey: "haenam_engine_outfit_01" },
   haenam_engine_acc_wrench: { accessory: "wrench" },
-  haenam_engine_hat_helmet: { hat: "hardhat" },
+  haenam_engine_hat_helmet: { hat: "hardhat", hatAssetKey: "hat_hardhat" },
   haenam_engine_outfit_casual: { outfit: "sweatshirt", outfitColor: "#ff9a4d", outfitAssetKey: "haenam_engine_outfit_03" },
   // 새싹
   child_outfit_overalls: { outfit: "child_overalls", outfitAssetKey: "child_outfit_02" },
