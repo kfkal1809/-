@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
-import { WALLPAPER_SWATCHES, FLOOR_SWATCHES, clampToZone } from "@/lib/domain/cabinDecor";
+import { WALLPAPER_SWATCHES, FLOOR_SWATCHES, clampToZone, isInKeepOutZone } from "@/lib/domain/cabinDecor";
 import { getPlacementDef, furnitureWrapperStyle, depthOf, zoneBoundsFor } from "@/lib/domain/cabinPlacement";
 import { playSfx } from "@/lib/audio/audioManager";
 import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
@@ -95,11 +95,16 @@ export function CabinEditor({
     if (!draggingId || !roomRef.current) return;
     const item = placed.find((p) => p.id === draggingId);
     if (!item) return;
-    const bounds = zoneBoundsFor(getPlacementDef(item.sku).placementType);
+    const def = getPlacementDef(item.sku);
+    const bounds = zoneBoundsFor(def.placementType);
     const rect = roomRef.current.getBoundingClientRect();
     const rawX = (e.clientX - rect.left) / rect.width;
     const rawY = (e.clientY - rect.top) / rect.height;
     const { x, y } = clampToZone(rawX, rawY, bounds);
+    // 바닥 가구는 문 앞/캐릭터가 서는 중앙 자리를 완전히 덮지 못하게 한다 — 그 구간에
+    // 들어가는 좌표는 무시하고 직전 유효 위치를 유지(드래그를 계속하다가 keep-out 밖으로
+    // 나오면 다시 따라오기 시작함).
+    if (def.placementType === "floor" && isInKeepOutZone(x, y)) return;
     setPlaced((prev) => prev.map((p) => (p.id === draggingId ? { ...p, x, y } : p)));
   }
 

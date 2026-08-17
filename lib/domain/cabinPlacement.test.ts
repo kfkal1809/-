@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
 import { getPlacementDef, zoneBoundsFor, depthOf } from "@/lib/domain/cabinPlacement";
-import { clampToZone, isInsideFloor, DOOR_X_RANGE, ROOM_ZONES, WALL_BOUNDS } from "@/lib/domain/cabinDecor";
+import {
+  clampToZone,
+  isInsideFloor,
+  isInKeepOutZone,
+  DOOR_X_RANGE,
+  DOOR_CLEARANCE,
+  CHARACTER_SPAWN_ZONE,
+  ROOM_ZONES,
+  WALL_BOUNDS,
+} from "@/lib/domain/cabinDecor";
 
 describe("getPlacementDef", () => {
   it("침대류는 floor에, 넓고 크게 렌더된다", () => {
@@ -126,4 +135,50 @@ describe("기본 선실 배치 좌표", () => {
       expect(x).toBeLessThan(DOOR_X_RANGE.min);
     }
   );
+});
+
+describe("PlacementDef 확장 필드(furnitureKind/allowedZones/facing)", () => {
+  it("furnitureKind가 실제 분류와 일치한다", () => {
+    expect(getPlacementDef("furniture_bed").furnitureKind).toBe("bed");
+    expect(getPlacementDef("interior_lighthouse_frame").furnitureKind).toBe("wallDeco");
+  });
+
+  it("allowedZones는 현재 방향별 에셋이 없어 항상 preferredZone 하나뿐이다", () => {
+    const def = getPlacementDef("furniture_desk");
+    expect(def.allowedZones).toEqual([def.preferredZone]);
+  });
+
+  it("supportedFacings는 현재 defaultFacing 하나뿐이다(방향별 에셋 없음)", () => {
+    const def = getPlacementDef("furniture_bed");
+    expect(def.supportedFacings).toEqual([def.defaultFacing]);
+  });
+
+  it("groundAnchor는 기본적으로 바닥 접점(0.5, 1)이다", () => {
+    const def = getPlacementDef("furniture_chair");
+    expect(def.groundAnchorX).toBe(0.5);
+    expect(def.groundAnchorY).toBe(1);
+  });
+
+  it("벽 아이템은 wall 하나만 allowedZones로 갖는다", () => {
+    const def = getPlacementDef("furniture_porthole");
+    expect(def.allowedZones).toEqual(["wall"]);
+  });
+});
+
+describe("isInKeepOutZone", () => {
+  it("문 앞 구간은 keep-out이다", () => {
+    const midX = (DOOR_CLEARANCE.xMin + DOOR_CLEARANCE.xMax) / 2;
+    const midY = (DOOR_CLEARANCE.yMin + DOOR_CLEARANCE.yMax) / 2;
+    expect(isInKeepOutZone(midX, midY)).toBe(true);
+  });
+
+  it("캐릭터 스폰 자리는 keep-out이다", () => {
+    const midX = (CHARACTER_SPAWN_ZONE.xMin + CHARACTER_SPAWN_ZONE.xMax) / 2;
+    const midY = (CHARACTER_SPAWN_ZONE.yMin + CHARACTER_SPAWN_ZONE.yMax) / 2;
+    expect(isInKeepOutZone(midX, midY)).toBe(true);
+  });
+
+  it("두 keep-out 밖의 일반 바닥 지점은 자유롭게 배치 가능하다", () => {
+    expect(isInKeepOutZone(0.22, 0.65)).toBe(false); // 기본 침대 자리
+  });
 });

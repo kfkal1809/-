@@ -87,6 +87,18 @@ export function clampToZone(x: number, y: number, bounds: ZoneBounds): { x: numb
 // 포함). 기본 배치를 고를 때 이 구간을 피해서 가구가 문을 가리지 않게 한다.
 export const DOOR_X_RANGE = { min: 0.76, max: 0.93 };
 
+// 문 앞 바닥의 keep-out 영역(자유배치 드래그에서도 회피) — 문 x범위 바로 앞 바닥 구간.
+export const DOOR_CLEARANCE: ZoneBounds = { xMin: DOOR_X_RANGE.min, xMax: DOOR_X_RANGE.max, yMin: 0.55, yMax: 0.78 };
+
+// 캐릭터가 서는 중앙 앞쪽 바닥 — CabinRoom의 CHARACTER_Y(0.86)를 기준으로 한 여유 영역.
+// 자유배치 드래그에서 가구가 캐릭터 자리를 완전히 덮지 않도록 회피한다.
+export const CHARACTER_SPAWN_ZONE: ZoneBounds = { xMin: 0.35, xMax: 0.65, yMin: 0.78, yMax: 0.95 };
+
+export function isInKeepOutZone(x: number, y: number): boolean {
+  const inRect = (r: ZoneBounds) => x >= r.xMin && x <= r.xMax && y >= r.yMin && y <= r.yMax;
+  return inRect(DOOR_CLEARANCE) || inRect(CHARACTER_SPAWN_ZONE);
+}
+
 // floor 폴리곤 위 한 점이 실제로 폴리곤 안에 있는지 검사(ray casting) — 바운딩 박스보다
 // 정확하게 "바닥 위에 서 있는지"를 확인할 때 쓴다(기본 배치 좌표를 고를 때 사용).
 export function isInsideFloor(x: number, y: number): boolean {

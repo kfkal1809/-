@@ -678,6 +678,74 @@ Stage 1/2와 동일한 품질 기준(완벽보다 "충분히 좋음")으로 수�
 - **검증**: `/cabin` 스크린샷으로 문이 더 이상 책상에 가려지지 않는 것 확인(수정 전/후 비교).
   `tsc`/`eslint`/`vitest run`(75개, 신규 12개 포함)/`next build` 전부 통과.
 
+## 선실 가구 배치 metadata 재구조화 + keep-out zone (2차 후속 개선)
+
+방향별 새 스프라이트 없이는 "모든 가구를 모든 방향에 자유배치"할 수 없다는 걸 인정하고,
+대신 지금 가진 단일 각도 에셋 기준으로 배치 제약을 명시적인 데이터 구조로 정리하는 방향으로
+범위를 좁혔다(사용자 요청). `CSS rotate(90deg)`로 방향을 억지로 바꾸는 코드는 여전히 어디에도
+없다.
+
+- **`PlacementDef` 필드 확장**(`lib/domain/cabinPlacement.ts`): `furnitureKind`(분류 라벨),
+  `preferredZone`/`allowedZones`(지금은 항상 배열 1개짜리지만, 방향별 에셋이 생기면 여러
+  zone을 지원하도록 배열로 열어둠), `defaultFacing`/`supportedFacings`(에셋이 실제로 그려진
+  단일 시점 — 전환 가능한 방향이 아니라 "이 그림은 이 각도로 그려졌다"는 기록),
+  `groundAnchorX`/`groundAnchorY`(현재는 항상 0.5/1=바닥 중앙 접점이지만, 여백이 있는
+  에셋이 추가되면 아이템별로 조정 가능하도록 파라미터화), `mirrorSafe`(기존).
+
+- **가구 분류표**(furnitureKind별):
+
+  | furnitureKind | 분류 | placementType | mirrorSafe | 예시 sku |
+  |---|---|---|---|---|
+  | bed | zone-fixed, future-directional-needed | floor | ❌ | `furniture_bed`, `interior_bunk_bed`, `interior_baby_crib` |
+  | storage | zone-fixed, future-directional-needed | floor | ❌ | `interior_wardrobe`, `interior_bookshelf`, `interior_display_cabinet` |
+  | appliance | zone-fixed, future-directional-needed | floor | ❌ | `furniture_fridge`, `interior_record_player` |
+  | table | mirror-safe | floor | ✅ | `furniture_desk`, `interior_round_dining_table` |
+  | seat | mirror-safe | floor | ✅ | `furniture_chair`, `interior_rattan_chair` |
+  | lamp | mirror-safe | floor | ✅ | `furniture_stand_light`, `interior_floor_lamp` |
+  | smallDeco | mirror-safe | floor | ✅ | `interior_whale_plush`, `interior_hanging_planter` |
+  | rug | mirror-safe | rug(바닥 하위) | ✅ | `furniture_rug`, `interior_oval_rug` |
+  | wallDeco | **wall-only**, mirror-safe | wall | ✅ | `interior_lighthouse_frame`, `furniture_porthole` |
+
+  "future-directional-needed"(bed/storage/appliance)는 방향별 스프라이트가 생기면 가장 덕을
+  볼 후보 — 지금은 `mirrorSafe: false`라 편집기에서 반전 버튼이 비활성화된다(손잡이/헤드보드
+  등 좌우 비대칭 디테일이 있을 가능성이 높아서, 확인 안 된 상태에서 반전을 허용하지 않음).
+
+- **예시**(`getPlacementDef("furniture_bed")`가 돌려주는 값):
+  ```ts
+  {
+    furnitureKind: "bed", placementType: "floor", preferredZone: "floor", allowedZones: ["floor"],
+    baseHeightFrac: 0.34, defaultScale: 1, minScale: 0.8, maxScale: 1.3,
+    defaultFacing: "front-left", supportedFacings: ["front-left"],
+    mirrorSafe: false, groundAnchorX: 0.5, groundAnchorY: 1,
+  }
+  ```
+
+- **편집기 keep-out zone**(`lib/domain/cabinDecor.ts`의 `DOOR_CLEARANCE`/`CHARACTER_SPAWN_ZONE`/
+  `isInKeepOutZone`): 기본 배치 좌표를 고를 때뿐 아니라 **자유배치 드래그 중에도** 문 앞
+  구간과 캐릭터가 서는 중앙 자리로는 바닥 가구를 끌어다 놓을 수 없게 했다 — 그 구간에 포인터가
+  들어가면 좌표 갱신을 건너뛰고 직전 유효 위치를 유지(경계 밖으로 다시 나가면 다시 따라옴).
+  Playwright로 책상을 문 앞 쪽으로, 러그를 캐릭터 자리로 드래그해봐도 실제로 그 구간엔
+  들어가지 않는 것 확인.
+
+- **검증**: `cabinPlacement.test.ts`에 20개 추가(총 83개) — `furnitureKind`/`allowedZones`/
+  `supportedFacings`/`groundAnchor` 기본값, `isInKeepOutZone` 두 구간 판정. `tsc`/`eslint`/
+  `vitest run`/`next build` 전부 통과. `pageerror` 0건.
+
+- **⚠️ 여전히 하지 않은 것**: 진짜 방향 전환(왼쪽 벽용/오른쪽 벽용 별도 그림)은 이번에도
+  구현하지 않음 — 새 에셋이 없으면 원천적으로 불가능하고, 이 점은 사용자도 이번 요청에서
+  인정하고 범위를 좁혀줬다. `supportedFacings` 배열 구조는 이미 만들어뒀으니, 나중에 방향별
+  그림이 추가되면 해당 아이템만 `SKU_OVERRIDES`에 `supportedFacings: ["front-left", "front-right"]`
+  식으로 추가하고 렌더링 쪽에서 `item.facing`(신규 필드, 아직 없음)에 따라 어떤 그림을 쓸지
+  고르는 분기만 추가하면 확장된다.
+
+## 옷가게 모자/소품 시각적 착용 — 보류
+
+사용자에게 확인한 결과, 항해모/안전모/스패너 그림 파일이 프로젝트에 없고(디자인 시안 폴더
+전수 확인 — 의상 시트들도 전부 목 아래만 그려져 있어 모자/소품 단독 이미지가 한 장도 없음)
+나중에 제공하기로 함. 그림 파일이 오면 `CustomizeScreen`/옷가게가 이미 쓰는
+`character_equipment`/`appearance_json.hat`·`accessory` 데이터는 그대로 있으니, 헤드
+앵커 좌표만 8종 체형별로 잡아서 `characterFullBody.ts`에 레이어를 추가하면 연결 가능하다.
+
 ## 가구상점
 
 - 사용자가 준 디자인 시안(가구상점 UI)을 기준으로 신규 구현. **기존 구매 시스템을 그대로
