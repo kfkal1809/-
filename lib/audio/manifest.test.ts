@@ -65,16 +65,16 @@ describe("bgmKeyForPath", () => {
     expect(bgmKeyForPath("/stores/clothing")).toBe("clothing");
   });
 
-  it("BGM이 지정되지 않은 화면은 null을 반환한다(엉뚱한 분위기 음악 대신 무음)", () => {
-    expect(bgmKeyForPath("/")).toBeNull();
-    expect(bgmKeyForPath("/wallet")).toBeNull();
-    expect(bgmKeyForPath("/onboarding/me")).toBeNull();
-    expect(bgmKeyForPath("/boarding-pass/abc")).toBeNull();
-    expect(bgmKeyForPath("/menu")).toBeNull();
+  it("BGM이 지정되지 않은 화면은 기본값(home)을 반환한다(무음 대신 메인 BGM)", () => {
+    expect(bgmKeyForPath("/")).toBe("home");
+    expect(bgmKeyForPath("/wallet")).toBe("home");
+    expect(bgmKeyForPath("/onboarding/me")).toBe("home");
+    expect(bgmKeyForPath("/boarding-pass/abc")).toBe("home");
+    expect(bgmKeyForPath("/menu")).toBe("home");
   });
 
   it("BGM_ROUTE_MAP 순서와 무관하게 첫 매칭 규칙을 사용한다", () => {
-    // /deck과 /decks 같은 우발적 prefix 오탐이 없는지 확인
-    expect(bgmKeyForPath("/decking")).toBeNull();
+    // /deck과 /decks 같은 우발적 prefix 오탐이 없는지 확인 — 매칭 안 되면 기본값(home)
+    expect(bgmKeyForPath("/decking")).toBe("home");
   });
 });

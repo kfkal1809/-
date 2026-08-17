@@ -1416,3 +1416,48 @@ assetKey 선택 → 바닥/벽 anchor 유지 → 같은 위치에서 이미지 �
   숨기거나, (c) 이대로 두고 추후 처리 — 세 가지 중 어떤 방향을 원하시는지 확인 필요(임의로
   UI를 지우거나 바꾸지 않고 대기).
   `tsc`/`eslint`/`vitest run`(227개)/`next build` 전부 통과.
+
+## 알바 버튼 실패 조사 (코드 버그 못 찾음)
+
+"리리양곱창/본뿌리 알바 버튼 클릭해도 실패한다"는 제보를 조사 — `app/api/store/work/route.ts`,
+`store_work_logs` 테이블 스키마(unique index 포함), `apply_wallet_transaction` RPC, 페이지
+컴포넌트의 storeSlug("bonppuri"/"liri-gopchang")와 seed.sql의 stores.slug를 전부 대조했지만
+코드상 불일치나 버그를 찾지 못했다. 마이그레이션이 아직 하나도 적용 안 된 상태(사용자 확인됨)라
+관련 테이블/RPC 자체가 실제 DB에 없어서 나는 실패로 강하게 추정 — 마이그레이션 적용 후 재현되면
+다시 조사 필요.
+
+## 갑판광장 채팅 닉네임 버그 수정
+
+"채팅에 별명이 아닌 실명이 뜬다"는 제보 — 원인은 `lib/game/deckData.ts`의 `getDeckSelf()`가
+`profiles.nickname`(카카오 로그인 시 계정에 저장되는 실제 이름/닉네임, `app/auth/callback/
+route.ts`에서 `user_metadata.nickname ?? user_metadata.name`으로 채워짐)을 쓰고 있었던 것 —
+캐릭터 생성 때 사용자가 직접 짓는 역할극 별명(`characters.nickname`, "두부"/"북극곰" 같은)과는
+다른 값이다. `character_managers` 조인에 `characters.nickname`을 추가로 가져와 쓰도록 수정.
+이 값을 채팅창 자기 이름 표시와 `chat_messages.nickname_snapshot` 저장 둘 다에 그대로 쓰므로
+한 번의 수정으로 둘 다 해결됨. `tsc`/`eslint`/`vitest run`(227개)/`next build` 전부 통과.
+
+## BGM 화면 전환 버그 수정 + 미지정 화면 기본 BGM 적용
+
+"화면 이동 후 복귀하면 BGM이 안 들리거나 다른 화면 BGM이 들린다"는 제보 — `lib/audio/
+audioManager.ts`의 `playBgm()`에서 실제 버그를 발견했다.
+
+- **원인**: `playBgm(key)`가 "이미 이 키가 재생 중인지" 확인하는 조건(`this.bgmEl &&
+  this.currentBgmKey === key && !this.bgmEl.paused`)을 검사하기 **전에** `this.currentBgmKey
+  = key`로 먼저 덮어써버려서, 이 조건의 `this.currentBgmKey === key` 부분이 항상 참이 되는
+  버그였다. 그 결과 실제로는 다른 화면으로 이동해 새 BGM 키를 요청해도, 기존 오디오 엘리먼트가
+  아직 재생 중(paused 아님)이기만 하면 무조건 "이미 재생 중"으로 오판하고 새 BGM을 아예
+  시작하지 않았다 — 화면을 옮겨도 이전 화면 음악이 계속 나오거나(대부분), 타이밍에 따라 그
+  전 fadeOut 타이머가 먼저 끝나 있으면 반대로 무음이 되는 등 재현이 들쭉날쭉했던 이유.
+  "키 비교"는 덮어쓰기 전(이전 값) 기준으로 판단하도록 수정 — 새 화면과 이전 화면의 BGM 키가
+  다르면 항상 새로 재생을 시작한다.
+- **미지정 화면 기본 BGM**: `bgmKeyForPath()`가 지정 안 된 화면(온보딩/지갑/승선확인증 등)에
+  `null`을 돌려줘서 BGM이 완전히 멈추던 것을, "메인 BGM(`home`)을 기본값으로" 요청에 따라
+  `null` 대신 `"home"`을 반환하도록 변경 — `BgmController.tsx`도 `stopBgm()` 분기 제거하고
+  항상 `playBgm()`만 호출하도록 단순화. `bgmKeyForPath`의 반환 타입도 `BgmKey | null`에서
+  `BgmKey`로 좁혀 널 체크가 코드베이스 전체에서 실수로 빠질 여지를 없앴다.
+  `manifest.test.ts`의 "지정 안 된 화면은 null" 테스트를 "home으로 폴백" 기준으로 갱신.
+- **라이브 검증은 못 함(정직하게 기록)**: 오디오 파일 자체가 이 저장소에 아직 없어서
+  (`public/audio/` 무음원 상태로 추정, `unavailable` 캐시로 조용히 무시되는 구조) 브라우저에서
+  실제 소리 전환을 귀로 확인하지는 못했다 — 다만 버그 자체는 로직 추적으로 명확히 확인되고
+  수정도 그 로직만 바로잡는 최소 변경이라 확신은 높다.
+  `tsc`/`eslint`/`vitest run`(227개)/`next build` 전부 통과.

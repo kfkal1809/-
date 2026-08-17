@@ -213,10 +213,15 @@ class AudioManager {
   /** 화면에 맞는 배경음악을 재생 — 이미 같은 트랙이 재생 중이면 아무 것도 안 한다. */
   playBgm(key: BgmKey) {
     if (typeof window === "undefined") return;
+    // "이미 이 키가 재생 중인가"는 currentBgmKey를 덮어쓰기 전(이전 값) 기준으로 판단해야 한다.
+    // 예전엔 currentBgmKey를 먼저 덮어쓴 뒤 그 값과 key를 비교해서 이 체크가 항상 참이 돼버렸고,
+    // 그 결과 화면을 옮겨도(키가 실제로 달라져도) 이전 화면의 BGM이 멈추지 않고 계속 나오거나
+    // 반대로 새 BGM이 아예 시작되지 않는 오작동이 있었다.
+    const alreadyPlayingThisKey = this.currentBgmKey === key && this.bgmEl !== null && !this.bgmEl.paused;
     this.currentBgmKey = key;
     if (!this.settings.bgmEnabled) return;
     if (this.unavailable.has(`bgm:${key}`)) return;
-    if (this.bgmEl && this.currentBgmKey === key && !this.bgmEl.paused) return;
+    if (alreadyPlayingThisKey) return;
 
     const nextEl = new Audio(BGM_MANIFEST[key]);
     nextEl.loop = true;
