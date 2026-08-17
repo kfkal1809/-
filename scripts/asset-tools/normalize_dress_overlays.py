@@ -32,7 +32,6 @@ CHAR_DIR = os.path.join(ROOT, "public", "images", "character")
 
 SHOULDER_PAD = 1.08  # 기본 체형 어깨폭보다 살짝 넉넉하게(속옷 끈이 안 비치도록)
 NECK_RAISE = 12  # 옷 상단을 목선보다 살짝 위로 올려서 자연스럽게 겹치게
-TARGET_SHOE_W = 130  # 신발 너비 목표(px) — 기본 체형 발 크기에 맞춰 실측한 값
 SHOE_RAISE = 8  # 신발을 바닥선보다 살짝 위로 올려서 발이 파묻히지 않게
 
 
@@ -51,8 +50,17 @@ def _largest_component_only(im: Image.Image) -> Image.Image:
 
 
 def extract_grid(sheet_path: str, kind: str) -> int:
-    """3x3 시트를 셀별로 클러스터링 — 셀 안에서 가장 작은 덩어리를 신발로, 나머지(옷+가방)는
-    합쳐서 원본 크롭으로 저장. 셀에 덩어리가 하나뿐이면 신발 없이 옷만 저장."""
+    """3x3 시트를 셀별로 클러스터링.
+
+    셀에 덩어리가 정확히 2개면(기존 "옷+신발만" 시트, 캐릭터 의상 (1)(3)(5)(8)) 작은 쪽을
+    신발로 쓴다(기존 동작 그대로 유지).
+
+    셀에 덩어리가 3개 이상이면(모자/머리핀/가방/인형 소품이 같이 있는 시트, 예:
+    캐릭터 의상 (2)(6)) 가장 큰 덩어리를 옷으로 확정하고, 나머지 중 "셀 하단부에 있으면서
+    옷의 가로 범위 안에 중심이 있는" 것만 신발로 묶는다(왼쪽/오른쪽 신발이 분리된 경우 합침).
+    그 외(모자, 머리핀, 가방, 인형 등 옆이나 위에 떠 있는 소품)는 옷에 합치지 않고 버린다 —
+    예전 버전은 "가장 작은 것 1개만 신발, 나머지는 전부 옷에 합침"이라 모자/가방까지 옷
+    크롭에 섞여 실루엣이 깨지는 문제가 있었다."""
     im = Image.open(sheet_path).convert("RGBA")
     arr = np.array(im)
     mask = arr[:, :, 3] > 20
@@ -60,6 +68,10 @@ def extract_grid(sheet_path: str, kind: str) -> int:
     sizes = ndimage.sum(mask, labeled, range(1, n + 1))
     h, w = mask.shape
     cell_h, cell_w = h / 3, w / 3
+    SHOE_Y_FRAC = 0.6  # 셀 상단 기준 이 비율보다 아래에 있어야 신발 후보
+    SHOE_MIN_SIZE = 3500  # 장갑/손 같은 작은 소품이 손 높이에서 이 기준을 우연히 넘겨
+    # (허리 높이가 셀의 60%보다 아래에 있는 정장류 시트에서 실측됨) 신발로 오분류되는 걸
+    # 막는 최소 픽셀 크기 — 실제 신발 한 짝은 이 시트들 전부에서 4300px 이상이었다.
 
     groups = defaultdict(list)
     for i, s in enumerate(sizes, start=1):
@@ -74,8 +86,15 @@ def extract_grid(sheet_path: str, kind: str) -> int:
 
     dress_dir = os.path.join(CHAR_DIR, kind, "dress")
     shoes_dir = os.path.join(CHAR_DIR, kind, "dress_shoes")
-    os.makedirs(dress_dir, exist_ok=True)
-    os.makedirs(shoes_dir, exist_ok=True)
+    # 이전에 같은 kind로 다른 시트를 처리했을 때 남은 파일을 지우고 시작한다 — 안 지우면,
+    # 이번 시트에서 신발이 옷에 이미 붙어있어 별도 신발 크롭을 안 만드는 셀(idx)이 이전 시트가
+    # 남긴 그 idx의 신발 파일을 조용히 재사용해버린다(실제로 신발 대신 가방 그림이 합성되는
+    # 버그로 발견됨).
+    for d in (dress_dir, shoes_dir):
+        if os.path.isdir(d):
+            for f in glob.glob(os.path.join(d, "*.png")):
+                os.remove(f)
+        os.makedirs(d, exist_ok=True)
 
     idx = 1
     pad = 6
@@ -85,13 +104,33 @@ def extract_grid(sheet_path: str, kind: str) -> int:
             if not parts:
                 continue
             parts_sorted = sorted(parts, key=lambda p: p[0])
-            if len(parts_sorted) >= 2:
-                _, sy0, sy1, sx0, sx1 = parts_sorted[0]
-                garment_parts = parts_sorted[1:]
+
+            # 덩어리 개수와 무관하게 항상 같은 규칙을 쓴다: 가장 큰 덩어리 = 옷.
+            # 나머지 중 셀 하단부(SHOE_Y_FRAC 이하)에 있고 옷의 가로 범위 안에 중심이 있는
+            # 것만 신발. 그 외(모자/머리핀/가방/인형 등 위나 옆에 뜬 소품)는 버린다.
+            # 예전엔 "덩어리가 정확히 2개면 작은 쪽 = 신발"이라는 별도 규칙이 있었는데,
+            # 모자+옷만 있고 신발은 옷단에 이미 붙어있는 셀(모자가 옷보다 작아서 "신발"로
+            # 오분류됨, 발밑에 모자가 렌더되는 버그로 실제 발견됨)에서 틀렸다.
+            garment = max(parts_sorted, key=lambda p: p[0])
+            gx0, gx1 = garment[3], garment[4]
+            cell_top = row * cell_h
+            shoe_y_threshold = cell_top + SHOE_Y_FRAC * cell_h
+            rest = [p for p in parts_sorted if p is not garment]
+            shoe_parts = [
+                p
+                for p in rest
+                if p[1] >= shoe_y_threshold and gx0 <= (p[3] + p[4]) / 2 <= gx1 and p[0] >= SHOE_MIN_SIZE
+            ]
+            garment_parts = [garment]
+
+            if shoe_parts:
+                sy0 = min(p[1] for p in shoe_parts)
+                sy1 = max(p[2] for p in shoe_parts)
+                sx0 = min(p[3] for p in shoe_parts)
+                sx1 = max(p[4] for p in shoe_parts)
                 shoes_crop = im.crop((max(0, sx0 - pad), max(0, sy0 - pad), min(w, sx1 + pad), min(h, sy1 + pad)))
                 shoes_crop.save(os.path.join(shoes_dir, f"shoes_{idx:02d}.png"))
-            else:
-                garment_parts = parts_sorted
+
             gy0 = min(p[1] for p in garment_parts)
             gy1 = max(p[2] for p in garment_parts)
             gx0 = min(p[3] for p in garment_parts)
@@ -156,9 +195,17 @@ def compose_all(kind: str) -> list[str]:
 
         shoes_path = os.path.join(CHAR_DIR, kind, "dress_shoes", f"shoes_{idx}.png")
         if os.path.exists(shoes_path):
-            shoes_trim = _largest_component_only(Image.open(shoes_path).convert("RGBA"))
+            # 주의: _largest_component_only를 신발에 쓰면 안 된다 — 왼쪽/오른쪽 신발이 서로
+            # 안 붙어있는(연결 요소가 2개인) 크롭이 대부분이라, "가장 큰 덩어리만 남기기"를
+            # 적용하면 한쪽 신발이 통째로 사라진다(한쪽 발이 맨발로 렌더되는 버그로 실제 발견됨).
+            # extract_grid가 이미 셀 단위로 정확히 자른 크롭이라 별도 노이즈 제거가 필요 없다.
+            shoes_trim = Image.open(shoes_path).convert("RGBA")
             sw, sh = shoes_trim.size
-            sscale = TARGET_SHOE_W / sw
+            # 신발 크롭엔 두 짝이 다 든 것도, 한쪽만 든 것도 있다(반대쪽이 옷단에 붙어서 옷
+            # 크롭에 이미 포함된 경우). 고정 목표 너비(TARGET_SHOE_W)를 쓰면 한 짝짜리 크롭이
+            # 두 짝 크기로 부풀려져 항아리처럼 보이는 문제가 있었다 — 옷과 같은 배율(scale)을
+            # 써서 원본 시트 안에서의 실제 상대 크기를 그대로 유지한다.
+            sscale = scale
             snew_w, snew_h = round(sw * sscale), round(sh * sscale)
             shoes_scaled = shoes_trim.resize((snew_w, snew_h), Image.LANCZOS)
             spx = round(foot_cx - snew_w / 2)
