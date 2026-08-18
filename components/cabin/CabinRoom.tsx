@@ -5,7 +5,7 @@ import { GameIcon } from "@/components/icons/GameIcon";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
 import type { CabinData } from "@/lib/game/cabinData";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
-import { getPlacementDef, furnitureWrapperStyle, depthOf } from "@/lib/domain/cabinPlacement";
+import { getPlacementDef, furnitureWrapperStyle, depthOf, wallTiltFor } from "@/lib/domain/cabinPlacement";
 import { furnitureImageSrc } from "@/lib/domain/furnitureFacingAssets";
 
 // 캐릭터 열을 방 바닥의 이 y위치에 서 있는 것으로 취급해 가구와 같은 depth 계산식을 쓴다
@@ -39,7 +39,7 @@ export function CabinRoom({ data }: { data: CabinData }) {
                 x: item.x,
                 y: item.y,
                 scale: item.scale,
-                rotation: item.rotation,
+                rotation: item.rotation + wallTiltFor(def.placementType, item.x),
                 flipX: item.flipX,
                 depth: depthOf(item.y, item.zIndex),
                 baseHeightFrac: def.baseHeightFrac,

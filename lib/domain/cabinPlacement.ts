@@ -12,7 +12,7 @@
 // 이미 그 확장을 지원한다.
 
 import type { CSSProperties } from "react";
-import { ROOM_ZONES, WALL_BOUNDS } from "@/lib/domain/cabinDecor";
+import { ROOM_ZONES, WALL_BOUNDS, WALL_TILT_DEG } from "@/lib/domain/cabinDecor";
 
 export type PlacementType = "floor" | "wall" | "rug" | "free";
 
@@ -33,6 +33,14 @@ export function zoneBoundsFor(placementType: PlacementType) {
 // 멀리 떨어진 가구끼리는 항상 y가 우선하고, 비슷한 y에서 겹치는 경우에만 zIndex로 순서가 뒤집힌다.
 export function depthOf(y: number, zIndex: number): number {
   return y * 1000 + zIndex;
+}
+
+// 벽 장식(placementType "wall")은 x가 방 중앙(0.5) 기준 왼쪽/오른쪽 벽 중 어디 있는지로
+// 자동 기본 기울기를 정한다 — 정면에서 본 평평한 그림을 원근 있는 벽에 맞춰 자연스럽게
+// 붙어 보이게 한다. 벽이 아닌 가구는 0(수평 유지).
+export function wallTiltFor(placementType: PlacementType, x: number): number {
+  if (placementType !== "wall") return 0;
+  return x < 0.5 ? WALL_TILT_DEG.left : WALL_TILT_DEG.right;
 }
 
 // 방(aspect-ratio로 높이가 고정된 컨테이너) 안에서 가구 한 점을 절대 위치시키는 스타일.

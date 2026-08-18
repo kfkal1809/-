@@ -76,6 +76,13 @@ export const ROOM_ZONES = {
   floor: boundsFromClip(ROOM_CLIP.floor),
 };
 
+// 벽면 자체가 원근으로 기울어져 있는데(room-base.png 실측), 액자/시계 같은 벽 장식 소품은
+// 전부 정면에서 본 평평한 그림이라 그냥 얹으면 벽 기울기와 안 맞아 붕 떠 보인다("벽 각도
+// 미스얼라인" 버그). 벽 폴리곤 위쪽 모서리 기울기를 실측한 값 — 벽 장식을 놓을 때 기본
+// 회전값으로 더해준다(furnitureWrapperStyleForItem 참고). 사용자가 회전 버튼으로 그 위에
+// 추가 조정도 계속 할 수 있다.
+export const WALL_TILT_DEG = { left: -13.3, right: 13.3 };
+
 // wall 폴리곤 두 개(좌/우)를 합친 바운딩 박스 — placementType "wall"용.
 export const WALL_BOUNDS: ZoneBounds = {
   xMin: Math.min(ROOM_ZONES.leftWall.xMin, ROOM_ZONES.rightWall.xMin),

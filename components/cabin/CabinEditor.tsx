@@ -9,7 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
 import { WALLPAPER_SWATCHES, FLOOR_SWATCHES, clampToZone, isInKeepOutZone } from "@/lib/domain/cabinDecor";
-import { getPlacementDef, furnitureWrapperStyle, depthOf, zoneBoundsFor } from "@/lib/domain/cabinPlacement";
+import { getPlacementDef, furnitureWrapperStyle, depthOf, zoneBoundsFor, wallTiltFor } from "@/lib/domain/cabinPlacement";
 import { furnitureImageSrc, availableFacings, cycleFacing } from "@/lib/domain/furnitureFacingAssets";
 import { playSfx } from "@/lib/audio/audioManager";
 import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
@@ -244,7 +244,7 @@ export function CabinEditor({
               x: item.x,
               y: item.y,
               scale: item.scale,
-              rotation: item.rotation,
+              rotation: item.rotation + wallTiltFor(def.placementType, item.x),
               flipX: item.flipX,
               depth: depthOf(item.y, item.zIndex),
               baseHeightFrac: def.baseHeightFrac,
