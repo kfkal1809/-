@@ -54,9 +54,11 @@ function ToggleRow({ label, checked, onChange }: { label: string; checked: boole
         aria-label={label}
         onClick={() => onChange(!checked)}
         className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${checked ? "bg-[var(--color-tab-active)]" : "bg-[var(--color-navy)]/15"}`}
+        style={{ overflow: "hidden" }}
       >
         <span
-          className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${checked ? "translate-x-6" : "translate-x-1"}`}
+          className="absolute top-1 h-5 w-5 rounded-full bg-white shadow transition-[left]"
+          style={{ left: checked ? 24 : 4 }}
         />
       </button>
     </div>
