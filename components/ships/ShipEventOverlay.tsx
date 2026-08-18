@@ -123,13 +123,13 @@ export function ShipEventOverlay() {
       {phase === "banner" && event && ship && (
         <div className="pointer-events-none absolute inset-x-0 top-4 z-40 flex justify-center px-6">
           <div
-            className="animate-banner-drop flex items-center gap-2.5 rounded-full border-2 border-white bg-white px-4 py-2 shadow-[0_8px_20px_rgba(36,54,90,0.18)]"
+            className="animate-banner-drop flex items-center gap-2.5 rounded-full border-2 border-white bg-white px-5 py-2.5 shadow-[0_8px_24px_rgba(36,54,90,0.28)]"
             onAnimationEnd={() => setPhase("crate")}
           >
-            <ShipSprite ship={ship} width={34} />
+            <ShipSprite ship={ship} width={38} />
             <div>
-              <p className="text-[13px] font-extrabold text-[var(--color-navy)]">{event.shipTypeName}</p>
-              <p className="text-[11px] text-[var(--color-navy-soft)]">{event.themeLabel}</p>
+              <p className="text-[16px] font-extrabold text-[var(--color-navy)]">{event.shipTypeName}</p>
+              <p className="text-[13px] font-bold text-[var(--color-navy-soft)]">{event.themeLabel}</p>
             </div>
           </div>
         </div>
