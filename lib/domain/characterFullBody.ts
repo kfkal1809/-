@@ -140,3 +140,151 @@ export function outfitFullSrc(assetKey: string): string {
 export function dressFullSrc(assetKey: string): string {
   return `/images/character/dress_full/${assetKey}.png`;
 }
+// scripts/asset-tools 로 생성 — 해녀/해남/새싹 민머리 베이스 + 헤어스타일 오버레이 배치값.
+// widthFrac/leftFrac/topFrac은 headRenderW/headRenderH(렌더된 머리 폭/높이) 기준 비율.
+export const HAIR_ASSET_PLACEMENT: Record<string, { widthFrac: number; leftFrac: number; topFrac: number; w: number; h: number }> = {
+  haenyeo_01: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 272 },
+  haenyeo_02: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 246 },
+  haenyeo_03: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 267 },
+  haenyeo_04: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 233 },
+  haenyeo_05: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 304 },
+  haenyeo_06: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 248 },
+  haenyeo_07: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 278 },
+  haenyeo_08: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 303 },
+  haenyeo_09: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 263 },
+  haenyeo_10: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 336 },
+  haenyeo_11: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 273 },
+  haenyeo_12: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 265 },
+  haenyeo_13: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 406 },
+  haenyeo_14: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 253 },
+  haenyeo_15: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 263 },
+  haenyeo_16: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 283 },
+  haenyeo_17: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 269 },
+  haenyeo_18: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 262 },
+  haenyeo_19: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 284 },
+  haenyeo_20: { widthFrac: 0.8, leftFrac: 0.1, topFrac: -0.1897, w: 272, h: 304 },
+  haenam_01: { widthFrac: 0.9259, leftFrac: -0.0157, topFrac: -0.0315, w: 325, h: 264 },
+  haenam_02: { widthFrac: 0.9573, leftFrac: -0.0266, topFrac: -0.003, w: 336, h: 324 },
+  haenam_03: { widthFrac: 0.9516, leftFrac: -0.0054, topFrac: -0.0149, w: 334, h: 243 },
+  haenam_04: { widthFrac: 0.9487, leftFrac: -0.0029, topFrac: -0.0011, w: 333, h: 240 },
+  haenam_05: { widthFrac: 0.9345, leftFrac: 0.0309, topFrac: 0.0089, w: 328, h: 223 },
+  haenam_06: { widthFrac: 0.9402, leftFrac: -0.0155, topFrac: -0.0069, w: 330, h: 235 },
+  haenam_07: { widthFrac: 0.9744, leftFrac: -0.0219, topFrac: -0.0331, w: 342, h: 265 },
+  haenam_08: { widthFrac: 0.9117, leftFrac: -0.0031, topFrac: 0.0049, w: 320, h: 228 },
+  haenam_10: { widthFrac: 0.9088, leftFrac: -0.0067, topFrac: 0.0202, w: 319, h: 218 },
+  haenam_11: { widthFrac: 0.9573, leftFrac: -0.0434, topFrac: -0.016, w: 336, h: 238 },
+  haenam_12: { widthFrac: 0.9231, leftFrac: -0.0123, topFrac: 0.0034, w: 324, h: 234 },
+  haenam_13: { widthFrac: 0.9231, leftFrac: -0.0168, topFrac: -0.0156, w: 324, h: 341 },
+  haenam_14: { widthFrac: 0.9345, leftFrac: -0.0014, topFrac: 0.0097, w: 328, h: 237 },
+  haenam_15: { widthFrac: 0.9373, leftFrac: 0.0071, topFrac: -0.081, w: 329, h: 231 },
+  haenam_16: { widthFrac: 0.9573, leftFrac: -0.0307, topFrac: -0.0022, w: 336, h: 232 },
+  haenam_17: { widthFrac: 1.0, leftFrac: -0.0615, topFrac: -0.0024, w: 351, h: 328 },
+  haenam_18: { widthFrac: 0.9402, leftFrac: -0.0104, topFrac: -0.0567, w: 330, h: 341 },
+  haenam_19: { widthFrac: 0.8974, leftFrac: 0.0218, topFrac: -0.0071, w: 315, h: 228 },
+  haenam_20: { widthFrac: 1.0085, leftFrac: -0.0474, topFrac: -0.0699, w: 354, h: 273 },
+  child_toddler_male_01: { widthFrac: 1.0458, leftFrac: -0.0175, topFrac: -0.0601, w: 365, h: 332 },
+  child_toddler_male_02: { widthFrac: 1.1834, leftFrac: -0.048, topFrac: -0.0527, w: 413, h: 337 },
+  child_toddler_male_03: { widthFrac: 1.2149, leftFrac: 0.008, topFrac: -0.0038, w: 424, h: 199 },
+  child_toddler_male_04: { widthFrac: 1.1834, leftFrac: -0.0012, topFrac: -0.0135, w: 413, h: 270 },
+  child_toddler_male_05: { widthFrac: 1.1117, leftFrac: -0.0169, topFrac: 0.016, w: 388, h: 304 },
+  child_toddler_male_06: { widthFrac: 1.0602, leftFrac: -0.0193, topFrac: -0.0222, w: 370, h: 233 },
+  child_toddler_male_07: { widthFrac: 1.1461, leftFrac: -0.0594, topFrac: 0.0047, w: 400, h: 307 },
+  child_toddler_male_08: { widthFrac: 1.1146, leftFrac: -0.0149, topFrac: 0.0027, w: 389, h: 313 },
+  child_toddler_male_09: { widthFrac: 1.1032, leftFrac: 0.009, topFrac: 0.0035, w: 385, h: 304 },
+  child_toddler_male_10: { widthFrac: 1.0917, leftFrac: 0.0154, topFrac: -0.0472, w: 381, h: 238 },
+  child_toddler_female_01: { widthFrac: 0.9855, leftFrac: -0.0181, topFrac: -0.0642, w: 408, h: 372 },
+  child_toddler_female_02: { widthFrac: 1.1135, leftFrac: -0.0452, topFrac: -0.0559, w: 461, h: 376 },
+  child_toddler_female_03: { widthFrac: 1.1329, leftFrac: 0.0076, topFrac: -0.0026, w: 469, h: 221 },
+  child_toddler_female_04: { widthFrac: 1.1087, leftFrac: -0.0008, topFrac: -0.0138, w: 459, h: 299 },
+  child_toddler_female_05: { widthFrac: 1.0459, leftFrac: -0.016, topFrac: 0.0161, w: 433, h: 339 },
+  child_toddler_female_06: { widthFrac: 1.0, leftFrac: -0.0194, topFrac: -0.0242, w: 414, h: 262 },
+  child_toddler_female_07: { widthFrac: 1.0797, leftFrac: -0.0555, topFrac: 0.0042, w: 447, h: 344 },
+  child_toddler_female_08: { widthFrac: 1.0459, leftFrac: -0.0138, topFrac: 0.003, w: 433, h: 349 },
+  child_toddler_female_09: { widthFrac: 1.0338, leftFrac: 0.0089, topFrac: 0.0033, w: 428, h: 339 },
+  child_toddler_female_10: { widthFrac: 1.029, leftFrac: 0.0144, topFrac: -0.0503, w: 426, h: 266 },
+  child_kindergarten_male_01: { widthFrac: 0.9828, leftFrac: -0.0174, topFrac: -0.0643, w: 401, h: 365 },
+  child_kindergarten_male_02: { widthFrac: 1.1103, leftFrac: -0.0451, topFrac: -0.056, w: 453, h: 369 },
+  child_kindergarten_male_03: { widthFrac: 1.1299, leftFrac: 0.0084, topFrac: -0.0017, w: 461, h: 217 },
+  child_kindergarten_male_04: { widthFrac: 1.1054, leftFrac: -0.0024, topFrac: -0.0159, w: 451, h: 295 },
+  child_kindergarten_male_05: { widthFrac: 1.0392, leftFrac: -0.0155, topFrac: 0.0173, w: 424, h: 332 },
+  child_kindergarten_male_06: { widthFrac: 0.9975, leftFrac: -0.0183, topFrac: -0.0236, w: 407, h: 257 },
+  child_kindergarten_male_07: { widthFrac: 1.076, leftFrac: -0.0542, topFrac: 0.0053, w: 439, h: 338 },
+  child_kindergarten_male_08: { widthFrac: 1.0417, leftFrac: -0.013, topFrac: 0.0041, w: 425, h: 343 },
+  child_kindergarten_male_09: { widthFrac: 1.0319, leftFrac: 0.0076, topFrac: 0.0044, w: 421, h: 333 },
+  child_kindergarten_male_10: { widthFrac: 1.0221, leftFrac: 0.0156, topFrac: -0.0525, w: 417, h: 262 },
+  child_kindergarten_female_01: { widthFrac: 1.005, leftFrac: -0.0178, topFrac: -0.0629, w: 402, h: 366 },
+  child_kindergarten_female_02: { widthFrac: 1.135, leftFrac: -0.0461, topFrac: -0.0548, w: 454, h: 370 },
+  child_kindergarten_female_03: { widthFrac: 1.1575, leftFrac: 0.0084, topFrac: -0.0019, w: 463, h: 217 },
+  child_kindergarten_female_04: { widthFrac: 1.1325, leftFrac: -0.0027, topFrac: -0.0158, w: 453, h: 296 },
+  child_kindergarten_female_05: { widthFrac: 1.065, leftFrac: -0.0159, topFrac: 0.0168, w: 426, h: 333 },
+  child_kindergarten_female_06: { widthFrac: 1.0175, leftFrac: -0.0188, topFrac: -0.0232, w: 407, h: 257 },
+  child_kindergarten_female_07: { widthFrac: 1.0975, leftFrac: -0.0554, topFrac: 0.0052, w: 439, h: 339 },
+  child_kindergarten_female_08: { widthFrac: 1.065, leftFrac: -0.0134, topFrac: 0.0038, w: 426, h: 344 },
+  child_kindergarten_female_09: { widthFrac: 1.055, leftFrac: 0.0076, topFrac: 0.0041, w: 422, h: 334 },
+  child_kindergarten_female_10: { widthFrac: 1.045, leftFrac: 0.0158, topFrac: -0.0485, w: 418, h: 261 },
+  child_elementary_male_01: { widthFrac: 0.9725, leftFrac: -0.0169, topFrac: -0.0653, w: 424, h: 387 },
+  child_elementary_male_02: { widthFrac: 1.0986, leftFrac: -0.0446, topFrac: -0.0567, w: 479, h: 391 },
+  child_elementary_male_03: { widthFrac: 1.1147, leftFrac: 0.0081, topFrac: -0.0014, w: 486, h: 228 },
+  child_elementary_male_04: { widthFrac: 1.0917, leftFrac: -0.0024, topFrac: -0.0161, w: 476, h: 311 },
+  child_elementary_male_05: { widthFrac: 1.0321, leftFrac: -0.0166, topFrac: 0.0168, w: 450, h: 352 },
+  child_elementary_male_06: { widthFrac: 0.9885, leftFrac: -0.0189, topFrac: -0.0229, w: 431, h: 271 },
+  child_elementary_male_07: { widthFrac: 1.0665, leftFrac: -0.0548, topFrac: 0.0048, w: 465, h: 358 },
+  child_elementary_male_08: { widthFrac: 1.0321, leftFrac: -0.013, topFrac: 0.0039, w: 450, h: 362 },
+  child_elementary_male_09: { widthFrac: 1.0183, leftFrac: 0.0086, topFrac: 0.0039, w: 444, h: 352 },
+  child_elementary_male_10: { widthFrac: 1.0138, leftFrac: 0.0139, topFrac: -0.0504, w: 442, h: 276 },
+  child_elementary_female_01: { widthFrac: 1.0341, leftFrac: -0.0199, topFrac: -0.0605, w: 334, h: 304 },
+  child_elementary_female_02: { widthFrac: 1.1703, leftFrac: -0.0475, topFrac: -0.0533, w: 378, h: 308 },
+  child_elementary_female_03: { widthFrac: 1.195, leftFrac: 0.0096, topFrac: -0.0031, w: 386, h: 182 },
+  child_elementary_female_04: { widthFrac: 1.1703, leftFrac: -0.0029, topFrac: -0.0155, w: 378, h: 247 },
+  child_elementary_female_05: { widthFrac: 1.0991, leftFrac: -0.0175, topFrac: 0.0151, w: 355, h: 278 },
+  child_elementary_female_06: { widthFrac: 1.0464, leftFrac: -0.0198, topFrac: -0.023, w: 338, h: 214 },
+  child_elementary_female_07: { widthFrac: 1.1331, leftFrac: -0.059, topFrac: 0.0034, w: 366, h: 282 },
+  child_elementary_female_08: { widthFrac: 1.0991, leftFrac: -0.0133, topFrac: 0.0043, w: 355, h: 286 },
+  child_elementary_female_09: { widthFrac: 1.0898, leftFrac: 0.0093, topFrac: 0.0022, w: 352, h: 279 },
+  child_elementary_female_10: { widthFrac: 1.0774, leftFrac: 0.0158, topFrac: -0.0494, w: 348, h: 218 },
+};
+
+// HairStyle(온보딩 선택지) → 그룹별 사용 가능한 스타일 번호. 값이 없으면(예: 새싹 bun) 그림 자산이
+// 없다는 뜻 — 숨기지 않고 민머리 베이스로 자연스럽게 폴백한다(docs/PROGRESS.md 기록).
+export const HAIR_STYLE_INDEX: Record<"haenyeo" | "haenam" | "child", Partial<Record<string, string>>> = {
+  haenyeo: { wave: "03", pony: "09", bob: "06", twin: "11", bun: "10" },
+  haenam: { short_neat: "01", buzz: "07", sideswept: "15", bob: "18" },
+  child: { bob: "02", twin: "03", pony: "04" },
+};
+// 민머리 베이스(공급받은 원본 시트에서 크롭, docs/PROGRESS.md 기록) — 얼굴/피부톤/표정/체형은
+// 기존 base/head 그림과 동일, 머리카락만 빠져 있다. 헤어스타일 오버레이를 얹기 위한 밑그림.
+export function baldHeadSrc(key: CharacterPortraitKey): string {
+  return `/images/character/base/head_bald/${characterPortraitKeyFor(key)}.png`;
+}
+
+export function baldSkinMaskSrc(key: CharacterPortraitKey): string {
+  return `/images/character/base/masks/${characterPortraitKeyFor(key)}_bald_skin_mask.png`;
+}
+
+// 헤어스타일 오버레이 자산은 해녀/해남/새싹 3그룹 폴더로 나뉜다(kind가 그대로 그룹명). 새싹은
+// 연령대×성별 6종 헤드마다 그림 크기가 달라 하위 폴더(characterPortraitKeyFor 키)로 한 번 더 나눈다.
+export function hairOverlaySrc(portraitKey: CharacterPortraitKey, styleIndex: string): string {
+  const group = portraitKey.kind;
+  if (group === "child") {
+    const headKey = characterPortraitKeyFor(portraitKey);
+    return `/images/character/child/hair/${headKey}/child_hair_${styleIndex}.png`;
+  }
+  return `/images/character/${group}/hair/${group}_hair_${styleIndex}.png`;
+}
+
+export function hairOverlayMaskSrc(portraitKey: CharacterPortraitKey, styleIndex: string): string {
+  const group = portraitKey.kind;
+  if (group === "child") {
+    const headKey = characterPortraitKeyFor(portraitKey);
+    return `/images/character/child/hair/${headKey}/masks/child_hair_${styleIndex}_mask.png`;
+  }
+  return `/images/character/${group}/hair/masks/${group}_hair_${styleIndex}_mask.png`;
+}
+
+// HairStyle 선택값 → HAIR_ASSET_PLACEMENT 키. 해당 그룹에 그림 자산이 없는 조합(새싹 bun 등)은
+// null을 반환 — 이 경우 CharacterSprite가 민머리 베이스로 자연스럽게 폴백한다.
+export function resolveHairAssetKey(portraitKey: CharacterPortraitKey, hairStyle: string): string | null {
+  const idx = HAIR_STYLE_INDEX[portraitKey.kind]?.[hairStyle];
+  if (!idx) return null;
+  return `${characterPortraitKeyFor(portraitKey)}_${idx}`;
+}
