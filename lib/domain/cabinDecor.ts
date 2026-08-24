@@ -51,10 +51,10 @@ interface ZoneBounds {
   yMax: number;
 }
 
-// ROOM_CLIP의 폴리곤 좌표(퍼센트 문자열)에서 바운딩 박스를 뽑아 0~1 정규화 좌표로 변환.
-// 완전한 폴리곤 충돌판정 대신 "바닥/벽 영역에서 크게 벗어나지 않게"하는 최소한의 배치 제약으로 쓴다.
-function boundsFromClip(clip: string): ZoneBounds {
-  const points = clip
+// ROOM_CLIP의 CSS polygon() 문자열(퍼센트 좌표)을 0~1 정규화 좌표 점 배열로 파싱한다.
+// boundsFromClip(바운딩 박스)와 pointInPolygon/nearestPointOnPolygon(실제 폴리곤 판정) 양쪽에서 재사용.
+function parsePolygon(clip: string): { x: number; y: number }[] {
+  return clip
     .replace(/^polygon\(/, "")
     .replace(/\)$/, "")
     .split(",")
@@ -62,6 +62,12 @@ function boundsFromClip(clip: string): ZoneBounds {
       const [x, y] = pair.trim().split(/\s+/).map((v) => parseFloat(v) / 100);
       return { x, y };
     });
+}
+
+// ROOM_CLIP의 폴리곤 좌표(퍼센트 문자열)에서 바운딩 박스를 뽑아 0~1 정규화 좌표로 변환.
+// 드래그 중 좌표가 너무 멀리 튀지 않게 잡는 1차 안전망으로 쓴다(정밀한 경계는 폴리곤 클램프가 처리).
+function boundsFromClip(clip: string): ZoneBounds {
+  const points = parsePolygon(clip);
   return {
     xMin: Math.min(...points.map((p) => p.x)),
     xMax: Math.max(...points.map((p) => p.x)),
@@ -70,11 +76,56 @@ function boundsFromClip(clip: string): ZoneBounds {
   };
 }
 
+// 점(x,y)가 폴리곤(points, 0~1 정규화) 안에 있는지 ray-casting으로 판정.
+export function pointInPolygon(x: number, y: number, points: { x: number; y: number }[]): boolean {
+  let inside = false;
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const { x: xi, y: yi } = points[i];
+    const { x: xj, y: yj } = points[j];
+    const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+    if (intersects) inside = !inside;
+  }
+  return inside;
+}
+
+// 점(x,y)에서 선분(a,b)까지 가장 가까운 점을 구한다(표준 투영, t를 [0,1]로 clamp).
+function closestPointOnSegment(x: number, y: number, a: { x: number; y: number }, b: { x: number; y: number }) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const lenSq = dx * dx + dy * dy;
+  const t = lenSq === 0 ? 0 : Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / lenSq));
+  return { x: a.x + t * dx, y: a.y + t * dy };
+}
+
+// 점(x,y)가 폴리곤 밖이면 폴리곤 테두리(변) 중 가장 가까운 점으로 스냅한다 — "바닥/벽처럼
+// 보이는 마름모 밖으로 가구를 못 끌고 나가게" 하는 실제 폴리곤 충돌판정. 바운딩 박스 클램프와
+// 달리 isometric 모서리(예: 바닥 육각형의 뾰족한 앞/뒤 꼭짓점 옆 빈 삼각형 구간)도 정확히 막는다.
+export function clampToPolygon(x: number, y: number, points: { x: number; y: number }[]): { x: number; y: number } {
+  if (pointInPolygon(x, y, points)) return { x, y };
+  let best = closestPointOnSegment(x, y, points[points.length - 1], points[0]);
+  let bestDist = (best.x - x) ** 2 + (best.y - y) ** 2;
+  for (let i = 0; i < points.length - 1; i++) {
+    const candidate = closestPointOnSegment(x, y, points[i], points[i + 1]);
+    const dist = (candidate.x - x) ** 2 + (candidate.y - y) ** 2;
+    if (dist < bestDist) {
+      best = candidate;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
 export const ROOM_ZONES = {
   leftWall: boundsFromClip(ROOM_CLIP.leftWall),
   rightWall: boundsFromClip(ROOM_CLIP.rightWall),
   floor: boundsFromClip(ROOM_CLIP.floor),
 };
+
+// 실제 폴리곤 충돌판정(clampToPolygon/pointInPolygon)에 쓰는 점 배열 — ROOM_CLIP과 항상
+// 동기화되도록 파싱해서 만든다(좌표를 따로 손으로 옮겨 적지 않음).
+export const FLOOR_POLYGON = parsePolygon(ROOM_CLIP.floor);
+export const LEFT_WALL_POLYGON = parsePolygon(ROOM_CLIP.leftWall);
+export const RIGHT_WALL_POLYGON = parsePolygon(ROOM_CLIP.rightWall);
 
 // 벽면 자체가 원근으로 기울어져 있는데(room-base.png 실측), 액자/시계 같은 벽 장식 소품은
 // 전부 정면에서 본 평평한 그림이라 그냥 얹으면 벽 기울기와 안 맞아 붕 떠 보인다("벽 각도
@@ -114,23 +165,21 @@ export function isInKeepOutZone(x: number, y: number): boolean {
   return inRect(DOOR_CLEARANCE) || inRect(CHARACTER_SPAWN_ZONE);
 }
 
-// floor 폴리곤 위 한 점이 실제로 폴리곤 안에 있는지 검사(ray casting) — 바운딩 박스보다
-// 정확하게 "바닥 위에 서 있는지"를 확인할 때 쓴다(기본 배치 좌표를 고를 때 사용).
+// floor 폴리곤 위 한 점이 실제로 폴리곤 안에 있는지 검사 — 바운딩 박스보다 정확하게
+// "바닥 위에 서 있는지"를 확인할 때 쓴다(기본 배치 좌표를 고를 때 사용).
 export function isInsideFloor(x: number, y: number): boolean {
-  const points = ROOM_CLIP.floor
-    .replace(/^polygon\(/, "")
-    .replace(/\)$/, "")
-    .split(",")
-    .map((pair) => {
-      const [px, py] = pair.trim().split(/\s+/).map((v) => parseFloat(v) / 100);
-      return [px, py] as [number, number];
-    });
-  let inside = false;
-  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
-    const [xi, yi] = points[i];
-    const [xj, yj] = points[j];
-    const intersects = yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi;
-    if (intersects) inside = !inside;
-  }
-  return inside;
+  return pointInPolygon(x, y, FLOOR_POLYGON);
+}
+
+// 바닥 위 드래그 좌표를 실제 바닥 육각형 폴리곤 안으로 스냅한다 — 바운딩 박스만으로는
+// 막지 못하던 "육각형 뾰족한 앞/뒤 꼭짓점 옆 빈 삼각형 구간"까지 정확히 막는다.
+export function clampToFloorPolygon(x: number, y: number): { x: number; y: number } {
+  return clampToPolygon(x, y, FLOOR_POLYGON);
+}
+
+// 벽 드래그 좌표를 실제 좌/우 벽 평행사변형 폴리곤 안으로 스냅한다 — x가 방 중앙(0.5) 기준
+// 왼쪽/오른쪽 중 어디 있는지로 어느 벽 폴리곤을 쓸지 고른다(WALL_TILT_DEG의 좌우 판정과 동일 기준).
+export function clampToWallPolygon(x: number, y: number): { x: number; y: number } {
+  const polygon = x < 0.5 ? LEFT_WALL_POLYGON : RIGHT_WALL_POLYGON;
+  return clampToPolygon(x, y, polygon);
 }

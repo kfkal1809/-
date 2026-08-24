@@ -1,7 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { getPlacementDef, zoneBoundsFor, depthOf } from "@/lib/domain/cabinPlacement";
+import { getPlacementDef, zoneBoundsFor, clampToRoomZone, depthOf } from "@/lib/domain/cabinPlacement";
 import {
   clampToZone,
+  clampToPolygon,
+  clampToFloorPolygon,
+  clampToWallPolygon,
+  pointInPolygon,
   isInsideFloor,
   isInKeepOutZone,
   DOOR_X_RANGE,
@@ -9,6 +13,9 @@ import {
   CHARACTER_SPAWN_ZONE,
   ROOM_ZONES,
   WALL_BOUNDS,
+  FLOOR_POLYGON,
+  LEFT_WALL_POLYGON,
+  RIGHT_WALL_POLYGON,
 } from "@/lib/domain/cabinDecor";
 
 describe("getPlacementDef", () => {
@@ -116,6 +123,73 @@ describe("isInsideFloor", () => {
 
   it("천장/벽 쪽 점은 바닥이 아니다", () => {
     expect(isInsideFloor(0.5, 0.1)).toBe(false);
+  });
+});
+
+// 완전한 폴리곤 충돌판정 — 바운딩 박스만으로는 못 막던 "박스 안이지만 실제 육각형/평행사변형
+// 밖인 모서리 빈 삼각형 구간"을 폴리곤 테두리로 정확히 스냅하는지 검증.
+describe("clampToPolygon", () => {
+  it("폴리곤 안의 점은 그대로 둔다", () => {
+    expect(clampToPolygon(0.5, 0.7, FLOOR_POLYGON)).toEqual({ x: 0.5, y: 0.7 });
+  });
+
+  it("바운딩 박스 안이지만 실제 육각형 폴리곤 밖인 모서리 점은 테두리로 스냅된다", () => {
+    // FLOOR_POLYGON의 바운딩 박스 좌상단 근처(바운딩 박스 클램프만으로는 안 걸러짐).
+    const result = clampToPolygon(0.03, 0.476, FLOOR_POLYGON);
+    expect(result.x).toBeCloseTo(0.103, 2);
+    expect(result.y).toBeCloseTo(0.635, 2);
+    // 스냅된 점 자체는 폴리곤 경계 위(또는 그 근처)라 더 이상 밖이 아니어야 한다.
+    expect(pointInPolygon(result.x, result.y + 0.001, FLOOR_POLYGON)).toBe(true);
+  });
+
+  it("폴리곤 훨씬 밖(천장 쪽)의 점은 가장 가까운 변(위쪽 꼭짓점 근방)으로 스냅된다", () => {
+    const result = clampToPolygon(0.5, 0, FLOOR_POLYGON);
+    expect(result.y).toBeGreaterThan(0.4);
+    expect(result.y).toBeLessThan(0.5);
+  });
+});
+
+describe("clampToFloorPolygon / clampToWallPolygon", () => {
+  it("clampToFloorPolygon은 clampToPolygon(FLOOR_POLYGON)과 동일하다", () => {
+    expect(clampToFloorPolygon(0.03, 0.476)).toEqual(clampToPolygon(0.03, 0.476, FLOOR_POLYGON));
+  });
+
+  it("clampToWallPolygon은 x<0.5면 왼쪽 벽 폴리곤을, 아니면 오른쪽 벽 폴리곤을 쓴다", () => {
+    expect(clampToWallPolygon(0.1, 0.5)).toEqual(clampToPolygon(0.1, 0.5, LEFT_WALL_POLYGON));
+    expect(clampToWallPolygon(0.9, 0.5)).toEqual(clampToPolygon(0.9, 0.5, RIGHT_WALL_POLYGON));
+  });
+
+  it("벽 바운딩 박스 안이지만 실제 평행사변형 밖인 점도 걸러낸다", () => {
+    // 벽은 원근 때문에 x가 방 중앙에 가까울수록 유효 y범위가 좁아지는 기울어진 사각형이라,
+    // WALL_BOUNDS(좌우 벽을 합친 바운딩 박스) 안이지만 실제 왼쪽 벽 사각형 밖인 점이 생긴다.
+    const inBox = 0.45 >= WALL_BOUNDS.xMin && 0.45 <= WALL_BOUNDS.xMax && 0.55 >= WALL_BOUNDS.yMin && 0.55 <= WALL_BOUNDS.yMax;
+    expect(inBox).toBe(true);
+    expect(pointInPolygon(0.45, 0.55, LEFT_WALL_POLYGON)).toBe(false);
+    const result = clampToWallPolygon(0.45, 0.55);
+    expect(result).not.toEqual({ x: 0.45, y: 0.55 });
+    expect(result.x).toBeCloseTo(0.369, 2);
+    expect(result.y).toBeCloseTo(0.404, 2);
+  });
+});
+
+describe("clampToRoomZone", () => {
+  it("floor/rug는 바운딩 박스가 아니라 실제 바닥 폴리곤으로 클램프된다", () => {
+    const result = clampToRoomZone(0.03, 0.476, "floor");
+    expect(result).toEqual(clampToFloorPolygon(0.03, 0.476));
+    expect(result).not.toEqual(clampToZone(0.03, 0.476, ROOM_ZONES.floor));
+  });
+
+  it("wall은 실제 벽 폴리곤으로 클램프된다", () => {
+    const result = clampToRoomZone(0.05, 0.55, "wall");
+    expect(result).toEqual(clampToWallPolygon(0.05, 0.55));
+  });
+
+  it("free는 폴리곤 없이 방 전체(0~1) 바운딩 박스만 적용된다", () => {
+    expect(clampToRoomZone(-1, 2, "free")).toEqual({ x: 0, y: 1 });
+  });
+
+  it("폴리곤 안쪽 점은 floor/wall 모두 좌표가 그대로 유지된다", () => {
+    expect(clampToRoomZone(0.46, 0.86, "floor")).toEqual({ x: 0.46, y: 0.86 });
   });
 });
 

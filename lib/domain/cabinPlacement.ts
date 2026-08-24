@@ -12,7 +12,7 @@
 // 이미 그 확장을 지원한다.
 
 import type { CSSProperties } from "react";
-import { ROOM_ZONES, WALL_BOUNDS, WALL_TILT_DEG } from "@/lib/domain/cabinDecor";
+import { ROOM_ZONES, WALL_BOUNDS, WALL_TILT_DEG, clampToZone, clampToFloorPolygon, clampToWallPolygon } from "@/lib/domain/cabinDecor";
 
 export type PlacementType = "floor" | "wall" | "rug" | "free";
 
@@ -26,6 +26,19 @@ export function zoneBoundsFor(placementType: PlacementType) {
   if (placementType === "wall") return WALL_BOUNDS;
   if (placementType === "free") return { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
   return ROOM_ZONES.floor; // floor, rug 모두 바닥 영역 사용
+}
+
+// 드래그 좌표를 배치 타입에 맞는 실제 영역 안으로 고정한다. 먼저 바운딩 박스로 크게 벗어난
+// 좌표를 1차로 가둔 다음(멀리 떨어진 포인터에서도 계산이 항상 안정적이도록), floor/wall은
+// 실제 isometric 폴리곤(육각형 바닥/평행사변형 벽)으로 다시 스냅한다 — 바운딩 박스만으로는
+// 못 막던 "폴리곤 밖 모서리 빈 삼각형 구간"까지 정확히 막는 완전한 폴리곤 충돌판정.
+// free는 폴리곤이 없어 바운딩 박스(방 전체 0~1) 그대로 쓴다.
+export function clampToRoomZone(rawX: number, rawY: number, placementType: PlacementType): { x: number; y: number } {
+  const bounds = zoneBoundsFor(placementType);
+  const { x, y } = clampToZone(rawX, rawY, bounds);
+  if (placementType === "wall") return clampToWallPolygon(x, y);
+  if (placementType === "floor" || placementType === "rug") return clampToFloorPolygon(x, y);
+  return { x, y };
 }
 
 // 바닥 y좌표를 기본 depth로 삼고(아래쪽일수록 앞), 사용자가 앞으로/뒤로 조정한 zIndex를

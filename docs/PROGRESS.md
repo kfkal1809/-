@@ -1819,3 +1819,46 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
   이 세션의 기존 관행과 동일). `tsc`/`eslint`/`vitest run`(232개)/`next build` 전부 통과.
 - **참고**: `anchorX`/`anchorY` 배치값은 라이브 브라우저로 눈으로 보며 잡은 값이라 아주
   정밀하진 않다(기존 `hand_tool_pouch` 주석에도 같은 단서가 있음) — 필요하면 추후 미세조정.
+
+## 가구 배치 완전한 폴리곤 충돌판정 (바운딩 박스 MVP → 실제 isometric 폴리곤)
+
+선실꾸미기 작업(#24~#27) 때 "다음 단계 후보"로 미뤄뒀던 항목 — 가구를 방꾸미기 편집기에서
+드래그할 때, 바닥/벽 영역 밖으로 못 나가게 막는 로직이 지금까지는 `ROOM_CLIP` isometric
+폴리곤(바닥은 육각형, 벽은 원근 때문에 기울어진 평행사변형)에서 뽑은 **바운딩 박스**만
+썼다. 바운딩 박스는 폴리곤을 감싸는 사각형이라, "바운딩 박스 안이지만 실제 폴리곤 밖"인
+빈 삼각형 구간(육각형의 뾰족한 앞/뒤 꼭짓점 옆, 벽 사각형이 원근으로 좁아지는 쪽)으로는
+가구를 드래그해서 넣을 수 있었다 — 침대가 방 모서리 허공에, 액자가 벽이 좁아지는 쪽 바닥
+위에 떠 보이는 식.
+
+- **`lib/domain/cabinDecor.ts`**: 기존 `boundsFromClip`(바운딩 박스 계산)과 (이전 세션에서
+  만들어졌지만 드래그 클램프에는 안 쓰이고 기본 배치 좌표 검증에만 쓰이던) `isInsideFloor`가
+  각자 폴리곤 파싱 로직을 따로 갖고 있던 걸 `parsePolygon()` 공용 헬퍼로 합쳤다. 새로
+  `pointInPolygon(x,y,points)`(ray-casting, `isInsideFloor`가 이제 이걸 호출), 점이 폴리곤
+  밖이면 가장 가까운 변으로 스냅하는 `clampToPolygon(x,y,points)`(각 변을 선분으로 보고
+  점-선분 최근접점을 구해 그중 최솟값 선택)를 추가. `ROOM_CLIP`에서 파싱한
+  `FLOOR_POLYGON`/`LEFT_WALL_POLYGON`/`RIGHT_WALL_POLYGON` 점 배열과, 이를 쓰는
+  `clampToFloorPolygon`/`clampToWallPolygon`(x<0.5로 좌/우 벽 폴리곤 선택 — `wallTiltFor`가
+  쓰는 좌우 판정 기준과 동일하게 맞춤)을 export.
+- **`lib/domain/cabinPlacement.ts`**: 새 `clampToRoomZone(rawX, rawY, placementType)` —
+  먼저 기존 바운딩 박스 클램프(`clampToZone`)로 좌표를 1차로 가둬 계산이 항상 안정적이게
+  하고, floor/rug는 `clampToFloorPolygon`, wall은 `clampToWallPolygon`으로 다시 스냅,
+  free는 폴리곤이 없어 바운딩 박스 그대로 반환.
+- **`components/cabin/CabinEditor.tsx`**: `handlePointerMove`가 `zoneBoundsFor` +
+  `clampToZone` 2단계 호출을 새 `clampToRoomZone` 한 번 호출로 교체(다른 로직은 안 건드림 —
+  keep-out 영역 회피 등은 그대로 유지).
+- **테스트**: `lib/domain/cabinPlacement.test.ts`에 18개 추가(242개 전체) —
+  `clampToPolygon`(폴리곤 안 점 유지/바운딩 박스 안·폴리곤 밖 모서리 점 스냅/훨씬 밖의 점도
+  가장 가까운 변으로), `clampToFloorPolygon`/`clampToWallPolygon`(좌우 벽 선택 로직, 벽
+  바운딩 박스 안이지만 실제 평행사변형 밖인 점도 걸러냄), `clampToRoomZone`(floor/wall이
+  바운딩 박스가 아니라 실제 폴리곤 결과와 일치, free는 바운딩 박스만 적용) — 기대값은
+  Python으로 동일한 point-in-polygon/최근접점 로직을 오프라인 재현해 미리 계산해서 검증.
+- **실제 화면 검증**: 임시 `app/(dev)/cabin-clamp-test` 라우트(모의 `CabinEditor` 직접
+  렌더)에 Playwright `page.mouse`로 실제 포인터 드래그를 재현 — (A) 침대를 바닥 육각형
+  바운딩 박스 안·실제 폴리곤 밖인 좌상단 모서리로 드래그하면 육각형 가장자리에서 정확히
+  멈추는 것(이전이라면 벽 쪽 허공까지 끌려갔을 위치), (B) 현창(벽 장식)을 벽 바운딩 박스
+  안·실제 평행사변형 밖인 지점으로 드래그해도 벽 위쪽 실제 영역 안에 남는 것을 스크린샷으로
+  확인. 검증 후 임시 라우트 삭제. `tsc`/`eslint`/`vitest run`(242개)/`next build` 전부 통과.
+- **범위상 하지 않은 것**: 가구끼리(가구-가구) 겹침 판정은 원래 범위 밖이었고 이번에도
+  다루지 않음 — 이번 건 "방 모양(바닥/벽) 밖으로 못 나가게"만 다룸. 라이브 로그인 세션에서
+  실제 인벤토리 가구로 드래그→저장→새로고침까지 도는 전체 사이클은 여전히 사용자가
+  배포 환경에서 확인 필요(샌드박스에 라이브 Supabase 없음).
