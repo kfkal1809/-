@@ -145,7 +145,7 @@ export const HAND_PLACEMENT: Record<string, { widthFrac: number; anchorX: number
   hand_tool_pouch: { widthFrac: 0.24, anchorX: 0.5, anchorY: 0.15 },
   // 손잡이(파란 anchor 무늬 부분)가 오른손 앵커에 오도록, 낚싯대는 손잡이~릴 근처를 잡고
   // 대는 대각선 위로 뻗어나가는 모양이라 다른 소품보다 폭을 훨씬 크게 잡았다.
-  hand_fishing_rod: { widthFrac: 0.62, anchorX: 0.1, anchorY: 0.82 },
+  hand_fishing_rod: { widthFrac: 0.62, anchorX: 0.02, anchorY: 0.82 },
 };
 
 export function handAccessorySrc(key: string): string {
