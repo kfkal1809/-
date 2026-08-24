@@ -1729,3 +1729,56 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
 - **검증**: 임시 `wall-test` 라우트에 해녀+해남+새싹(유아) 3명을 `CabinRoom`에 넣어
   Playwright로 확인 — 새싹이 어른들 옆에 더 작은 키로, 닉네임 태그까지 정상적으로 나란히
   표시됨. 검증 후 임시 라우트 삭제. `tsc`/`eslint`/`vitest run`(227개)/`next build` 전부 통과.
+
+## 낚시 빈도 밸런스 + 실시간 연출 + 타이밍 미니게임
+
+기존 낚시는 세션 종료 시점에 개수를 한 번에 뽑아서(4시간 2~4개, 8시간 5~8개 — 대략
+1~2시간에 한 개꼴) 화면엔 카운트다운만 보이다가 끝나면 결과가 한꺼번에 쏟아지는 방식이었다.
+사용자 피드백 세 가지를 모두 반영: (1) 낚시 중에 하나씩 잡히는 알림 연출, (2) 30분에 한
+개꼴로 상향, (3) 잡히는 순간 터치 타이밍 미니게임(막대 위 커서가 목표 구간을 지날 때
+탭하면 보너스)으로 적당한 난이도의 실시간 조작 요소 추가.
+
+- **핵심 설계 결정**: 클라이언트와 서버가 각자 같은 시드로 로또를 다시 굴리는 방식은
+  "화면에 하나씩 뜬 알림"과 "최종 지급 결과"가 어긋날 위험이 있어(카탈로그 조회 순서가
+  달라지면 특히), 세션 **시작 시점에 서버가 전체 스케줄("언제 무엇이 잡히는지")을 한 번만
+  확정해서 `scheduled_loot`(jsonb)에 저장**하고, 화면은 그 저장된 스케줄을 그대로 재생만
+  하며, claim 때도 그 목록을 그대로 지급하는 구조로 바꿨다.
+- **마이그레이션(`0017_fishing_live_catches.sql`, 미적용)**: `fishing_sessions`에
+  `scheduled_loot jsonb`(`[{catalogItemId, offsetMinutes}, ...]`)와
+  `tap_bonus_indices integer[]`(미니게임 성공한 인덱스) 컬럼 추가. 이 세션은 라이브
+  Supabase에 접근할 수 없어 실제 프로젝트에는 미적용 — 사용자가 Supabase 대시보드/CLI로
+  직접 적용해야 한다.
+- **`lib/game/fishingLoot.ts`**: 개수 산식을 4시간 7~9개(기존 2~4개), 8시간 15~17개(기존
+  5~8개)로 상향(≈30분/개). 기존 `pickFishingLoot`(호환 유지)과 같은 가중치 로직을 재사용하는
+  `pickFishingLootSchedule()`을 추가 — duration을 개수만큼 등분한 슬롯에 ±30% 지터를 줘서
+  로봇처럼 정확히 30분 간격이 아니라 자연스럽게 들쭉날쭉한 `offsetMinutes`를 정하고
+  오름차순 정렬해 반환.
+- **`app/api/fishing/start/route.ts`**: 세션 생성 시 카탈로그를 조회해
+  `pickFishingLootSchedule()`로 스케줄을 확정하고 `scheduled_loot`에 저장.
+- **`lib/game/fishingData.ts`**: `scheduled_loot`/`tap_bonus_indices`를 읽어 아이템
+  이름/희귀도까지 붙인 `scheduledLoot: FishingScheduledCatch[]`를 세션 정보에 실어 화면에
+  내려준다.
+- **`app/api/fishing/tap/route.ts`**(신규): 미니게임 성공을 기록하는 엔드포인트 — 요청한
+  인덱스의 `offsetMinutes` 시점이 아직 안 됐으면(미리 탭) 거절, 세션이 이미 끝났으면 거절,
+  같은 인덱스 중복 요청은 멱등 처리.
+- **`app/api/fishing/claim/route.ts`**: 예전처럼 `pickFishingLoot`을 다시 굴리지 않고
+  `scheduled_loot`을 그대로 개수로 집계 + `tap_bonus_indices`에 있는 항목만 1개씩 추가
+  지급하도록 재작성 — 화면에 하나씩 뜬 알림과 최종 지급 결과가 항상 일치.
+- **`components/fishing/FishingCatchGame.tsx`**(신규): 타이밍 미니게임 UI. 막대 위를
+  1.3초 주기로 왕복하는 커서와, 매번 무작위 위치에 놓이는 목표 구간(폭 16%)을 보여주고
+  "지금 당기기!" 버튼을 누른 순간의 커서 위치가 목표 구간 안이면 성공 — 시간 제한
+  4.5초, DOM 측정 없이 `requestAnimationFrame` 경과시간으로 커서 위치를 계산해 판정한다.
+  (참고: 탭 판정 자체는 클라이언트에서 계산하고 서버는 타이밍 범위만 검증 — 라이프심 게임
+  특성상 보너스가 흔한 아이템 복제 1개 수준이라 다른 서버 신뢰 패턴만큼 엄격하게 막지는
+  않음. 악용 시 얻는 이득이 작아 감수 가능한 트레이드오프로 판단.)
+- **`components/fishing/FishingScreen.tsx`**: 1초 타이머로 `scheduledLoot`을 훑어 새로
+  도달한(offsetMinutes 경과) 항목이 있으면 상단에 토스트 알림을 띄우고 미니게임 대기열에
+  넣는다 — 여러 개가 동시에 도달해도 미니게임은 한 번에 하나씩만 순서대로. **마운트 이전에
+  이미 지난 항목은 알림을 띄우지 않고**(페이지 재진입 시 스팸 방지), 그 이후로 새로
+  도달하는 것만 알린다. 미니게임 성공 시 `/api/fishing/tap`으로 기록. 카운트다운 카드에
+  "지금까지 N마리 낚았어요" 진행 표시도 추가.
+- **테스트**: `pickFishingLootSchedule`에 대해 개수 범위, 정렬, 평균 간격(24~36분),
+  재현성, 빈 카탈로그 5개 케이스 추가 — `lib/game/fishingLoot.test.ts` 232개(전체) 전부 통과.
+- **검증**: 라이브 Supabase가 없어 UI 상호작용(토스트 타이밍/미니게임 탭 판정)은 브라우저
+  실행으로 확인하지 못했다 — `tsc`/`eslint`/`vitest run`(232개)/`next build`는 모두 통과했지만,
+  이 부분은 명시적으로 "코드 검증만 했고 라이브 UI 동작 확인은 못 했다"고 밝혀둔다.

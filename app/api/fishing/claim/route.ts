@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { getMyHouseholdId } from "@/lib/game/household";
-import { pickFishingLoot, createSeededRandom } from "@/lib/game/fishingLoot";
 
 // 기획서 3.13 / FR-FISH-002: 서버 시간으로만 완료를 판정하고, 조건부 UPDATE로
 // 최초 1회만 claim이 성공하도록 해 새로고침/중복요청으로 결과가 바뀌지 않게 한다.
+//
+// loot는 세션 시작 시점에 이미 scheduled_loot로 확정돼 저장돼 있으므로 여기서 다시 뽑지
+// 않고 그 목록을 그대로 지급한다 — 화면에 하나씩 뜬 알림과 최종 지급 결과가 항상 일치하게.
+// 실시간 탭 타이밍 미니게임에 성공한 항목(tap_bonus_indices)은 같은 아이템을 하나씩 더 준다.
 export async function POST(request: Request) {
   const supabase = await createClient();
   const {
@@ -21,7 +24,7 @@ export async function POST(request: Request) {
 
   const { data: session } = await service
     .from("fishing_sessions")
-    .select("id, household_id, duration_hours, ends_at, seed, state")
+    .select("id, household_id, ends_at, state, scheduled_loot, tap_bonus_indices")
     .eq("id", sessionId)
     .maybeSingle();
 
@@ -56,17 +59,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ alreadyClaimed: true, loot: formatLoot(existingLoot) });
   }
 
-  const { data: catalog } = await service
-    .from("item_catalog")
-    .select("id, subcategory, rarity")
-    .in("subcategory", ["fish", "lost", "trash", "legend"])
-    .eq("active", true);
-
-  const random = createSeededRandom(session.seed);
-  const picks = pickFishingLoot(session.duration_hours as 4 | 8, catalog ?? [], random);
+  const schedule = (session.scheduled_loot as { catalogItemId: string; offsetMinutes: number }[] | null) ?? [];
+  const tapBonusIndices = (session.tap_bonus_indices as number[] | null) ?? [];
 
   const counts = new Map<string, number>();
-  for (const itemId of picks) counts.set(itemId, (counts.get(itemId) ?? 0) + 1);
+  for (const entry of schedule) counts.set(entry.catalogItemId, (counts.get(entry.catalogItemId) ?? 0) + 1);
+  for (const index of tapBonusIndices) {
+    const entry = schedule[index];
+    if (entry) counts.set(entry.catalogItemId, (counts.get(entry.catalogItemId) ?? 0) + 1);
+  }
 
   const lootRows = Array.from(counts.entries()).map(([catalogItemId, quantity]) => ({
     session_id: sessionId,
