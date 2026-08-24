@@ -130,8 +130,10 @@ export const HAT_PLACEMENT: Record<string, { widthFrac: number; bottomFrac: numb
 // 손소품은 머리처럼 별도 레이어가 없는 outfit_full 그림 위에 얹으므로, 모든 의상이 공유하는
 // 팔 늘어뜨린 기본 포즈에서 "오른손 부근" 한 점(HAND_ACCESSORY_ANCHOR, OUTFIT_CANVAS 좌표계)에
 // 고정 앵커링한다 — 실측: haenam_engine_outfit_01 기준 오른손 중심 약 (310, 300).
+// hand_fishing_rod: design-assets/낚시대.png(사용자 업로드)에서 여백만 잘라낸 실측 크기.
 export const HAND_SIZE: Record<string, { w: number; h: number }> = {
   hand_tool_pouch: { w: 217, h: 192 },
+  hand_fishing_rod: { w: 700, h: 540 },
 };
 
 export const HAND_ACCESSORY_ANCHOR = { x: 310, y: 300 };
@@ -141,6 +143,9 @@ export const HAND_ACCESSORY_ANCHOR = { x: 310, y: 300 };
 // 픽셀 단위까지 검증하지 못해 어림값 — 실제로 보면서 미세조정 필요할 수 있음(정직하게 기록).
 export const HAND_PLACEMENT: Record<string, { widthFrac: number; anchorX: number; anchorY: number }> = {
   hand_tool_pouch: { widthFrac: 0.24, anchorX: 0.5, anchorY: 0.15 },
+  // 손잡이(파란 anchor 무늬 부분)가 오른손 앵커에 오도록, 낚싯대는 손잡이~릴 근처를 잡고
+  // 대는 대각선 위로 뻗어나가는 모양이라 다른 소품보다 폭을 훨씬 크게 잡았다.
+  hand_fishing_rod: { widthFrac: 0.62, anchorX: 0.17, anchorY: 0.82 },
 };
 
 export function handAccessorySrc(key: string): string {

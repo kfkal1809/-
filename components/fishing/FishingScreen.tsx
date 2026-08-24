@@ -9,7 +9,9 @@ import { RARITY_LABEL } from "@/lib/domain/types";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
 import { playSfx } from "@/lib/audio/audioManager";
 import type { FishingData } from "@/lib/game/fishingData";
+import type { DeckSelf } from "@/lib/game/deckData";
 import { FishingCatchGame } from "@/components/fishing/FishingCatchGame";
+import { CharacterSprite } from "@/components/character/CharacterSprite";
 
 interface CatchToast {
   key: number;
@@ -31,7 +33,7 @@ function formatRemaining(ms: number): string {
   return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
-export function FishingScreen({ data }: { data: FishingData }) {
+export function FishingScreen({ data, self }: { data: FishingData; self: DeckSelf }) {
   const router = useRouter();
   const [now, setNow] = useState(() => Date.now());
   const [starting, setStarting] = useState(false);
@@ -184,6 +186,21 @@ export function FishingScreen({ data }: { data: FishingData }) {
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">
       <h1 className="text-lg font-extrabold text-[var(--color-navy)]">낚시터</h1>
+
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[26px] border-2 border-white shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
+        <Image src="/images/backgrounds/fishing.jpg" alt="" fill unoptimized style={{ objectFit: "cover" }} />
+        {self.ready && (
+          <div className="animate-bob absolute bottom-[8%] left-[36%] -translate-x-1/2">
+            <CharacterSprite
+              appearance={{ ...self.appearance, handAssetKey: "hand_fishing_rod" }}
+              kind={self.kind}
+              childGender={self.childGender}
+              childStage={self.childStage}
+              size={150}
+            />
+          </div>
+        )}
+      </div>
 
       {result ? (
         <Card tone="cream" className="flex flex-col items-center gap-3 py-6 text-center">

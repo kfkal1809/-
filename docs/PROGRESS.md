@@ -1782,3 +1782,40 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
 - **검증**: 라이브 Supabase가 없어 UI 상호작용(토스트 타이밍/미니게임 탭 판정)은 브라우저
   실행으로 확인하지 못했다 — `tsc`/`eslint`/`vitest run`(232개)/`next build`는 모두 통과했지만,
   이 부분은 명시적으로 "코드 검증만 했고 라이브 UI 동작 확인은 못 했다"고 밝혀둔다.
+
+## 낚시터 배경 + 낚싯대 든 내 캐릭터 표시
+
+사용자가 GitHub 저장소(`claude/sailing-lovers-game-dev-765o6m` 브랜치, `design-assets/`
+폴더)에 낚시터 배경 원화와 낚싯대 소품 원화를 업로드해줘서, 낚시 화면 상단에 배경을 깔고
+그 위에 로그인한 사용자 본인 캐릭터(커스터마이징 그대로)가 낚싯대를 든 모습으로 서 있도록
+연결했다.
+
+- **에셋 처리**: `낚시터.png`(1448×1086, 이미 4:3 비율)를 기존 배경 이미지 컨벤션과 맞춰
+  1000×750 JPG로 리사이즈해 `public/images/backgrounds/fishing.jpg`로 저장(다른
+  `backgrounds/*.jpg`와 동일 패턴, `jewelry.jpg` 카드 UI 재사용). `낚시대.png`는 알파
+  bbox로 여백만 잘라내고(1353×1044) 렌더 해상도에 맞춰 700×540으로 다운스케일해
+  `public/images/character/hand_accessories/hand_fishing_rod.png`로 저장 — 기존
+  `hand_tool_pouch`(가방)와 같은 "손소품" 레이어 방식 그대로 재사용.
+- **배치 계산**: `characterFullBody.ts`의 `HAND_SIZE`/`HAND_PLACEMENT`에 `hand_fishing_rod`
+  항목 추가(`widthFrac: 0.62, anchorX: 0.17, anchorY: 0.82` — 손잡이의 anchor 무늬 부분이
+  캐릭터 오른손 앵커에 오도록). 별도 소품 카탈로그/장착 UI를 새로 만들지 않고, 낚시
+  화면에서만 `appearance`를 `{ ...self.appearance, handAssetKey: "hand_fishing_rod" }`로
+  오버라이드해서 렌더링 — 인벤토리에 실제로 넣거나 다른 화면에 영향을 주지 않는, 이
+  장면 전용 표시.
+- **내 캐릭터 조회**: 낚시는 계정별이 아니라 household 캐릭터 소유 개념이라, 기존
+  `lib/game/deckData.ts`의 `getDeckSelf()`(갑판 채팅에서 "내 캐릭터"를 가져올 때 쓰던
+  `character_managers` 조인 쿼리)를 그대로 재사용 — 새 쿼리를 만들지 않음.
+  `app/(game)/fishing/page.tsx`에서 `getFishingData()`와 병렬로 호출해 `FishingScreen`에
+  `self` prop으로 전달.
+- **동작(모션) 표현**: 정지 이미지 한 장뿐이라 진짜 낚싯대를 던지는 동작 프레임은 없지만,
+  기존 `globals.css`의 `animate-bob`(살짝 위아래로 흔들리는 keyframe, 배 화면 등에서
+  이미 쓰던 것)를 캐릭터에 그대로 적용해 가만히 서 있지 않고 낚시하는 듯한 느낌을 줬다 —
+  새 keyframe을 추가하지 않고 기존 걸 재사용.
+- **검증**: 임시 `fishing-test`/`fishing-test-haenyeo` 라우트에 해남/해녀 각각 목업
+  appearance로 렌더링해 Playwright로 확인 — 두 체형 모두 낚싯대 손잡이가 오른손 근처에
+  자연스럽게 잡히고, 옷/헤어 커스터마이징이 그대로 유지된 채 배경 앞에 서는 것 확인.
+  검증 후 임시 라우트 삭제. 원본 업로드 파일(`design-assets/낚시대.png`,
+  `design-assets/낚시터.png`)은 처리 후 커밋하지 않음(다른 브랜치에 원본 보존돼 있음,
+  이 세션의 기존 관행과 동일). `tsc`/`eslint`/`vitest run`(232개)/`next build` 전부 통과.
+- **참고**: `anchorX`/`anchorY` 배치값은 라이브 브라우저로 눈으로 보며 잡은 값이라 아주
+  정밀하진 않다(기존 `hand_tool_pouch` 주석에도 같은 단서가 있음) — 필요하면 추후 미세조정.
