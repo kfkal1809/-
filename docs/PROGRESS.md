@@ -1713,3 +1713,19 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
   (`.next` 캐시에 삭제된 임시 라우트의 타입 참조가 남아 `next build`가 실패하는 걸
   겪었음 — 라우트 삭제 후에는 `.next`를 지우고 다시 빌드해야 한다는 걸 기록해둔다.)
   `tsc`/`eslint`/`vitest run`(227개)/`next build` 전부 통과.
+
+## 선실 화면에 새싹(자녀) 캐릭터 표시 추가
+
+`lib/game/cabinData.ts`의 캐릭터 조회 쿼리에 `.neq("kind", "child")`가 박혀 있어서, 온보딩에서
+새싹을 같이 만들어도 선실 화면에는 해녀/해남만 보이고 새싹은 통째로 빠져 있었다
+(`ROLE_LABEL`에 이미 `child: "새싹"` 라벨까지 있었던 걸 보면 원래는 보이게 할 생각이었던
+듯 — 이유 없이 나중에 필터만 추가된 것으로 보임).
+
+- **수정**: 필터 제거하고, `CharacterSprite`가 새싹 그림/키를 고르는 데 필요한
+  `child_gender`/`child_stage` 컬럼도 같이 select해서 `CabinCharacter`에
+  `childGender`/`childStage` 필드로 실어 나르도록 확장. `CabinRoom.tsx`에서 캐릭터 렌더링할
+  때 이 값을 `CharacterSprite`에 그대로 전달 — 방금 고친 연령대별 키 배율(`heightScaleFor`)
+  덕분에 어른보다 자연스럽게 작게, 같은 바닥선에 나란히 선다.
+- **검증**: 임시 `wall-test` 라우트에 해녀+해남+새싹(유아) 3명을 `CabinRoom`에 넣어
+  Playwright로 확인 — 새싹이 어른들 옆에 더 작은 키로, 닉네임 태그까지 정상적으로 나란히
+  표시됨. 검증 후 임시 라우트 삭제. `tsc`/`eslint`/`vitest run`(227개)/`next build` 전부 통과.
