@@ -17,7 +17,7 @@ import {
   HEAD_OVERLAP,
   HEAD_MARGIN_TOP,
   HEAD_SIZE,
-  HEIGHT_SCALE_BY_KIND,
+  heightScaleFor,
   HAT_SIZE,
   HAT_PLACEMENT,
   HAND_SIZE,
@@ -320,7 +320,7 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     // 전신 이미지 — dressFullSrc 자체가 이미 얼굴/팔다리/신발까지 다 포함된 한 장이라 별도
     // 헤어 레이어가 필요 없다(lib/domain/characterFullBody.ts 참고).
     const dims = PORTRAIT_SIZE[characterPortraitKeyFor({ kind, childGender, childStage })];
-    const kindScale = HEIGHT_SCALE_BY_KIND[kind] ?? 1;
+    const kindScale = heightScaleFor(kind, childStage);
     const height = size;
     const width = Math.round(height * (dims.w / dims.h));
     const innerHeight = height * kindScale;
@@ -357,7 +357,7 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const height = size;
     // 바깥 박스는 항상 같은 크기(레이아웃 자리 유지)로 두고, 안쪽 캐릭터만 kindScale로
     // 줄여서 하단(발 기준선) 정렬 — 해남/해녀가 같은 바닥선에 서 있으면서 키 차이만 남는다.
-    const kindScale = HEIGHT_SCALE_BY_KIND[kind] ?? 1;
+    const kindScale = heightScaleFor(kind, childStage);
     const innerScale = scale * kindScale;
     const innerWidth = OUTFIT_CANVAS_W * innerScale;
     const innerHeight = totalCanvasH * innerScale;

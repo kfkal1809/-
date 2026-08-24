@@ -1,5 +1,6 @@
-import type { CharacterPortraitKey } from "@/lib/domain/characterPortrait";
-import { characterPortraitKeyFor } from "@/lib/domain/characterPortrait";
+import type { CharacterPortraitKey, ChildStageGroup } from "@/lib/domain/characterPortrait";
+import { characterPortraitKeyFor, toStageGroup } from "@/lib/domain/characterPortrait";
+import type { ChildStage } from "@/lib/domain/types";
 
 // 목 아래(의상) 전신 스프라이트 정규화 캔버스 — scripts/normalize-outfits.py 참고.
 // 모든 outfit_full/*.png는 이 캔버스 크기로 저장되어 있고, 목선(collar)이 항상 NECK_Y에 온다.
@@ -22,11 +23,28 @@ export const HEAD_MARGIN_TOP = 90;
 // 해남/해녀를 같은 세계관 스케일로 맞추되, 해녀가 살짝 더 작아 보이도록 하는 키 보정.
 // 발 기준선(바닥)은 그대로 두고 위쪽만 줄어들도록 렌더링 쪽에서 하단 정렬로 적용한다
 // (CharacterSprite 참고) — 의상도 체형과 한 장으로 묶인 스프라이트라 자동으로 같이 줄어든다.
+// child는 예전엔 1(성인과 완전히 같은 키)이었다 — 새싹 그림 자체가 아동 비율(큰 머리)로
+// 그려져 있긴 해도 전체 캔버스 높이가 해남/해녀와 거의 같아서(PORTRAIT_SIZE 참고), 선실처럼
+// 어른과 나란히 서면 새싹이 어른만큼 커 보이는 체형 문제가 있었다. heightScaleFor()로
+// 연령대별로 더 작게 줄인다.
 export const HEIGHT_SCALE_BY_KIND: Record<string, number> = {
   haenyeo: 0.94,
   haenam: 1,
-  child: 1,
 };
+
+// 새싹 연령대별 키 보정 — 유아가 가장 작고 초등학생이 어른에 가장 가깝게, 3단계로 점차
+// 커지도록. bodyScale(구버전 벡터 폴백 전용 필드)과 별개로 실사 렌더링 경로(outfitAssetKey)
+// 전용이다.
+export const CHILD_STAGE_HEIGHT_SCALE: Record<ChildStageGroup, number> = {
+  toddler: 0.72,
+  kindergarten: 0.8,
+  elementary: 0.88,
+};
+
+export function heightScaleFor(kind: string, childStage?: ChildStage | null): number {
+  if (kind === "child") return CHILD_STAGE_HEIGHT_SCALE[toStageGroup(childStage)];
+  return HEIGHT_SCALE_BY_KIND[kind] ?? 1;
+}
 
 // public/images/character/base/head/*.png 실측 크기(스크립트로 생성, 8종 고정값).
 export const HEAD_SIZE: Record<string, { w: number; h: number }> = {

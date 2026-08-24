@@ -8,11 +8,11 @@ export interface CharacterPortraitKey {
   childStage?: ChildStage | null;
 }
 
-type ChildStageGroup = "toddler" | "kindergarten" | "elementary";
+export type ChildStageGroup = "toddler" | "kindergarten" | "elementary";
 
 // 그림으로 받은 3단계(유아/유치원/초등학생) 바깥의 연령(영아/중고생/대학생)은
 // 가장 가까운 단계로 근사한다 — 새 연령대 그림이 오면 이 매핑만 넓히면 됨.
-function toStageGroup(stage: ChildStage | null | undefined): ChildStageGroup {
+export function toStageGroup(stage: ChildStage | null | undefined): ChildStageGroup {
   switch (stage) {
     case "infant":
     case "toddler":
