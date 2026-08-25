@@ -291,6 +291,17 @@ export const ITEM_ICON_SKUS = new Set([
   "haenyeo_hat_daisy_clip",
   "haenyeo_hat_shell_cluster_clip",
   "haenyeo_hat_bow_clip_navy",
+  // 손소품 10종 (0018_hand_accessory_pack)
+  "haenam_deck_acc_binoculars",
+  "haenam_deck_acc_life_ring",
+  "haenyeo_acc_shell_purse",
+  "haenam_engine_acc_walkie",
+  "haenam_engine_acc_lantern",
+  "haenam_deck_acc_canteen",
+  "haenyeo_acc_rope_bracelet",
+  "haenyeo_acc_satchel",
+  "haenam_deck_acc_scroll",
+  "haenam_deck_acc_compass",
 ]);
 
 export function itemIconSrc(sku: string | null | undefined): string | null {

@@ -131,9 +131,23 @@ export const HAT_PLACEMENT: Record<string, { widthFrac: number; bottomFrac: numb
 // 팔 늘어뜨린 기본 포즈에서 "오른손 부근" 한 점(HAND_ACCESSORY_ANCHOR, OUTFIT_CANVAS 좌표계)에
 // 고정 앵커링한다 — 실측: haenam_engine_outfit_01 기준 오른손 중심 약 (310, 300).
 // hand_fishing_rod: design-assets/낚시대.png(사용자 업로드)에서 여백만 잘라낸 실측 크기.
+// hand_binoculars~hand_compass(10종): design-assets/모자 소품.png(손소품 시트, 기존
+// hand_tool_pouch를 크롭했던 것과 같은 시트) 5~6행에서 나머지 손소품류를 마저 크롭한
+// 실측 크기 — "손소품 렌더 슬롯 신설" 때 인프라만 만들고 미뤄뒀던 13종 중 목에 거는
+// 반다나/보타이 3종(별도 anchor 필요, 이번에 포함 안 함)을 뺀 손에 드는 10종.
 export const HAND_SIZE: Record<string, { w: number; h: number }> = {
   hand_tool_pouch: { w: 217, h: 192 },
   hand_fishing_rod: { w: 700, h: 540 },
+  hand_binoculars: { w: 227, h: 218 },
+  hand_life_ring_bag: { w: 202, h: 231 },
+  hand_shell_purse: { w: 181, h: 228 },
+  hand_walkie_talkie: { w: 132, h: 238 },
+  hand_lantern: { w: 120, h: 229 },
+  hand_canteen: { w: 190, h: 216 },
+  hand_rope_bracelet: { w: 188, h: 147 },
+  hand_satchel_bag: { w: 195, h: 149 },
+  hand_scroll: { w: 198, h: 133 },
+  hand_compass: { w: 206, h: 155 },
 };
 
 export const HAND_ACCESSORY_ANCHOR = { x: 310, y: 300 };
@@ -146,6 +160,20 @@ export const HAND_PLACEMENT: Record<string, { widthFrac: number; anchorX: number
   // 손잡이(파란 anchor 무늬 부분)가 오른손 앵커에 오도록, 낚싯대는 손잡이~릴 근처를 잡고
   // 대는 대각선 위로 뻗어나가는 모양이라 다른 소품보다 폭을 훨씬 크게 잡았다.
   hand_fishing_rod: { widthFrac: 0.62, anchorX: 0.02, anchorY: 0.82 },
+  // 손잡이/끈 고리가 위쪽에 있는 가방·주머니류 — anchorY를 작게 잡아 손 앵커에 그 고리가
+  // 걸리듯 오도록.
+  hand_binoculars: { widthFrac: 0.22, anchorX: 0.5, anchorY: 0.08 },
+  hand_life_ring_bag: { widthFrac: 0.22, anchorX: 0.5, anchorY: 0.06 },
+  hand_shell_purse: { widthFrac: 0.2, anchorX: 0.5, anchorY: 0.06 },
+  hand_lantern: { widthFrac: 0.14, anchorX: 0.5, anchorY: 0.1 },
+  hand_canteen: { widthFrac: 0.2, anchorX: 0.5, anchorY: 0.06 },
+  hand_satchel_bag: { widthFrac: 0.22, anchorX: 0.5, anchorY: 0.12 },
+  hand_compass: { widthFrac: 0.2, anchorX: 0.5, anchorY: 0.15 },
+  // 손잡이 없이 손에 직접 쥐는 기기 — 몸통 중간 높이를 앵커에 맞춘다.
+  hand_walkie_talkie: { widthFrac: 0.16, anchorX: 0.5, anchorY: 0.35 },
+  // 팔찌(손목에 거는 원형)/두루마리(가운데 띠를 쥠) — 이미지 가운데 근처를 앵커에 맞춘다.
+  hand_rope_bracelet: { widthFrac: 0.22, anchorX: 0.5, anchorY: 0.42 },
+  hand_scroll: { widthFrac: 0.22, anchorX: 0.5, anchorY: 0.42 },
 };
 
 export function handAccessorySrc(key: string): string {

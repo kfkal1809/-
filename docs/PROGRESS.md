@@ -1890,3 +1890,37 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
   에셋 결함으로 기록만 해둔다.
 - **검증**: `tsc`/`eslint`/`vitest run`(242개)/`next build` 전부 통과(코드 변경이 사실상
   없어 회귀 없음).
+
+## 손소품 나머지 10종 카탈로그 연결
+
+"손소품 렌더 슬롯 신설" 때 인프라(hand_tool_pouch 1종)만 만들고 "범위상 하지 않은 것"으로
+미뤄뒀던 나머지 손소품류를 마저 연결. `design-assets/모자 소품.png`(그 세션에서 크롭했던
+것과 같은 시트, git 히스토리에 남아있어 재사용) 5~6행에서 커넥티드 컴포넌트로 14개를
+자동 추출 — 이 중 손에 드는 10종(쌍안경/구명튜브 가방/조개 파우치/무전기/랜턴/수통/로프
+팔찌/새첼백/지도 두루마리/나침반)만 이번에 연결하고, 목에 거는 반다나 2종·보타이 1종은
+손 앵커가 아니라 목 앵커가 따로 필요해서 이번 범위에서 뺐다(추후 별도 작업 필요).
+
+- **에셋 처리**: scipy 커넥티드 컴포넌트로 자동 추출 후 라벨 붙인 contact sheet로 눈으로
+  검증 — `life_ring_bag`/`shell_purse` 두 개에서 인접 아이템의 픽셀 조각이 딸려 들어온
+  걸 발견해서, 다시 해당 영역만 컴포넌트 크기 기준으로 가장 큰 덩어리만 골라 정밀 재크롭.
+  각 500px 이내로 다운스케일해 `public/images/character/hand_accessories/hand_*.png`
+  10장으로 저장.
+- **배치값**: `HAND_SIZE`/`HAND_PLACEMENT`(`characterFullBody.ts`)에 10종 추가 — 손잡이/끈
+  고리가 위에 있는 가방류는 tool_pouch와 같은 패턴(anchorY 작게), 손잡이 없이 직접 쥐는
+  무전기는 몸통 중간, 팔찌/두루마리처럼 원형이거나 띠를 쥐는 모양은 이미지 중앙 근처를
+  앵커에 맞췄다.
+- **카탈로그**: `0018_hand_accessory_pack.sql`(신규, 0016_hat_accessory_pack과 동일 패턴)로
+  `item_catalog`에 `category='accessory'` 10종 추가 + 옷가게(`store_products`) 연결.
+  아이템마다 어울리는 subcategory(해남 항해사/기관사/해녀) 하나씩만 배정(기존
+  `haenam_engine_acc_wrench`처럼 전부 특정 role 전용 — 여러 role에 중복 등록하지 않음).
+  `itemAppearance.ts`에 handAssetKey만 연결(`AccessoryStyle`은 구버전 벡터 폴백 전용 고정
+  유니온이라 대응 그림이 없는 이 10종은 건드리지 않음 — 모자 21종 때와 같은 이유).
+  `itemIcons.ts`에 인벤토리 아이콘 SKU 10개 추가(`public/images/items/<sku>.png`로 손소품
+  크롭본을 그대로 복사 — 기존 wrench도 같은 방식으로 중복 저장돼 있던 걸 확인하고 재사용).
+- **검증**: 임시 `app/(dev)/hand-preview`(해남/해녀 각각 10종 전부 렌더, 커밋 전 삭제)로
+  Playwright 스크린샷 확인 — 10종 전부 오른손 근처에 자연스러운 크기로 걸리고, 몸을 뚫고
+  지나가거나 허공에 뜨는 것 없음. `tsc`/`eslint`/`vitest run`(242개)/`next build` 전부 통과.
+- **범위상 하지 않은 것**: 목에 거는 반다나 2종(파랑/빨강)·보타이 1종은 손 앵커가 아니라
+  목 위치의 새 anchor point가 필요해 이번엔 안 함 — 이미지는 시트에 있으니 나중에 목
+  anchor(대략 outfit 캔버스 목선 근처)만 새로 재면 됨. 마이그레이션(`0018`)은 이 세션이
+  라이브 Supabase에 접근할 수 없어 미적용 — 사용자가 직접 적용 필요.

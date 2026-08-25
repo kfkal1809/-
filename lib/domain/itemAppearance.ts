@@ -54,6 +54,21 @@ export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>>
   haenyeo_hat_daisy_clip: { hatAssetKey: "hat_daisy_clip" },
   haenyeo_hat_shell_cluster_clip: { hatAssetKey: "hat_shell_cluster_clip" },
   haenyeo_hat_bow_clip_navy: { hatAssetKey: "hat_bow_clip_navy" },
+  // 손소품 10종 (0018_hand_accessory_pack) — "손소품 렌더 슬롯 신설" 때 인프라만 만들고
+  // 미뤄뒀던 나머지 13종 중, 손에 드는 10종만 이번에 연결(목에 거는 반다나/보타이 3종은
+  // 별도 anchor가 필요해 제외). AccessoryStyle("wrench"|"tablet"|"none")은 구버전 벡터
+  // 폴백 전용 고정 유니온이라 이 10종은 대응하는 벡터 그림이 없음 — 모자 21종 때와 같은
+  // 이유로 accessory 필드는 건드리지 않고 handAssetKey만 연결한다.
+  haenam_deck_acc_binoculars: { handAssetKey: "hand_binoculars" },
+  haenam_deck_acc_life_ring: { handAssetKey: "hand_life_ring_bag" },
+  haenyeo_acc_shell_purse: { handAssetKey: "hand_shell_purse" },
+  haenam_engine_acc_walkie: { handAssetKey: "hand_walkie_talkie" },
+  haenam_engine_acc_lantern: { handAssetKey: "hand_lantern" },
+  haenam_deck_acc_canteen: { handAssetKey: "hand_canteen" },
+  haenyeo_acc_rope_bracelet: { handAssetKey: "hand_rope_bracelet" },
+  haenyeo_acc_satchel: { handAssetKey: "hand_satchel_bag" },
+  haenam_deck_acc_scroll: { handAssetKey: "hand_scroll" },
+  haenam_deck_acc_compass: { handAssetKey: "hand_compass" },
 };
 
 export const CATEGORY_TO_SLOT: Record<string, EquipSlot> = {
