@@ -87,6 +87,10 @@ export const HAT_SIZE: Record<string, { w: number; h: number }> = {
   hat_daisy_clip: { w: 157, h: 109 },
   hat_shell_cluster_clip: { w: 176, h: 96 },
   hat_bow_clip_navy: { w: 171, h: 127 },
+  // 선글라스 — 고글류와 같은 "hat" 슬롯 메커니즘을 그대로 재사용하되(안경도 결국 머리에
+  // 고정하는 소품), bottomFrac을 고글류(0.58, 이마 위로 밀어올린 위치)보다 크게(더 아래로)
+  // 잡아 실제로 눈에 걸쳐 쓴 것처럼 보이게 한다.
+  hat_sunglasses: { w: 92, h: 57 },
 };
 
 export function hatSrc(key: string): string {
@@ -124,6 +128,9 @@ export const HAT_PLACEMENT: Record<string, { widthFrac: number; bottomFrac: numb
   hat_daisy_clip: { widthFrac: 0.4, bottomFrac: 0.5, offsetXFrac: 0.35 },
   hat_shell_cluster_clip: { widthFrac: 0.42, bottomFrac: 0.5, offsetXFrac: -0.35 },
   hat_bow_clip_navy: { widthFrac: 0.45, bottomFrac: 0.5, offsetXFrac: 0.35 },
+  // bottomFrac이 클수록 머리 위쪽에서 더 내려온 위치(머리 top 기준)라, 이마 위로 밀어올린
+  // 고글류(0.58)보다 더 큰 값을 줘야 실제로 눈높이까지 내려온 안경처럼 보인다.
+  hat_sunglasses: { widthFrac: 0.72, bottomFrac: 0.68 },
 };
 
 // public/images/character/hand_accessories/*.png 실측 크기(design-assets/모자 소품.png에서 크롭).
@@ -148,6 +155,10 @@ export const HAND_SIZE: Record<string, { w: number; h: number }> = {
   hand_satchel_bag: { w: 195, h: 149 },
   hand_scroll: { w: 198, h: 133 },
   hand_compass: { w: 206, h: 155 },
+  // hand_umbrella/hand_doll: design-assets/캐릭터 의상 (7).png(시트 7 처리 때 같이 크롭)
+  // 우산·인형(불가사리 소품과 마찬가지로 슬롯 없는 소품)을 손소품 슬롯으로 연결.
+  hand_umbrella: { w: 77, h: 258 },
+  hand_doll: { w: 122, h: 192 },
 };
 
 export const HAND_ACCESSORY_ANCHOR = { x: 310, y: 300 };
@@ -174,10 +185,37 @@ export const HAND_PLACEMENT: Record<string, { widthFrac: number; anchorX: number
   // 팔찌(손목에 거는 원형)/두루마리(가운데 띠를 쥠) — 이미지 가운데 근처를 앵커에 맞춘다.
   hand_rope_bracelet: { widthFrac: 0.22, anchorX: 0.5, anchorY: 0.42 },
   hand_scroll: { widthFrac: 0.22, anchorX: 0.5, anchorY: 0.42 },
+  // 우산은 고리 손잡이가 위쪽에 있어(지팡이처럼 손잡이를 잡고 아래로 늘어뜨린 모양) 다른
+  // 손잡이류와 같은 방식(anchorY 작게). 인형은 품에 안듯 살짝 아래로.
+  hand_umbrella: { widthFrac: 0.17, anchorX: 0.5, anchorY: 0.08 },
+  hand_doll: { widthFrac: 0.22, anchorX: 0.5, anchorY: 0.15 },
 };
 
 export function handAccessorySrc(key: string): string {
   return `/images/character/hand_accessories/${key}.png`;
+}
+
+// 목에 거는 소품(반다나/보타이) — 손소품과 같은 원리로 고정 앵커 하나(목선 중앙, OUTFIT_CANVAS
+// 좌표계)에 얹는다. design-assets/모자 소품.png 손소품 시트에서 "손소품 렌더 슬롯 신설" 때
+// 별도 anchor가 필요해 미뤄뒀던 3종(반다나 2색 + 보타이) — NECK_Y(목선)를 그대로 기준으로 쓴다.
+export const NECK_SIZE: Record<string, { w: number; h: number }> = {
+  neck_bandana_blue: { w: 180, h: 169 },
+  neck_bandana_red: { w: 170, h: 165 },
+  neck_bow_tie_navy: { w: 186, h: 145 },
+};
+
+export const NECK_ACCESSORY_ANCHOR = { x: OUTFIT_CANVAS_W / 2, y: NECK_Y + 5 };
+
+// widthFrac: OUTFIT_CANVAS_W 대비 소품 폭 비율. anchorX/anchorY: 소품 이미지 안에서
+// NECK_ACCESSORY_ANCHOR에 맞출 상대 위치(0~1) — 매듭/중심 부분을 목선에 맞춘다.
+export const NECK_PLACEMENT: Record<string, { widthFrac: number; anchorX: number; anchorY: number }> = {
+  neck_bandana_blue: { widthFrac: 0.34, anchorX: 0.5, anchorY: 0.25 },
+  neck_bandana_red: { widthFrac: 0.32, anchorX: 0.5, anchorY: 0.25 },
+  neck_bow_tie_navy: { widthFrac: 0.3, anchorX: 0.5, anchorY: 0.3 },
+};
+
+export function neckAccessorySrc(key: string): string {
+  return `/images/character/neck_accessories/${key}.png`;
 }
 
 export function outfitFullSrc(assetKey: string): string {

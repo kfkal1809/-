@@ -69,6 +69,17 @@ export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>>
   haenyeo_acc_satchel: { handAssetKey: "hand_satchel_bag" },
   haenam_deck_acc_scroll: { handAssetKey: "hand_scroll" },
   haenam_deck_acc_compass: { handAssetKey: "hand_compass" },
+  // 목 소품 3종(0020_neck_accessory_pack) — 손소품과 별개인 neckAssetKey 슬롯(목선 anchor)에
+  // 연결. 우산/인형은 슬롯이 없는 소품이지만 손에 드는 물건이라 기존 handAssetKey 슬롯을
+  // 그대로 재사용, 선글라스는 고글류와 같은 hatAssetKey 슬롯을 재사용(새 슬롯 발명 안 함).
+  // 우산/인형/선글라스는 design-assets/캐릭터 의상 (7).png(새싹 옷 시트)에서 나온 소품이라
+  // subcategory를 'child'로 뒀다.
+  haenam_deck_acc_bandana_blue: { neckAssetKey: "neck_bandana_blue" },
+  haenyeo_acc_bandana_red: { neckAssetKey: "neck_bandana_red" },
+  haenam_engine_acc_bow_tie: { neckAssetKey: "neck_bow_tie_navy" },
+  child_acc_umbrella: { handAssetKey: "hand_umbrella" },
+  child_acc_doll: { handAssetKey: "hand_doll" },
+  child_acc_sunglasses: { hatAssetKey: "hat_sunglasses" },
 };
 
 export const CATEGORY_TO_SLOT: Record<string, EquipSlot> = {

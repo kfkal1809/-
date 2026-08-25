@@ -23,12 +23,16 @@ import {
   HAND_SIZE,
   HAND_PLACEMENT,
   HAND_ACCESSORY_ANCHOR,
+  NECK_SIZE,
+  NECK_PLACEMENT,
+  NECK_ACCESSORY_ANCHOR,
   HAIR_ASSET_PLACEMENT,
   headSrc,
   outfitFullSrc,
   dressFullSrc,
   hatSrc,
   handAccessorySrc,
+  neckAccessorySrc,
   baldHeadSrc,
   baldSkinMaskSrc,
   hairOverlaySrc,
@@ -396,6 +400,15 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const handLeft = handPlacement ? handAnchorPxX - handRenderW * handPlacement.anchorX : 0;
     const handTop = handPlacement ? handAnchorPxY - handRenderH * handPlacement.anchorY : 0;
 
+    const neckDims = a.neckAssetKey ? NECK_SIZE[a.neckAssetKey] : null;
+    const neckPlacement = a.neckAssetKey ? NECK_PLACEMENT[a.neckAssetKey] : null;
+    const neckRenderW = neckDims && neckPlacement ? innerWidth * neckPlacement.widthFrac : 0;
+    const neckRenderH = neckDims ? (neckDims.h / neckDims.w) * neckRenderW : 0;
+    const neckAnchorPxX = NECK_ACCESSORY_ANCHOR.x * innerScale;
+    const neckAnchorPxY = outfitTop + NECK_ACCESSORY_ANCHOR.y * innerScale;
+    const neckLeft = neckPlacement ? neckAnchorPxX - neckRenderW * neckPlacement.anchorX : 0;
+    const neckTop = neckPlacement ? neckAnchorPxY - neckRenderH * neckPlacement.anchorY : 0;
+
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
         <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}>
@@ -486,6 +499,17 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
               height={handDims.h}
               unoptimized
               style={{ position: "absolute", left: handLeft, top: handTop, width: handRenderW, height: handRenderH }}
+            />
+          )}
+          {a.neckAssetKey && neckDims && (
+            <Image
+              src={neckAccessorySrc(a.neckAssetKey)}
+              alt=""
+              aria-hidden
+              width={neckDims.w}
+              height={neckDims.h}
+              unoptimized
+              style={{ position: "absolute", left: neckLeft, top: neckTop, width: neckRenderW, height: neckRenderH }}
             />
           )}
         </div>

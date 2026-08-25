@@ -44,6 +44,10 @@ export interface CharacterAppearance {
   // AccessoryStyle(accessory 필드)과 마찬가지로 벡터 폴백에서는 accessory 필드가, 실사
   // 캐릭터에서는 이 필드가 있어야 실제로 보인다.
   handAssetKey?: string | null;
+  // 실사 일러스트 전용 목 소품(반다나/보타이) 오버레이 키 —
+  // public/images/character/neck_accessories/<key>.png. 대응하는 구버전 벡터 폴백 필드는 없다
+  // (모자/손소품보다 훨씬 나중에 추가된 슬롯이라 처음부터 실사 전용).
+  neckAssetKey?: string | null;
 }
 
 const BASE: CharacterAppearance = {
@@ -62,6 +66,7 @@ const BASE: CharacterAppearance = {
   outfitAssetKey: null,
   hatAssetKey: null,
   handAssetKey: null,
+  neckAssetKey: null,
 };
 
 export function haenyeoPreset(overrides: Partial<CharacterAppearance> = {}): CharacterAppearance {

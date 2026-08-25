@@ -302,6 +302,13 @@ export const ITEM_ICON_SKUS = new Set([
   "haenyeo_acc_satchel",
   "haenam_deck_acc_scroll",
   "haenam_deck_acc_compass",
+  // 목 소품 3종 + 우산/인형/선글라스 (0020_neck_accessory_pack)
+  "haenam_deck_acc_bandana_blue",
+  "haenyeo_acc_bandana_red",
+  "haenam_engine_acc_bow_tie",
+  "child_acc_umbrella",
+  "child_acc_doll",
+  "child_acc_sunglasses",
 ]);
 
 export function itemIconSrc(sku: string | null | undefined): string | null {
