@@ -1924,3 +1924,30 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
   목 위치의 새 anchor point가 필요해 이번엔 안 함 — 이미지는 시트에 있으니 나중에 목
   anchor(대략 outfit 캔버스 목선 근처)만 새로 재면 됨. 마이그레이션(`0018`)은 이 세션이
   라이브 Supabase에 접근할 수 없어 미적용 — 사용자가 직접 적용 필요.
+
+## 옷 변형 후속 작업 확인 — 63벌 카탈로그 연결은 이미 완료돼 있었음 + 탭 분류 버그 수정
+
+"옷 변형 후속(우산/인형/선글라스 등)"을 이어가기 전에 먼저 확인해보니, 예전에 "카탈로그
+연결은 보류"로 남겨뒀던 새싹 의상 63벌(시트 2/3/4/5/6/8/9)이 **이미 이후 세션에서
+`lib/domain/itemAppearanceVariants.ts`(sku→체형별 variant 매핑)와
+`0010_outfit_variant_pack.sql` 마이그레이션으로 전부 연결이 끝나 있었다** — 옷가게 목록
+(`isCompatibleWithBody`)과 장착(`resolveAppearancePatch`) 양쪽 다 이미 이 시스템을 쓰고
+있는 것도 코드로 확인. 실제로 남은 건 마이그레이션 미적용(다른 것들과 동일하게 사용자가
+직접 적용해야 함)뿐이었다.
+
+- **확인하다가 발견한 실제 버그**: `clothingStoreCategories.ts`의 `clothingTabFor()`가
+  `sku.includes("dress")`만으로 원피스/상의 탭을 나누는데, 이 63벌의 sku가 전부
+  `child_dress_sN_NN`(합성 파이프라인의 `dress_full` 폴더 관례를 그대로 sku에 쓴 것 —
+  "원피스"라는 뜻이 아니라 "체형 합성 그림"이라는 뜻)이라서, 멜빵바지/후드티/파자마 같은
+  실제로는 원피스가 아닌 옷도 전부 "원피스" 탭에 잘못 들어가고 있었다.
+- **수정**: `clothingTabFor(category, sku, outfitKind?)`에 세 번째 인자를 추가 —
+  `outfitKind`(실제 옷 종류, `resolveAppearancePatch().outfit`에서 이미 구할 수 있음)가
+  있으면 그걸로 정확히 판정하고, 없는 구식 상품(해녀/해남 outfit 등)은 기존 sku 문자열
+  방식 그대로 폴백(회귀 없음). `clothingStoreData.ts`에서 이미 계산해두던 `bodyPresetKey`로
+  `resolveAppearancePatch(sku, bodyPresetKey)?.outfit`을 구해 넘기도록 연결.
+- **테스트**: `lib/domain/clothingStoreCategories.test.ts`(신규 3개, 245개 전체) —
+  `child_dress_s3_02`(실제로는 멜빵바지)가 outfitKind와 함께면 상의 탭으로, 옛 상품은
+  여전히 sku 문자열 폴백으로 동작하는 것 검증.
+- **검증**: `tsc`/`eslint`/`vitest run`(245개)/`next build` 전부 통과.
+- **다음 단계(시트 7/10)**: 사용자가 "카탈로그 연결부터 → 시트 7/10 순서대로" 선택 —
+  카탈로그 연결이 이미 끝나 있었으니 이어서 시트 7/10 처리로 넘어간다(별도 절에 기록).
