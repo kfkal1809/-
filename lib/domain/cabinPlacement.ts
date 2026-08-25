@@ -51,6 +51,14 @@ export function depthOf(y: number, zIndex: number): number {
 // 벽 장식(placementType "wall")은 x가 방 중앙(0.5) 기준 왼쪽/오른쪽 벽 중 어디 있는지로
 // 자동 기본 기울기를 정한다 — 정면에서 본 평평한 그림을 원근 있는 벽에 맞춰 자연스럽게
 // 붙어 보이게 한다. 벽이 아닌 가구는 0(수평 유지).
+//
+// 바닥 가구(floor/rug)에도 같은 방식으로 FLOOR_TILE_ANGLE(±15.7도, 바닥 판자 타일에 쓰던
+// 실측값)을 적용해봤지만 실제로 렌더링해보니 침대가 쓰러진 것처럼 과하게 기울어지고 러그
+// 이미지가 대각선으로 찌그러져 보여서 되돌렸다 — 벽 장식(액자/거울처럼 벽에 거는 완전히
+// 평평한 2D 오브젝트)과 달리, 침대/책상/의자 같은 가구는 원화 자체가 이미 방의 고정된
+// isometric 카메라 각도에 맞춰 입체감 있게 그려져 있어서(placementType이 floor인 대부분의
+// 가구), 타일 텍스처처럼 통째로 더 돌리면 오히려 원근이 깨진다. 그래서 바닥 가구는
+// 회전 없이(사용자가 회전 버튼으로 직접 조정하는 것) 그대로 두는 게 맞다.
 export function wallTiltFor(placementType: PlacementType, x: number): number {
   if (placementType !== "wall") return 0;
   return x < 0.5 ? WALL_TILT_DEG.left : WALL_TILT_DEG.right;
