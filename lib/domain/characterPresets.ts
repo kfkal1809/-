@@ -36,6 +36,18 @@ export interface CharacterAppearance {
   // 실사 일러스트 전용, outfitAssetKey보다 우선: 기본 체형 원본 위에 상의/원피스를 얹고
   // 신발을 발 위치에 앵커링해 만든 완성된 전신 이미지 키(dress_full/<key>.png).
   fullPortraitKey?: string | null;
+  // 실사 일러스트(outfitAssetKey 렌더링 경로) 전용 모자 오버레이 키 —
+  // public/images/character/hats/<key>.png. HatStyle(hat 필드)은 벡터 폴백 렌더링에서만 쓰이고,
+  // 실사 캐릭터는 이 필드가 있어야 실제로 모자가 보인다(lib/domain/characterFullBody.ts 참고).
+  hatAssetKey?: string | null;
+  // 실사 일러스트 전용 손소품 오버레이 키 — public/images/character/hand_accessories/<key>.png.
+  // AccessoryStyle(accessory 필드)과 마찬가지로 벡터 폴백에서는 accessory 필드가, 실사
+  // 캐릭터에서는 이 필드가 있어야 실제로 보인다.
+  handAssetKey?: string | null;
+  // 실사 일러스트 전용 목 소품(반다나/보타이) 오버레이 키 —
+  // public/images/character/neck_accessories/<key>.png. 대응하는 구버전 벡터 폴백 필드는 없다
+  // (모자/손소품보다 훨씬 나중에 추가된 슬롯이라 처음부터 실사 전용).
+  neckAssetKey?: string | null;
 }
 
 const BASE: CharacterAppearance = {
@@ -52,6 +64,9 @@ const BASE: CharacterAppearance = {
   bodyScale: 1,
   toned: false,
   outfitAssetKey: null,
+  hatAssetKey: null,
+  handAssetKey: null,
+  neckAssetKey: null,
 };
 
 export function haenyeoPreset(overrides: Partial<CharacterAppearance> = {}): CharacterAppearance {

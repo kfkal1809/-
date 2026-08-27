@@ -60,8 +60,9 @@ export const BGM_MANIFEST: Record<BgmKey, string> = {
   clothing: "/audio/bgm/clothing.mp3",
 };
 
-// 경로(pathname) → 재생할 BGM. 여기 없는 화면(온보딩, 지갑, 승선확인증 등)은 지정된 분위기가
-// 없어서 재생 중이던 BGM을 자연스럽게 멈춘다(엉뚱한 분위기 음악이 계속 나오는 것보다 무음이 낫다).
+// 경로(pathname) → 재생할 BGM. 여기 없는 화면(온보딩, 지갑, 승선확인증 등)은 전용 분위기 음악이
+// 없으므로 기본값인 메인(home) BGM을 그대로 이어서 재생한다 — 무음보다 메인 BGM이 낫다는
+// 사용자 피드백에 따름.
 export const BGM_ROUTE_MAP: { test: (pathname: string) => boolean; key: BgmKey }[] = [
   { test: (p) => p === "/home", key: "home" },
   { test: (p) => p.startsWith("/cabin"), key: "cabin" },
@@ -72,6 +73,6 @@ export const BGM_ROUTE_MAP: { test: (pathname: string) => boolean; key: BgmKey }
   { test: (p) => p.startsWith("/stores/clothing"), key: "clothing" },
 ];
 
-export function bgmKeyForPath(pathname: string): BgmKey | null {
-  return BGM_ROUTE_MAP.find((r) => r.test(pathname))?.key ?? null;
+export function bgmKeyForPath(pathname: string): BgmKey {
+  return BGM_ROUTE_MAP.find((r) => r.test(pathname))?.key ?? "home";
 }

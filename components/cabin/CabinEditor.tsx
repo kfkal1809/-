@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
-import { WALLPAPER_SWATCHES, FLOOR_SWATCHES, clampToZone, isInKeepOutZone } from "@/lib/domain/cabinDecor";
-import { getPlacementDef, furnitureWrapperStyle, depthOf, zoneBoundsFor } from "@/lib/domain/cabinPlacement";
+import { WALLPAPER_SWATCHES, FLOOR_SWATCHES, isInKeepOutZone } from "@/lib/domain/cabinDecor";
+import { getPlacementDef, furnitureWrapperStyle, depthOf, zoneBoundsFor, clampToRoomZone, wallTiltFor } from "@/lib/domain/cabinPlacement";
 import { furnitureImageSrc, availableFacings, cycleFacing } from "@/lib/domain/furnitureFacingAssets";
 import { playSfx } from "@/lib/audio/audioManager";
 import type { PlacedFurniture, UnplacedFurniture } from "@/lib/game/cabinEditData";
@@ -98,11 +98,10 @@ export function CabinEditor({
     const item = placed.find((p) => p.id === draggingId);
     if (!item) return;
     const def = getPlacementDef(item.sku);
-    const bounds = zoneBoundsFor(def.placementType);
     const rect = roomRef.current.getBoundingClientRect();
     const rawX = (e.clientX - rect.left) / rect.width;
     const rawY = (e.clientY - rect.top) / rect.height;
-    const { x, y } = clampToZone(rawX, rawY, bounds);
+    const { x, y } = clampToRoomZone(rawX, rawY, def.placementType);
     // 바닥 가구는 문 앞/캐릭터가 서는 중앙 자리를 완전히 덮지 못하게 한다 — 그 구간에
     // 들어가는 좌표는 무시하고 직전 유효 위치를 유지(드래그를 계속하다가 keep-out 밖으로
     // 나오면 다시 따라오기 시작함).
@@ -244,7 +243,7 @@ export function CabinEditor({
               x: item.x,
               y: item.y,
               scale: item.scale,
-              rotation: item.rotation,
+              rotation: item.rotation + wallTiltFor(def.placementType, item.x),
               flipX: item.flipX,
               depth: depthOf(item.y, item.zIndex),
               baseHeightFrac: def.baseHeightFrac,

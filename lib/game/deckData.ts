@@ -32,22 +32,22 @@ export async function getDeckSelf(): Promise<DeckSelf> {
     if (!user)
       return { ready: false, userId: null, nickname: "", characterId: null, appearance: haenyeoPreset(), kind: "haenyeo", childGender: null, childStage: null };
 
-    const [{ data: profile }, { data: managed }] = await Promise.all([
-      supabase.from("profiles").select("nickname").eq("id", user.id).maybeSingle(),
-      supabase
-        .from("character_managers")
-        .select("characters(id, kind, child_gender, child_stage, appearance_json)")
-        .eq("user_id", user.id)
-        .limit(1)
-        .maybeSingle(),
-    ]);
+    const { data: managed } = await supabase
+      .from("character_managers")
+      .select("characters(id, nickname, kind, child_gender, child_stage, appearance_json)")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
 
     const character = managed ? (Array.isArray(managed.characters) ? managed.characters[0] : managed.characters) : null;
 
     return {
       ready: true,
       userId: user.id,
-      nickname: profile?.nickname ?? "해녀",
+      // 갑판 채팅은 계정 실명(profiles.nickname, 카카오 로그인 정보)이 아니라 캐릭터 별명을
+      // 써야 한다 — 예전엔 profiles.nickname을 썼는데, 그게 카카오 계정의 실제 이름/닉네임이라
+      // 채팅에 실명이 뜨는 버그였다.
+      nickname: character?.nickname ?? "해녀",
       characterId: character?.id ?? null,
       appearance: (character?.appearance_json as CharacterAppearance) ?? haenyeoPreset(),
       kind: (character?.kind as CharacterKind) ?? "haenyeo",

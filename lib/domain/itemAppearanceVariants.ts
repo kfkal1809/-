@@ -115,6 +115,30 @@ export const OUTFIT_VARIANT_MANIFEST: OutfitVariantManifestEntry[] = [
   { sourceSheet: "캐릭터 의상 (9).png", cellIndex: 7, logicalItemKey: "child_dress_s9_07", bodyPresetKey: "child_elementary_male", assetKey: "child_elementary_male_dress_s9_07", slot: "outfit", reviewStatus: "verified" },
   { sourceSheet: "캐릭터 의상 (9).png", cellIndex: 8, logicalItemKey: "child_dress_s9_08", bodyPresetKey: "child_elementary_male", assetKey: "child_elementary_male_dress_s9_08", slot: "outfit", reviewStatus: "verified" },
   { sourceSheet: "캐릭터 의상 (9).png", cellIndex: 9, logicalItemKey: "child_dress_s9_09", bodyPresetKey: "child_elementary_male", assetKey: "child_elementary_male_dress_s9_09", slot: "outfit", reviewStatus: "verified" },
+  // 시트 7/10 — 한 시트 안에서도 칸마다 의도된 성별이 달라(교복풍 남아 아이템과 원피스 여아
+  // 아이템이 공존) 시트 전체를 한 kind로 돌리는 기존 파이프라인을 그대로 못 썼다. 시트마다
+  // male/female 두 번 다 돌려서(정규화 파이프라인은 결정적이라 같은 셀을 두 체형에 합성해도
+  // 문제 없음) 셀별로 실제 합성 결과(옷 실루엣이 그 체형에 자연스러운지)를 보고 성별을 골라,
+  // 고르지 않은 쪽 산출물은 커밋하지 않았다. 우산/선글라스/인형 등 슬롯이 없는 소품은 기존
+  // extract_grid 로직이 이미 자동으로 걸러낸다(옷+신발만 남김).
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 1, logicalItemKey: "child_dress_s7_01", bodyPresetKey: "child_toddler_male", assetKey: "child_toddler_male_dress_s7_01", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 2, logicalItemKey: "child_dress_s7_02", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_02", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 3, logicalItemKey: "child_dress_s7_03", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_03", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 4, logicalItemKey: "child_dress_s7_04", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_04", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 5, logicalItemKey: "child_dress_s7_05", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_05", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 6, logicalItemKey: "child_dress_s7_06", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_06", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 7, logicalItemKey: "child_dress_s7_07", bodyPresetKey: "child_toddler_male", assetKey: "child_toddler_male_dress_s7_07", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 8, logicalItemKey: "child_dress_s7_08", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_08", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (7).png", cellIndex: 9, logicalItemKey: "child_dress_s7_09", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_09", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 1, logicalItemKey: "child_dress_s10_01", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_01", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 2, logicalItemKey: "child_dress_s10_02", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_02", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 3, logicalItemKey: "child_dress_s10_03", bodyPresetKey: "child_toddler_male", assetKey: "child_toddler_male_dress_s10_03", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 4, logicalItemKey: "child_dress_s10_04", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_04", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 5, logicalItemKey: "child_dress_s10_05", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_05", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 6, logicalItemKey: "child_dress_s10_06", bodyPresetKey: "child_toddler_male", assetKey: "child_toddler_male_dress_s10_06", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 7, logicalItemKey: "child_dress_s10_07", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_07", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 8, logicalItemKey: "child_dress_s10_08", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_08", slot: "outfit", reviewStatus: "verified" },
+  { sourceSheet: "캐릭터 의상 (10).png", cellIndex: 9, logicalItemKey: "child_dress_s10_09", bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_09", slot: "outfit", reviewStatus: "verified" },
 ];
 
 // sku -> 체형별 appearance variant. 한 상품(sku)이 여러 체형 variant를 가질 수 있는 구조로
@@ -184,6 +208,24 @@ export const ITEM_APPEARANCE_VARIANTS: Record<string, AppearanceVariant[]> = {
   child_dress_s9_07: [{ bodyPresetKey: "child_elementary_male", assetKey: "child_elementary_male_dress_s9_07", patch: { outfit: "sweatshirt", outfitColor: "#233350", fullPortraitKey: "child_elementary_male_dress_s9_07" } }],
   child_dress_s9_08: [{ bodyPresetKey: "child_elementary_male", assetKey: "child_elementary_male_dress_s9_08", patch: { outfit: "tank", outfitColor: "#eef1e0", fullPortraitKey: "child_elementary_male_dress_s9_08" } }],
   child_dress_s9_09: [{ bodyPresetKey: "child_elementary_male", assetKey: "child_elementary_male_dress_s9_09", patch: { outfit: "sweatshirt", outfitColor: "#f4e3d8", fullPortraitKey: "child_elementary_male_dress_s9_09" } }],
+  child_dress_s7_01: [{ bodyPresetKey: "child_toddler_male", assetKey: "child_toddler_male_dress_s7_01", patch: { outfit: "hoodie", outfitColor: "#eecf6e", fullPortraitKey: "child_toddler_male_dress_s7_01" } }],
+  child_dress_s7_02: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_02", patch: { outfit: "pajama", outfitColor: "#f8dde3", fullPortraitKey: "child_toddler_female_dress_s7_02" } }],
+  child_dress_s7_03: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_03", patch: { outfit: "dress", outfitColor: "#efe6d2", fullPortraitKey: "child_toddler_female_dress_s7_03" } }],
+  child_dress_s7_04: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_04", patch: { outfit: "dress", outfitColor: "#e8a0ab", fullPortraitKey: "child_toddler_female_dress_s7_04" } }],
+  child_dress_s7_05: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_05", patch: { outfit: "tank", outfitColor: "#f2ede0", fullPortraitKey: "child_toddler_female_dress_s7_05" } }],
+  child_dress_s7_06: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_06", patch: { outfit: "child_overalls", outfitColor: "#7a95b8", fullPortraitKey: "child_toddler_female_dress_s7_06" } }],
+  child_dress_s7_07: [{ bodyPresetKey: "child_toddler_male", assetKey: "child_toddler_male_dress_s7_07", patch: { outfit: "cardigan", outfitColor: "#eee7d8", fullPortraitKey: "child_toddler_male_dress_s7_07" } }],
+  child_dress_s7_08: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_08", patch: { outfit: "sweatshirt", outfitColor: "#f3cdd6", fullPortraitKey: "child_toddler_female_dress_s7_08" } }],
+  child_dress_s7_09: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s7_09", patch: { outfit: "dress", outfitColor: "#a52f36", fullPortraitKey: "child_toddler_female_dress_s7_09" } }],
+  child_dress_s10_01: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_01", patch: { outfit: "dress", outfitColor: "#26385c", fullPortraitKey: "child_toddler_female_dress_s10_01" } }],
+  child_dress_s10_02: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_02", patch: { outfit: "cardigan", outfitColor: "#efe6d2", fullPortraitKey: "child_toddler_female_dress_s10_02" } }],
+  child_dress_s10_03: [{ bodyPresetKey: "child_toddler_male", assetKey: "child_toddler_male_dress_s10_03", patch: { outfit: "tank", outfitColor: "#cfe0f0", fullPortraitKey: "child_toddler_male_dress_s10_03" } }],
+  child_dress_s10_04: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_04", patch: { outfit: "sweatshirt", outfitColor: "#f1e6da", fullPortraitKey: "child_toddler_female_dress_s10_04" } }],
+  child_dress_s10_05: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_05", patch: { outfit: "dress", outfitColor: "#5b7fa0", fullPortraitKey: "child_toddler_female_dress_s10_05" } }],
+  child_dress_s10_06: [{ bodyPresetKey: "child_toddler_male", assetKey: "child_toddler_male_dress_s10_06", patch: { outfit: "tank", outfitColor: "#2e2e2e", fullPortraitKey: "child_toddler_male_dress_s10_06" } }],
+  child_dress_s10_07: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_07", patch: { outfit: "hoodie", outfitColor: "#f0c9d6", fullPortraitKey: "child_toddler_female_dress_s10_07" } }],
+  child_dress_s10_08: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_08", patch: { outfit: "dress", outfitColor: "#f2e9d8", fullPortraitKey: "child_toddler_female_dress_s10_08" } }],
+  child_dress_s10_09: [{ bodyPresetKey: "child_toddler_female", assetKey: "child_toddler_female_dress_s10_09", patch: { outfit: "dress", outfitColor: "#c9a877", fullPortraitKey: "child_toddler_female_dress_s10_09" } }],
 };
 
 // sku + 현재 캐릭터의 bodyPresetKey로 실제 적용할 appearance patch를 구한다.

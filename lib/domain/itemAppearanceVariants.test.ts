@@ -39,8 +39,8 @@ describe("bodyPresetKeyFor", () => {
 });
 
 describe("OUTFIT_VARIANT_MANIFEST", () => {
-  it("정확히 63개 항목(7개 시트 x 9벌)이 있다", () => {
-    expect(OUTFIT_VARIANT_MANIFEST).toHaveLength(63);
+  it("정확히 81개 항목(9개 시트 x 9벌 — 시트 2/3/4/5/6/8/9 63개 + 시트 7/10 18개)이 있다", () => {
+    expect(OUTFIT_VARIANT_MANIFEST).toHaveLength(81);
   });
 
   it("logicalItemKey는 전부 유일하다", () => {
@@ -73,6 +73,22 @@ describe("OUTFIT_VARIANT_MANIFEST", () => {
     for (const entry of OUTFIT_VARIANT_MANIFEST) {
       expect(ALL_BODY_PRESETS).toContain(entry.bodyPresetKey);
     }
+  });
+});
+
+describe("시트 7/10 (한 시트 안에서 칸마다 성별이 다른 케이스)", () => {
+  it("같은 시트 안에서도 셀마다 서로 다른 체형으로 등록될 수 있다", () => {
+    // 시트 7: 1번 칸은 남아 체형, 2번 칸은 여아 체형으로 골랐다.
+    const cell1 = OUTFIT_VARIANT_MANIFEST.find((m) => m.logicalItemKey === "child_dress_s7_01");
+    const cell2 = OUTFIT_VARIANT_MANIFEST.find((m) => m.logicalItemKey === "child_dress_s7_02");
+    expect(cell1?.bodyPresetKey).toBe("child_toddler_male");
+    expect(cell2?.bodyPresetKey).toBe("child_toddler_female");
+  });
+
+  it("시트 10의 남아 셀(3, 6)도 정확히 등록돼 있다", () => {
+    expect(resolveAppearancePatch("child_dress_s10_03", "child_toddler_male")).not.toBeNull();
+    expect(resolveAppearancePatch("child_dress_s10_06", "child_toddler_male")).not.toBeNull();
+    expect(resolveAppearancePatch("child_dress_s10_03", "child_toddler_female")).toBeNull();
   });
 });
 
@@ -117,7 +133,7 @@ describe("isCompatibleWithBody", () => {
     }
   });
 
-  it("63벌 전체가 정확히 하나의 체형과만 호환된다(현재 데이터셋엔 다체형 variant가 없음)", () => {
+  it("81벌 전체가 정확히 하나의 체형과만 호환된다(현재 데이터셋엔 다체형 variant가 없음)", () => {
     for (const entry of OUTFIT_VARIANT_MANIFEST) {
       const compatibleCount = ALL_BODY_PRESETS.filter((key) => isCompatibleWithBody(entry.logicalItemKey, key)).length;
       expect(compatibleCount).toBe(1);

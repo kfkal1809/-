@@ -1,6 +1,8 @@
 // 옷가게 카테고리 탭 — 디자인 시안의 7개 탭(전체/상의/하의/원피스/모자/신발/악세사리)을 그대로
 // 유지하되, 현재 MVP 카탈로그가 지원하지 않는 하의/신발은 매핑 대상이 없어 항상 empty 상태다
-// (가짜 상품을 채우지 않음). outfit 카테고리 중 sku에 "dress"가 들어간 것만 원피스로 분리한다.
+// (가짜 상품을 채우지 않음). outfit 카테고리는 실제 옷 종류(outfitKind, 예: "dress"/"tank"/
+// "hoodie")가 있으면 그걸로 원피스 여부를 정확히 가르고, 없는 구식 상품은 예전처럼 sku에
+// "dress"가 들어간 것만 원피스로 분리한다(회귀 없음).
 export type ClothingTabKey = "all" | "top" | "bottom" | "dress" | "hat" | "shoes" | "accessory";
 
 export const CLOTHING_TABS: { key: ClothingTabKey; label: string }[] = [
@@ -13,9 +15,10 @@ export const CLOTHING_TABS: { key: ClothingTabKey; label: string }[] = [
   { key: "accessory", label: "악세사리" },
 ];
 
-export function clothingTabFor(category: "outfit" | "hat" | "accessory", sku: string): ClothingTabKey {
+export function clothingTabFor(category: "outfit" | "hat" | "accessory", sku: string, outfitKind?: string): ClothingTabKey {
   if (category === "hat") return "hat";
   if (category === "accessory") return "accessory";
+  if (outfitKind) return outfitKind === "dress" ? "dress" : "top";
   return sku.includes("dress") ? "dress" : "top";
 }
 

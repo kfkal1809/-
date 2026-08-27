@@ -12,7 +12,7 @@
 // 이미 그 확장을 지원한다.
 
 import type { CSSProperties } from "react";
-import { ROOM_ZONES, WALL_BOUNDS } from "@/lib/domain/cabinDecor";
+import { ROOM_ZONES, WALL_BOUNDS, WALL_TILT_DEG, clampToZone, clampToFloorPolygon, clampToWallPolygon } from "@/lib/domain/cabinDecor";
 
 export type PlacementType = "floor" | "wall" | "rug" | "free";
 
@@ -28,11 +28,40 @@ export function zoneBoundsFor(placementType: PlacementType) {
   return ROOM_ZONES.floor; // floor, rug 모두 바닥 영역 사용
 }
 
+// 드래그 좌표를 배치 타입에 맞는 실제 영역 안으로 고정한다. 먼저 바운딩 박스로 크게 벗어난
+// 좌표를 1차로 가둔 다음(멀리 떨어진 포인터에서도 계산이 항상 안정적이도록), floor/wall은
+// 실제 isometric 폴리곤(육각형 바닥/평행사변형 벽)으로 다시 스냅한다 — 바운딩 박스만으로는
+// 못 막던 "폴리곤 밖 모서리 빈 삼각형 구간"까지 정확히 막는 완전한 폴리곤 충돌판정.
+// free는 폴리곤이 없어 바운딩 박스(방 전체 0~1) 그대로 쓴다.
+export function clampToRoomZone(rawX: number, rawY: number, placementType: PlacementType): { x: number; y: number } {
+  const bounds = zoneBoundsFor(placementType);
+  const { x, y } = clampToZone(rawX, rawY, bounds);
+  if (placementType === "wall") return clampToWallPolygon(x, y);
+  if (placementType === "floor" || placementType === "rug") return clampToFloorPolygon(x, y);
+  return { x, y };
+}
+
 // 바닥 y좌표를 기본 depth로 삼고(아래쪽일수록 앞), 사용자가 앞으로/뒤로 조정한 zIndex를
 // 그 위에 더한다. y 차이(최대 1000)가 통상적인 zIndex 조정 폭보다 훨씬 커서, 화면 위/아래처럼
 // 멀리 떨어진 가구끼리는 항상 y가 우선하고, 비슷한 y에서 겹치는 경우에만 zIndex로 순서가 뒤집힌다.
 export function depthOf(y: number, zIndex: number): number {
   return y * 1000 + zIndex;
+}
+
+// 벽 장식(placementType "wall")은 x가 방 중앙(0.5) 기준 왼쪽/오른쪽 벽 중 어디 있는지로
+// 자동 기본 기울기를 정한다 — 정면에서 본 평평한 그림을 원근 있는 벽에 맞춰 자연스럽게
+// 붙어 보이게 한다. 벽이 아닌 가구는 0(수평 유지).
+//
+// 바닥 가구(floor/rug)에도 같은 방식으로 FLOOR_TILE_ANGLE(±15.7도, 바닥 판자 타일에 쓰던
+// 실측값)을 적용해봤지만 실제로 렌더링해보니 침대가 쓰러진 것처럼 과하게 기울어지고 러그
+// 이미지가 대각선으로 찌그러져 보여서 되돌렸다 — 벽 장식(액자/거울처럼 벽에 거는 완전히
+// 평평한 2D 오브젝트)과 달리, 침대/책상/의자 같은 가구는 원화 자체가 이미 방의 고정된
+// isometric 카메라 각도에 맞춰 입체감 있게 그려져 있어서(placementType이 floor인 대부분의
+// 가구), 타일 텍스처처럼 통째로 더 돌리면 오히려 원근이 깨진다. 그래서 바닥 가구는
+// 회전 없이(사용자가 회전 버튼으로 직접 조정하는 것) 그대로 두는 게 맞다.
+export function wallTiltFor(placementType: PlacementType, x: number): number {
+  if (placementType !== "wall") return 0;
+  return x < 0.5 ? WALL_TILT_DEG.left : WALL_TILT_DEG.right;
 }
 
 // 방(aspect-ratio로 높이가 고정된 컨테이너) 안에서 가구 한 점을 절대 위치시키는 스타일.
@@ -272,6 +301,17 @@ const SKU_OVERRIDES: Record<string, Partial<PlacementDef>> = {
     supportedFacings: ["front", "front-left", "front-right"],
     baseHeightFrac: 0.41,
   },
+  // 앵커 탁상시계 — "clock" 정규식이 벽시계로 잘못 분류하는 것을 바로잡음(interior_nightstand_clock과 동일 이유).
+  marine_anchor_clock_deco: { placementType: "floor", preferredZone: "floor", allowedZones: ["floor"], baseHeightFrac: 0.12 },
+  // 벽걸이형 소품 — classify() 정규식이 커버하지 못해 wall로 강제 지정.
+  marine_ship_wheel_deco: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.18 },
+  marine_wall_lamp: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.16 },
+  pirate_wall_lantern: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.16 },
+  fairy_wall_lantern: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.16 },
+  cottage_wall_sconce: { placementType: "wall", preferredZone: "wall", allowedZones: ["wall"], baseHeightFrac: 0.16 },
+  // 기둥형 우편함 — smallDeco 기본값(0.14)보다 세로로 길어서 살짝 키움.
+  marine_mailbox: { baseHeightFrac: 0.26 },
+  cottage_mailbox: { baseHeightFrac: 0.26 },
 };
 
 export function getPlacementDef(sku: string | null | undefined): PlacementDef {

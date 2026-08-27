@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { haenyeoPreset, haenamDeckPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
-import type { CharacterKind } from "@/lib/domain/types";
+import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 import type { Facing } from "@/lib/domain/cabinPlacement";
 
 export interface CabinCharacter {
@@ -10,6 +10,8 @@ export interface CabinCharacter {
   roleLabel: string;
   kind: CharacterKind;
   appearance: CharacterAppearance;
+  childGender: ChildGender | null;
+  childStage: ChildStage | null;
 }
 
 export interface CabinPlacedItem {
@@ -58,8 +60,8 @@ const DEMO: CabinData = {
   wallpaper: null,
   floor: null,
   characters: [
-    { id: "d1", nickname: "두부", roleLabel: "해녀", kind: "haenyeo", appearance: haenyeoPreset() },
-    { id: "d2", nickname: "북극곰", roleLabel: "해남(항해사)", kind: "haenam", appearance: haenamDeckPreset() },
+    { id: "d1", nickname: "두부", roleLabel: "해녀", kind: "haenyeo", appearance: haenyeoPreset(), childGender: null, childStage: null },
+    { id: "d2", nickname: "북극곰", roleLabel: "해남(항해사)", kind: "haenam", appearance: haenamDeckPreset(), childGender: null, childStage: null },
   ],
   placedItems: [
     { id: "f1", sku: "furniture_bed", name: "침대", x: 0.22, y: 0.62, scale: 1, rotation: 0, flipX: false, zIndex: 0, facing: null },
@@ -97,11 +99,13 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
 
     if (!space) return { ...DEMO, isDemo: false, householdId, isOwner, characters: [], placedItems: [], guestbook: [] };
 
+    // 예전엔 .neq("kind", "child")로 새싹을 선실 화면에서 아예 뺐다 — 온보딩에서 새싹을
+    // 같이 만들어도 선실엔 안 보이는 버그였다. child_gender/child_stage까지 같이 읽어와야
+    // CharacterSprite가 연령대별 그림/키(heightScaleFor)를 고를 수 있다.
     const { data: characters } = await supabase
       .from("characters")
-      .select("id, kind, nickname, department, appearance_json")
+      .select("id, kind, nickname, department, appearance_json, child_gender, child_stage")
       .eq("household_id", householdId)
-      .neq("kind", "child")
       .order("kind");
 
     const { data: placed } = await supabase
@@ -131,6 +135,8 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
         roleLabel: c.kind === "haenam" ? (c.department === "engine" ? "해남(기관사)" : "해남(항해사)") : ROLE_LABEL[c.kind] ?? c.kind,
         kind: c.kind as CharacterKind,
         appearance: (c.appearance_json as CharacterAppearance) ?? haenyeoPreset(),
+        childGender: (c.child_gender as ChildGender | null) ?? null,
+        childStage: (c.child_stage as ChildStage | null) ?? null,
       })),
       placedItems: (placed ?? []).map((p) => {
         const catalog = Array.isArray(p.item_catalog) ? p.item_catalog[0] : p.item_catalog;

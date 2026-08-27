@@ -1,7 +1,14 @@
 import Image from "next/image";
 import type { CharacterAppearance, HairStyle, OutfitStyle } from "@/lib/domain/characterPresets";
 import type { ChildGender, ChildStage, CharacterKind } from "@/lib/domain/types";
-import { PORTRAIT_SIZE, characterPortraitKeyFor, characterPortraitSrc, characterOutfitMaskSrc } from "@/lib/domain/characterPortrait";
+import {
+  PORTRAIT_SIZE,
+  characterPortraitKeyFor,
+  characterPortraitSrc,
+  characterOutfitMaskSrc,
+  characterSkinMaskSrc,
+  characterHairMaskSrc,
+} from "@/lib/domain/characterPortrait";
 import {
   OUTFIT_CANVAS_W,
   OUTFIT_CANVAS_H,
@@ -10,10 +17,27 @@ import {
   HEAD_OVERLAP,
   HEAD_MARGIN_TOP,
   HEAD_SIZE,
-  HEIGHT_SCALE_BY_KIND,
+  heightScaleFor,
+  HAT_SIZE,
+  HAT_PLACEMENT,
+  HAND_SIZE,
+  HAND_PLACEMENT,
+  HAND_ACCESSORY_ANCHOR,
+  NECK_SIZE,
+  NECK_PLACEMENT,
+  NECK_ACCESSORY_ANCHOR,
+  HAIR_ASSET_PLACEMENT,
   headSrc,
   outfitFullSrc,
   dressFullSrc,
+  hatSrc,
+  handAccessorySrc,
+  neckAccessorySrc,
+  baldHeadSrc,
+  baldSkinMaskSrc,
+  hairOverlaySrc,
+  hairOverlayMaskSrc,
+  resolveHairAssetKey,
 } from "@/lib/domain/characterFullBody";
 
 interface CharacterSpriteProps {
@@ -300,7 +324,7 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     // 전신 이미지 — dressFullSrc 자체가 이미 얼굴/팔다리/신발까지 다 포함된 한 장이라 별도
     // 헤어 레이어가 필요 없다(lib/domain/characterFullBody.ts 참고).
     const dims = PORTRAIT_SIZE[characterPortraitKeyFor({ kind, childGender, childStage })];
-    const kindScale = HEIGHT_SCALE_BY_KIND[kind] ?? 1;
+    const kindScale = heightScaleFor(kind, childStage);
     const height = size;
     const width = Math.round(height * (dims.w / dims.h));
     const innerHeight = height * kindScale;
@@ -337,7 +361,7 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const height = size;
     // 바깥 박스는 항상 같은 크기(레이아웃 자리 유지)로 두고, 안쪽 캐릭터만 kindScale로
     // 줄여서 하단(발 기준선) 정렬 — 해남/해녀가 같은 바닥선에 서 있으면서 키 차이만 남는다.
-    const kindScale = HEIGHT_SCALE_BY_KIND[kind] ?? 1;
+    const kindScale = heightScaleFor(kind, childStage);
     const innerScale = scale * kindScale;
     const innerWidth = OUTFIT_CANVAS_W * innerScale;
     const innerHeight = totalCanvasH * innerScale;
@@ -346,6 +370,44 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const headRenderH = (headDims.h / headDims.w) * headRenderW;
     const headLeft = (OUTFIT_CANVAS_W - HEAD_WIDTH) / 2 * innerScale;
     const headTop = (HEAD_MARGIN_TOP + NECK_Y + HEAD_OVERLAP) * innerScale - headRenderH;
+
+    // 헤어스타일 오버레이 — 민머리 베이스 위에 스타일별 그림을 얹는다(docs/PROGRESS.md 기록).
+    // 해당 kind/스타일 조합에 그림 자산이 없으면(예: 새싹 bun) hairAssetKey가 null이 되고,
+    // 기존처럼 고정 헤어스타일이 그려진 head 그림 + hairColor 마스크로 폴백한다.
+    const hairAssetKey = resolveHairAssetKey(portraitKey, a.hairStyle);
+    const hairPlacement = hairAssetKey ? HAIR_ASSET_PLACEMENT[hairAssetKey] : null;
+    const useBaldHead = Boolean(hairAssetKey && hairPlacement);
+    const hairOverlayRenderW = hairPlacement ? headRenderW * hairPlacement.widthFrac : 0;
+    const hairOverlayRenderH = hairPlacement ? (hairPlacement.h / hairPlacement.w) * hairOverlayRenderW : 0;
+    const hairOverlayLeft = hairPlacement ? headLeft + headRenderW * hairPlacement.leftFrac : 0;
+    const hairOverlayTop = hairPlacement ? headTop + headRenderH * hairPlacement.topFrac : 0;
+
+    const hatDims = a.hatAssetKey ? HAT_SIZE[a.hatAssetKey] : null;
+    const hatPlacement = a.hatAssetKey ? HAT_PLACEMENT[a.hatAssetKey] : null;
+    const hatRenderW = hatDims && hatPlacement ? headRenderW * hatPlacement.widthFrac : 0;
+    const hatRenderH = hatDims ? (hatDims.h / hatDims.w) * hatRenderW : 0;
+    const hatOffsetX = hatPlacement?.offsetXFrac ? headRenderW * hatPlacement.offsetXFrac : 0;
+    const hatLeft = headLeft + headRenderW / 2 - hatRenderW / 2 + hatOffsetX;
+    const hatBottom = hatPlacement ? headTop + headRenderH * hatPlacement.bottomFrac : 0;
+    const hatTop = hatBottom - hatRenderH;
+
+    const handDims = a.handAssetKey ? HAND_SIZE[a.handAssetKey] : null;
+    const handPlacement = a.handAssetKey ? HAND_PLACEMENT[a.handAssetKey] : null;
+    const handRenderW = handDims && handPlacement ? innerWidth * handPlacement.widthFrac : 0;
+    const handRenderH = handDims ? (handDims.h / handDims.w) * handRenderW : 0;
+    const handAnchorPxX = HAND_ACCESSORY_ANCHOR.x * innerScale;
+    const handAnchorPxY = outfitTop + HAND_ACCESSORY_ANCHOR.y * innerScale;
+    const handLeft = handPlacement ? handAnchorPxX - handRenderW * handPlacement.anchorX : 0;
+    const handTop = handPlacement ? handAnchorPxY - handRenderH * handPlacement.anchorY : 0;
+
+    const neckDims = a.neckAssetKey ? NECK_SIZE[a.neckAssetKey] : null;
+    const neckPlacement = a.neckAssetKey ? NECK_PLACEMENT[a.neckAssetKey] : null;
+    const neckRenderW = neckDims && neckPlacement ? innerWidth * neckPlacement.widthFrac : 0;
+    const neckRenderH = neckDims ? (neckDims.h / neckDims.w) * neckRenderW : 0;
+    const neckAnchorPxX = NECK_ACCESSORY_ANCHOR.x * innerScale;
+    const neckAnchorPxY = outfitTop + NECK_ACCESSORY_ANCHOR.y * innerScale;
+    const neckLeft = neckPlacement ? neckAnchorPxX - neckRenderW * neckPlacement.anchorX : 0;
+    const neckTop = neckPlacement ? neckAnchorPxY - neckRenderH * neckPlacement.anchorY : 0;
 
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
@@ -360,7 +422,7 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
             style={{ position: "absolute", top: outfitTop, left: 0, width: innerWidth, height: OUTFIT_CANVAS_H * innerScale }}
           />
           <Image
-            src={headSrc(portraitKey)}
+            src={useBaldHead ? baldHeadSrc(portraitKey) : headSrc(portraitKey)}
             alt=""
             aria-hidden
             width={headDims.w}
@@ -368,6 +430,88 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
             unoptimized
             style={{ position: "absolute", left: headLeft, top: headTop, width: headRenderW, height: headRenderH }}
           />
+          {/* 피부톤은 얼굴 마스크 위에 mix-blend-mode:multiply로 입힌다 — outfitColor와 같은
+              방식(마스크 자체는 흰색+alpha, RGB는 항상 흰색). */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: headLeft,
+              top: headTop,
+              width: headRenderW,
+              height: headRenderH,
+              backgroundColor: a.skinTone,
+              WebkitMaskImage: `url(${useBaldHead ? baldSkinMaskSrc(portraitKey) : characterSkinMaskSrc(portraitKey)})`,
+              maskImage: `url(${useBaldHead ? baldSkinMaskSrc(portraitKey) : characterSkinMaskSrc(portraitKey)})`,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              mixBlendMode: "multiply",
+            }}
+          />
+          {useBaldHead && hairAssetKey && (
+            <Image
+              src={hairOverlaySrc(portraitKey, hairAssetKey.slice(-2))}
+              alt=""
+              aria-hidden
+              width={hairPlacement!.w}
+              height={hairPlacement!.h}
+              unoptimized
+              style={{ position: "absolute", left: hairOverlayLeft, top: hairOverlayTop, width: hairOverlayRenderW, height: hairOverlayRenderH }}
+            />
+          )}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: useBaldHead ? hairOverlayLeft : headLeft,
+              top: useBaldHead ? hairOverlayTop : headTop,
+              width: useBaldHead ? hairOverlayRenderW : headRenderW,
+              height: useBaldHead ? hairOverlayRenderH : headRenderH,
+              backgroundColor: a.hairColor,
+              WebkitMaskImage: `url(${useBaldHead && hairAssetKey ? hairOverlayMaskSrc(portraitKey, hairAssetKey.slice(-2)) : characterHairMaskSrc(portraitKey)})`,
+              maskImage: `url(${useBaldHead && hairAssetKey ? hairOverlayMaskSrc(portraitKey, hairAssetKey.slice(-2)) : characterHairMaskSrc(portraitKey)})`,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              mixBlendMode: "multiply",
+            }}
+          />
+          {a.hatAssetKey && hatDims && (
+            <Image
+              src={hatSrc(a.hatAssetKey)}
+              alt=""
+              aria-hidden
+              width={hatDims.w}
+              height={hatDims.h}
+              unoptimized
+              style={{ position: "absolute", left: hatLeft, top: hatTop, width: hatRenderW, height: hatRenderH }}
+            />
+          )}
+          {a.handAssetKey && handDims && (
+            <Image
+              src={handAccessorySrc(a.handAssetKey)}
+              alt=""
+              aria-hidden
+              width={handDims.w}
+              height={handDims.h}
+              unoptimized
+              style={{ position: "absolute", left: handLeft, top: handTop, width: handRenderW, height: handRenderH }}
+            />
+          )}
+          {a.neckAssetKey && neckDims && (
+            <Image
+              src={neckAccessorySrc(a.neckAssetKey)}
+              alt=""
+              aria-hidden
+              width={neckDims.w}
+              height={neckDims.h}
+              unoptimized
+              style={{ position: "absolute", left: neckLeft, top: neckTop, width: neckRenderW, height: neckRenderH }}
+            />
+          )}
         </div>
       </div>
     );

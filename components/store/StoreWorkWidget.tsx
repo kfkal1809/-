@@ -1,13 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { WORK_TAP_TARGET } from "@/lib/domain/constants";
 
 export function StoreWorkWidget({ storeSlug, tasks }: { storeSlug: string; tasks: string[] }) {
   const router = useRouter();
-  const [task] = useState(() => tasks[Math.floor(Math.random() * tasks.length)]);
+  // 서버 렌더링 시점엔 항상 첫 번째 task로 고정해두고, 마운트 후(클라이언트에서만)
+  // 무작위로 골라야 한다 — 서버/클라이언트가 각자 다른 난수로 다른 문구를 렌더링하면
+  // React hydration mismatch가 나서 트리 전체가 버려지고 다시 렌더링된다.
+  const [task, setTask] = useState(tasks[0]);
+  useEffect(() => {
+    // 마운트 후 1회만 무작위로 바꾼다 — 캐스케이딩 렌더 경고 대상인 "매 렌더마다 갱신"이
+    // 아니라 hydration을 깨지 않기 위해 의도적으로 초기값(tasks[0])을 유지했다가 딱 한 번만
+    // 클라이언트에서 바꾸는 것이다.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setTask(tasks[Math.floor(Math.random() * tasks.length)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [taps, setTaps] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ reward: number; propReward: { name: string } | null } | null>(null);

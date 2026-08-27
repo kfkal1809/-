@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createSeededRandom, pickFishingLoot, type LootCatalogRow } from "@/lib/game/fishingLoot";
+import { createSeededRandom, pickFishingLoot, pickFishingLootSchedule, type LootCatalogRow } from "@/lib/game/fishingLoot";
 
 describe("createSeededRandom", () => {
   it("같은 시드는 항상 같은 수열을 만든다 (결정적)", () => {
@@ -37,21 +37,21 @@ const CATALOG: LootCatalogRow[] = [
 ];
 
 describe("pickFishingLoot", () => {
-  it("4시간 낚시는 2~4개를 반환한다 (기획서 1.32/1.33)", () => {
+  it("4시간 낚시는 7~9개를 반환한다 (대략 30분에 한 개꼴)", () => {
     for (let seed = 0; seed < 200; seed++) {
       const random = createSeededRandom(`4h:${seed}`);
       const result = pickFishingLoot(4, CATALOG, random);
-      expect(result.length).toBeGreaterThanOrEqual(2);
-      expect(result.length).toBeLessThanOrEqual(4);
+      expect(result.length).toBeGreaterThanOrEqual(7);
+      expect(result.length).toBeLessThanOrEqual(9);
     }
   });
 
-  it("8시간 낚시는 5~8개를 반환한다", () => {
+  it("8시간 낚시는 15~17개를 반환한다 (대략 30분에 한 개꼴)", () => {
     for (let seed = 0; seed < 200; seed++) {
       const random = createSeededRandom(`8h:${seed}`);
       const result = pickFishingLoot(8, CATALOG, random);
-      expect(result.length).toBeGreaterThanOrEqual(5);
-      expect(result.length).toBeLessThanOrEqual(8);
+      expect(result.length).toBeGreaterThanOrEqual(15);
+      expect(result.length).toBeLessThanOrEqual(17);
     }
   });
 
@@ -95,5 +95,49 @@ describe("pickFishingLoot", () => {
     const seed = "reproduce-me";
     const run = () => pickFishingLoot(8, CATALOG, createSeededRandom(seed));
     expect(run()).toEqual(run());
+  });
+});
+
+describe("pickFishingLootSchedule", () => {
+  it("4시간(240분)은 개수만큼 offsetMinutes가 0~240 사이에 고르게 퍼진다", () => {
+    for (let seed = 0; seed < 100; seed++) {
+      const schedule = pickFishingLootSchedule(4, CATALOG, createSeededRandom(`sched4:${seed}`));
+      expect(schedule.length).toBeGreaterThanOrEqual(7);
+      expect(schedule.length).toBeLessThanOrEqual(9);
+      for (const c of schedule) {
+        expect(c.offsetMinutes).toBeGreaterThan(0);
+        expect(c.offsetMinutes).toBeLessThan(240);
+      }
+    }
+  });
+
+  it("offsetMinutes는 항상 오름차순으로 정렬돼 있다", () => {
+    const schedule = pickFishingLootSchedule(8, CATALOG, createSeededRandom("sorted-check"));
+    for (let i = 1; i < schedule.length; i++) {
+      expect(schedule[i].offsetMinutes).toBeGreaterThanOrEqual(schedule[i - 1].offsetMinutes);
+    }
+  });
+
+  it("평균 간격이 30분 안팎이다 (너무 뜸하지 않게)", () => {
+    let totalGapMinutes = 0;
+    let totalGaps = 0;
+    for (let seed = 0; seed < 500; seed++) {
+      const schedule4 = pickFishingLootSchedule(4, CATALOG, createSeededRandom(`gap4:${seed}`));
+      totalGapMinutes += 240;
+      totalGaps += schedule4.length;
+    }
+    const avgGap = totalGapMinutes / totalGaps;
+    expect(avgGap).toBeGreaterThan(24);
+    expect(avgGap).toBeLessThan(36);
+  });
+
+  it("동일 시드면 스케줄도 항상 재현된다", () => {
+    const seed = "reproduce-schedule";
+    const run = () => pickFishingLootSchedule(8, CATALOG, createSeededRandom(seed));
+    expect(run()).toEqual(run());
+  });
+
+  it("카탈로그가 비어있으면 빈 배열을 반환한다", () => {
+    expect(pickFishingLootSchedule(4, [], createSeededRandom("empty-sched"))).toEqual([]);
   });
 });

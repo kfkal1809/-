@@ -110,8 +110,8 @@ export function HomeHeader({ balance }: { balance: number }) {
               <span className="text-[14px] font-extrabold text-[var(--color-navy)]">${balance.toFixed(2)}</span>
             </span>
           </Link>
-          <Link href="/notifications" className="rounded-full bg-white p-1.5 shadow-[0_4px_14px_rgba(36,54,90,0.08)]">
-            <GameIcon name="bell" size={20} withBadge={false} />
+          <Link href="/notifications" className="rounded-full bg-white p-2.5 shadow-[0_4px_14px_rgba(36,54,90,0.16)]">
+            <GameIcon name="bell" size={30} withBadge={false} />
           </Link>
         </div>
 

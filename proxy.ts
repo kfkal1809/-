@@ -41,6 +41,7 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/join") ||
     path.startsWith("/auth") ||
     path.startsWith("/api/kakao") ||
+    path.startsWith("/api/invites/validate") ||
     path.startsWith("/_next") ||
     path.startsWith("/manifest") ||
     path.startsWith("/icons");

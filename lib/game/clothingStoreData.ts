@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getWalletBalance } from "@/lib/game/wallet";
 import { compatKeyFor, clothingTabFor, type CompatKey, type ClothingTabKey } from "@/lib/domain/clothingStoreCategories";
-import { bodyPresetKeyFor, isCompatibleWithBody } from "@/lib/domain/itemAppearanceVariants";
+import { bodyPresetKeyFor, isCompatibleWithBody, resolveAppearancePatch } from "@/lib/domain/itemAppearanceVariants";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 import { haenyeoPreset } from "@/lib/domain/characterPresets";
@@ -160,13 +160,17 @@ export async function getClothingStoreData(requestedCharacterId?: string): Promi
         if (!isCompatibleWithBody(catalog.sku, bodyPresetKey)) return null;
         const metadata = catalog.metadata_json as { new?: boolean } | null;
         const category = catalog.category as "outfit" | "hat" | "accessory";
+        // 체형별 variant 상품(child_dress_s*)은 sku 자체가 파이프라인 산출물 이름(dress_full
+        // 폴더 관례)이라 실제로는 멜빵바지/후드티 등도 "dress"를 포함한다 — sku 문자열 대신
+        // 실제 옷 종류(patch.outfit)로 원피스/상의 탭을 정확히 가른다.
+        const outfitKind = category === "outfit" ? resolveAppearancePatch(catalog.sku, bodyPresetKey)?.outfit : undefined;
         return {
           catalogItemId: catalog.id,
           sku: catalog.sku,
           name: catalog.name,
           description: catalog.description,
           category,
-          tab: clothingTabFor(category, catalog.sku),
+          tab: clothingTabFor(category, catalog.sku, outfitKind),
           price: Number(catalog.buy_price),
           ownedInventoryItemIds: ownedInvIdsByCatalogId.get(catalog.id) ?? [],
           isNew: metadata?.new === true,

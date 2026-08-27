@@ -34,7 +34,7 @@ export const NPCS: NpcInfo[] = [
     name: "두부",
     title: "조리장",
     space: "선내식당",
-    line: "오늘도 기깔나게 해드릴게요.",
+    line: "오늘도 기깔나게 요리 해드릴게요!",
   },
   {
     id: "mami",
@@ -139,9 +139,27 @@ export const BONPPURI_PRODUCTS = [
 ];
 
 export const RING_SETS = [
-  { key: "wave_ring", sku: "ring_wave", name: "파도 커플링", price: 25 },
-  { key: "shell_ring", sku: "ring_shell", name: "진주조개 커플링", price: 40 },
-  { key: "lighthouse_ring", sku: "ring_lighthouse", name: "등대불빛 커플링", price: 60 },
+  {
+    key: "wave_ring",
+    sku: "ring_wave",
+    name: "파도 커플링",
+    price: 25,
+    description: "잔잔한 파도처럼 오래도록 서로의 곁을 지켜주는 사랑을 담은 커플링.",
+  },
+  {
+    key: "shell_ring",
+    sku: "ring_shell",
+    name: "진주조개 커플링",
+    price: 40,
+    description: "조개 속 진주처럼 소중한 인연을 발견했다는 의미를 담은 커플링.",
+  },
+  {
+    key: "lighthouse_ring",
+    sku: "ring_lighthouse",
+    name: "등대불빛 커플링",
+    price: 60,
+    description: "먼 바다에서도 서로를 향해 길을 밝혀주는 변함없는 사랑의 커플링.",
+  },
 ];
 
 export const MARRIAGE_DOCUMENT_PRICE = 30;
@@ -150,7 +168,7 @@ export const WORK_REWARD_MIN = 2;
 export const WORK_REWARD_MAX = 4;
 
 // 가게 알바 (1.38 / 1.40) — MVP는 복잡한 미니게임 대신 3~5회 탭으로 대체한다.
-export const BONPPURI_WORK_TASKS = ["꽃 물 갈기", "리본 묶기", "꽃 정리하기", "꽃다발 포장"];
+export const BONPPURI_WORK_TASKS = ["꽃에 물주기", "리본 묶기", "꽃 정리하기", "꽃다발 포장"];
 export const LIRI_WORK_TASKS = ["테이블 닦기", "반찬 나르기", "불판 정리", "주문 전달", "앞접시 놓기"];
 export const WORK_TAP_TARGET = 4;
 
