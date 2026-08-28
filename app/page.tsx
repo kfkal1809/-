@@ -53,7 +53,7 @@ export default function OpeningPage() {
 
         <div className="mt-10 w-full">
           <Link
-            href="/join"
+            href="/auth"
             className="inline-flex w-full items-center justify-center rounded-full bg-[var(--color-coral)] px-6 py-4 text-base font-extrabold text-white shadow-[0_8px_20px_rgba(255,122,107,0.35)] transition active:scale-[0.97]"
           >
             해연결호 승선하기

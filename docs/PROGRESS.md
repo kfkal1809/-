@@ -2062,3 +2062,29 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
 - **검증**: 수정 전/후 이미지를 직접 눈으로 비교해 점선 조각이 사라지고 러그 본체(닻
   문양 원형 러그)는 그대로인 것을 확인. `tsc`/`eslint`/`vitest run`(247개)/`next build`
   전부 통과.
+
+### 초대코드 기능 제거 (배포 전 진입장벽 해제)
+
+- **배경**: 배포 준비 중 사용자가 "초대코드 기능 빼도 되나"라고 물어봐서, 지금은 카카오
+  로그인만으로도 충분하다고 판단해 진입 장벽(초대코드 검증)을 제거하기로 함. 승인 절차
+  없이 카카오 로그인만 하면 바로 가입되는 구조로 바뀐다(트레이드오프를 사용자에게
+  먼저 안내하고 동의받음).
+- **제거**: `app/join/page.tsx`(초대코드 입력 화면), `app/api/invites/validate/route.ts`
+  (초대코드 검증 API) 삭제. 오프닝 화면(`app/page.tsx`)의 "해연결호 승선하기" 버튼이
+  `/join` 대신 바로 `/auth`(카카오 로그인 화면)로 연결되도록 수정.
+- **`app/auth/callback/route.ts` 단순화**: `invite_code` 쿠키 읽기/검증/`used_count` 증가
+  로직을 전부 제거하고, 신규 유저는 초대코드 확인 없이 바로 `profiles.approved = true`로
+  upsert하도록 변경. 에러 리다이렉트 경로도 삭제된 `/join`이 아니라 `/auth`로 변경.
+- **연쇄 정리**: 초대코드의 "partner" 타입(초대장에 미리 연결된 캐릭터가 있으면 온보딩에서
+  기존 캐릭터에 자동 연결)이 초대코드 발급에만 의존하던 기능이라 같이 죽은 코드가 됨 —
+  `app/api/onboarding/character/route.ts`에서 `partner_target_character` 쿠키를 읽어 기존
+  캐릭터에 연결하던 분기를 제거(더는 그 쿠키를 심는 곳이 없어 항상 실행 안 되는 코드였음).
+  `app/onboarding/me/page.tsx`의 `data.linkedExisting` 분기는 항상 `false`만 오게 되지만
+  분기 자체는 무해하게 남아있어 그대로 둠.
+- **범위상 하지 않은 것**: `invite_codes` 테이블/RLS(`0001_init.sql`, `0002_rls.sql`)는
+  DB 스키마 변경(DROP TABLE)이라 이번 범위에서 건드리지 않음 — 앱 코드에서 더는
+  참조하지 않을 뿐, 테이블 자체는 남아있음.
+- **검증**: `.next` 삭제 후 `next build`로 라우트 목록에서 `/join`, `/api/invites/validate`가
+  완전히 빠진 것 확인. 프로덕션 빌드를 로컬에서 띄워 `/`(200), `/auth`(200), `/join`(404)
+  상태코드 확인 + 오프닝 화면 버튼이 실제로 `/auth`를 가리키는 것 확인.
+  `tsc`/`eslint`/`vitest run`(247개)/`next build` 전부 통과.

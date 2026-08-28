@@ -14,7 +14,7 @@
 - [x] 커스텀 파스텔 아이콘 세트 (이모지 미사용, `components/icons/GameIcon.tsx`)
 - [x] Supabase 스키마 34개 테이블 + RLS (`supabase/migrations/`) + Seed (`supabase/seed.sql`)
 - [x] 선용금 원장 RPC (`apply_wallet_transaction`, idempotency 보장, service_role 전용)
-- [x] 초대코드 → 카카오 로그인 → 온보딩(캐릭터/관계/파트너/새싹) → 완료(웰컴그랜트 $20) 전체 플로우
+- [x] 카카오 로그인 → 온보딩(캐릭터/관계/파트너/새싹) → 완료(웰컴그랜트 $20) 전체 플로우
 - [x] 홈 화면 (기획서 A-5/2.3 레이아웃 그대로: 선용금/출석카드/나의 항해 정보/이벤트 한 줄/3x3 메뉴/고정 하단탭)
 - [x] 공지/건의/이벤트/입점신청/명예의 전당/승선확인증/지갑/알림 — 실데이터 연동
 
