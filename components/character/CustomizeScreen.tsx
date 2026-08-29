@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
+import { BaseAppearanceEditor } from "@/components/character/BaseAppearanceEditor";
 import { Card } from "@/components/ui/Card";
 import { playSfx } from "@/lib/audio/audioManager";
 import type { CustomizeData, EquipCandidate } from "@/lib/game/customizeData";
@@ -14,6 +15,7 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
   const [appearance, setAppearance] = useState(data.appearance);
   const [equipping, setEquipping] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingBase, setEditingBase] = useState(false);
 
   async function handleEquip(item: EquipCandidate) {
     if (!data.canEdit || equipping) return;
@@ -46,19 +48,43 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
             옷가게에서 옷 사러 가기 ›
           </Link>
         )}
+        {data.canEdit && data.kind !== "child" && (
+          <button
+            type="button"
+            onClick={() => setEditingBase((v) => !v)}
+            className="mt-1 block w-full text-center text-[12px] font-bold text-[var(--color-tab-active)]"
+          >
+            {editingBase ? "기본 외형 설정 닫기 ›" : "피부톤/헤어/의상컬러 다시 설정 ›"}
+          </button>
+        )}
       </div>
 
-      <div className="flex justify-center">
-        <div className="rounded-[28px] bg-white p-3 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
-          <CharacterSprite
-            appearance={appearance}
-            kind={data.kind}
-            childGender={data.childGender}
-            childStage={data.childStage}
-            size={170}
-          />
+      {editingBase && data.canEdit && data.kind !== "child" ? (
+        <BaseAppearanceEditor
+          characterId={data.characterId}
+          kind={data.kind}
+          department={data.department}
+          initialAppearance={appearance}
+          onSaved={(next) => {
+            setAppearance(next);
+            setEditingBase(false);
+            playSfx("equip");
+          }}
+          onClose={() => setEditingBase(false)}
+        />
+      ) : (
+        <div className="flex justify-center">
+          <div className="rounded-[28px] bg-white p-3 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
+            <CharacterSprite
+              appearance={appearance}
+              kind={data.kind}
+              childGender={data.childGender}
+              childStage={data.childStage}
+              size={170}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {!data.canEdit && (
         <p className="text-center text-[13px] text-[var(--color-navy-soft)]">이 캐릭터는 내가 관리할 수 없어요.</p>

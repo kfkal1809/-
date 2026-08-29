@@ -2088,3 +2088,31 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
   완전히 빠진 것 확인. 프로덕션 빌드를 로컬에서 띄워 `/`(200), `/auth`(200), `/join`(404)
   상태코드 확인 + 오프닝 화면 버튼이 실제로 `/auth`를 가리키는 것 확인.
   `tsc`/`eslint`/`vitest run`(247개)/`next build` 전부 통과.
+
+### 온보딩 이후 기본 외형(피부톤/헤어/의상컬러) 재설정 기능 추가
+
+- **문제**: 실제 배포본에서 처음 로그인한 사용자가 홈 화면의 "나의 항해 정보" 카드를 보고
+  해녀 캐릭터 헤어가 기본값(프리셋) 그대로라고 신고. 확인해보니 캐릭터 꾸미기 화면
+  (`/character/[id]/customize`)도 똑같이 기본 헤어로 나옴 — 원인은 버그가 아니라 애초에
+  **온보딩 이후에 피부톤/헤어컬러/헤어스타일/의상컬러를 다시 바꿀 수 있는 화면 자체가
+  없었던 것**. `AdultCharacterForm`(스와치 선택 UI)이 `/onboarding/me`, `/onboarding/partner`
+  에서만 쓰이고, 기존 캐릭터 꾸미기 화면은 가방 아이템(모자/소품/구매한 옷) 착용만 지원했음.
+- **수정**: `components/character/BaseAppearanceEditor.tsx`(신규) — `AdultCharacterForm`과
+  같은 스와치 데이터(`components/onboarding/swatches.ts`)를 재사용해 피부톤/헤어컬러/
+  헤어스타일/의상컬러를 현재 값으로 초기화한 뒤 다시 고르고 저장하는 폼. 캐릭터 꾸미기
+  화면(`CustomizeScreen.tsx`) 상단에 "피부톤/헤어/의상컬러 다시 설정 ›" 토글 버튼을 추가해
+  `data.canEdit && data.kind !== "child"`일 때만 노출(새싹은 별도 실루엣 커스터마이징
+  체계라 이번 범위에서 제외).
+- **API**: `app/api/character/base-appearance/route.ts`(신규) — `character_managers` 소유권
+  확인 후 `characters.appearance_json`에 5개 필드(skinTone/hairColor/hairStyle/outfitColor/
+  outfitAssetKey)만 병합(다른 필드—모자/손소품/목소품 등 기존 장착 정보—는 그대로 보존).
+  `/api/character/equip`(기존 라우트)과 동일한 권한 검증 패턴 재사용.
+- **연쇄 수정**: `lib/game/customizeData.ts`의 `CustomizeData`에 `department` 필드 추가
+  (해남 항해사/기관사에 따라 의상 스와치·에셋이 다르기 때문에 에디터가 알아야 함).
+- **범위상 하지 않은 것**: 새싹(자녀) 캐릭터의 실루엣/체형 재설정은 이번 범위에 없음
+  (성인 캐릭터와 다른 체계라 별도 작업 필요). DB에 이미 저장된 "기본값 그대로인" 캐릭터를
+  일괄로 고쳐주는 마이그레이션도 하지 않음 — 사용자가 이 화면에서 직접 다시 고르면 됨.
+- **검증**: 임시 `app/(dev)/preview-base-appearance`(목업 `CustomizeData`로 `CustomizeScreen`
+  렌더링, 커밋 전 삭제) + Playwright로 토글 버튼 클릭 전/후 스크린샷 확인 — 스와치 선택,
+  실시간 미리보기, 취소/저장 버튼 모두 정상 렌더링, `pageerror` 0건.
+  `tsc`/`eslint`/`vitest run`(247개)/`next build` 전부 통과.

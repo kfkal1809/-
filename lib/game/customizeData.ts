@@ -18,6 +18,7 @@ export interface CustomizeData {
   nickname: string;
   roleLabel: string;
   kind: CharacterKind;
+  department: "deck" | "engine" | null;
   childGender: ChildGender | null;
   childStage: ChildStage | null;
   appearance: CharacterAppearance;
@@ -31,6 +32,7 @@ const NOT_FOUND = (characterId: string): CustomizeData => ({
   nickname: "",
   roleLabel: "",
   kind: "haenyeo",
+  department: null,
   childGender: null,
   childStage: null,
   appearance: haenyeoPreset(),
@@ -100,6 +102,7 @@ export async function getCustomizeData(characterId: string): Promise<CustomizeDa
       nickname: character.nickname,
       roleLabel,
       kind: character.kind as CharacterKind,
+      department: (character.department as "deck" | "engine" | null) ?? null,
       childGender: character.child_gender as ChildGender | null,
       childStage: character.child_stage as ChildStage | null,
       appearance: (character.appearance_json as CharacterAppearance) ?? haenyeoPreset(),
