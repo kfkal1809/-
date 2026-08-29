@@ -44,6 +44,18 @@ export const ROOM_CLIP = {
 // 대각선으로 깔려 있어서, 타일 배경을 이 각도로 회전시켜야 원근과 맞는다.
 export const FLOOR_TILE_ANGLE = { left: -15.7, right: 15.7 };
 
+// 가구 배치용 바닥 경계 — ROOM_CLIP.floor(벽지/바닥재 틴트 마스크용, 손대면 그 기능이
+// 깨짐)와는 별도로 둔, 가구 드래그 클램프 전용 폴리곤. room-base.png를 실측해보면 진짜
+// 벽-바닥 경계선(굽도리널 아래)은 ROOM_CLIP.floor의 뒤쪽 변보다 화면상 더 위쪽(더 작은 y)에
+// 있다 — anchor(가구 이미지의 bottom-center)가 ROOM_CLIP.floor 경계에 정확히 닿아도, 가구는
+// 입체(헤드보드처럼 anchor보다 더 뒤로 뻗어 있는 부분)라 그 뒤쪽이 여전히 벽에서 몇 % 띄어져
+// 보이는 걸 픽셀 실측(scipy 없이 RGB warmth 임계값)과 실제 침대/책상 렌더링으로 확인했다.
+// 그래서 가구 클램프 경계만 뒤쪽으로 더 밀어서(각 꼭짓점 y를 8%p씩 줄여서) 가구를 더 뒤로
+// 끌 수 있게 하고, 실측한 진짜 벽 경계에 거의 붙어 보이도록 맞췄다(0% 뒤로 밀면 실측 결과와
+// 거의 같은 값). 뒤쪽 변(꼭짓점 3개)만 조정하고 앞쪽 변(문/캐릭터 쪽)은 원래 값 그대로 둔다.
+const FURNITURE_FLOOR_CLIP =
+  "polygon(2.7% 59%, 49.6% 37.6%, 96.4% 59%, 99.1% 71.9%, 49.6% 99.5%, 1% 71.9%)";
+
 interface ZoneBounds {
   xMin: number;
   xMax: number;
@@ -118,12 +130,14 @@ export function clampToPolygon(x: number, y: number, points: { x: number; y: num
 export const ROOM_ZONES = {
   leftWall: boundsFromClip(ROOM_CLIP.leftWall),
   rightWall: boundsFromClip(ROOM_CLIP.rightWall),
-  floor: boundsFromClip(ROOM_CLIP.floor),
+  // 가구 배치 바운딩 박스는 ROOM_CLIP.floor(텍스처 틴트용)가 아니라 FURNITURE_FLOOR_CLIP에서
+  // 뽑는다 — 그래야 뒤쪽으로 늘어난 폴리곤 범위까지 1차 바운딩 박스 클램프가 자르지 않는다.
+  floor: boundsFromClip(FURNITURE_FLOOR_CLIP),
 };
 
-// 실제 폴리곤 충돌판정(clampToPolygon/pointInPolygon)에 쓰는 점 배열 — ROOM_CLIP과 항상
-// 동기화되도록 파싱해서 만든다(좌표를 따로 손으로 옮겨 적지 않음).
-export const FLOOR_POLYGON = parsePolygon(ROOM_CLIP.floor);
+// 실제 폴리곤 충돌판정(clampToPolygon/pointInPolygon)에 쓰는 점 배열 — 가구 배치 전용
+// FURNITURE_FLOOR_CLIP에서 파싱한다(좌표를 따로 손으로 옮겨 적지 않음).
+export const FLOOR_POLYGON = parsePolygon(FURNITURE_FLOOR_CLIP);
 export const LEFT_WALL_POLYGON = parsePolygon(ROOM_CLIP.leftWall);
 export const RIGHT_WALL_POLYGON = parsePolygon(ROOM_CLIP.rightWall);
 
