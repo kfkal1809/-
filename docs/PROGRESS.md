@@ -2464,3 +2464,61 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
   모양이 실제로 서로 다르게(단발=일자앞머리, 트윈테일=작은 묶음, 포니테일=옆으로 늘어뜨림)
   바뀌는 것을 스크린샷으로 확인 — 이제 고른 것과 보이는 게 실제로 일치함. `pageerror` 0건.
   `tsc`/`eslint`/`vitest run`(247개)/`next build` 전부 통과.
+
+## 새싹 추가 모달이 좁은 화면에서 잘리던 문제
+
+`components/cabin/AddChildButton.tsx`의 모달이 `max-w-[380px]`로 고정돼 있어 390px보다
+좁은 실제 모바일 화면에서 카드 밖으로 잘려 보였고, `ChildCharacterForm`의 성별 버튼
+"설정 안 함" 라벨이 좁은 폭에서 두 줄로 줄바꿈됐다.
+
+- 모달 `max-w-[380px]` → `300px`로 축소, 패딩/모서리 반경도 축소.
+- `ChildCharacterForm`에 `compact` prop 추가 — 미리보기 크기(130→90px)/스와치 크기
+  (28px→24px)/행간(gap-4→gap-2.5)을 좁은 모달용으로 줄인다. 기존 `/onboarding/children`
+  전체 화면 온보딩에서는 `compact` 없이 기존 크기 그대로 유지.
+- "설정 안 함" → "무관"으로 줄이고 `whitespace-nowrap` 추가해 줄바꿈 방지.
+- 곁다리로 발견한 버그: 헤어스타일 버튼이 영문 키(`bob`/`twin`/`pony`)를 그대로 노출하고
+  있던 것도 `HAIR_STYLE_LABEL` 한글 라벨 맵을 추가해 고쳤다.
+- **검증**: `tsc`/`vitest run`(247개) 통과 후 커밋·푸시.
+
+## 홈 화면 전면 재구현 — 목표 시안(`design-assets/게임 UI 및 메뉴 화면.png`) 기준
+
+이전 커밋(`6aed458`)은 `app/(game)/layout.tsx`의 빈 공간 버그와 `VoyageInfoCard`/
+`FunctionMenuGrid` 일부만 손봤을 뿐, 실제 홈 화면 구조를 담당하는 `HomeHeader.tsx`/
+`HomeScreen.tsx`/`EventRow.tsx`는 전혀 건드리지 않아서 시안과의 격차가 그대로 남아있었다.
+이번에는 실제로 `/home`에서 쓰이는 6개 컴포넌트(`HomeHeader`/`VoyageInfoCard`/`EventRow`/
+`FunctionMenuGrid`/`BottomNav`, 그리고 이들이 참조하는 `lighthouse.png`/`ship.png`/
+`cloud-*.png`/`seagull-*.png`/`wave-*.png`/`lifebuoy.png`/`railing.png`/`deco-heart.png`
+등은 이미 지난 세션에 시안에서 직접 잘라낸 에셋이라 md5까지 일치 확인됨)를 시안 기준으로
+다시 짰다. 시안에 그림 자산이 없는 요소(리본 배너, 선용금 정보판의 카드 틀, 이벤트 배너의
+플라크 틀, 출항하기 배지)는 CSS로 구성하되, 그 안의 아이콘(coin/plus/anchor 등)은 전부
+`public/images/icons/*.png` 실제 파일을 사용했다.
+
+- **`HomeHeader.tsx`**: 로고를 190px→92%×max 400px(≈2배 이상, `-mx-4`로 헤더 패딩을
+  넘어 화면 끝까지 번지게 해서 좁은 화면에서도 안 잘림)로 확대. 등대/배/구름 3장/갈매기
+  2마리를 하늘(`#8fd2f7`)→바다(`#eaf6ff`) 그라디언트 배경 하나 위에 배치하고 맨 아래
+  `wave-divider.png`로 아래쪽 `VoyageInfoCard`의 바다와 시각적으로 이어지게 했다. 선용금
+  칩을 크림색+금색 점선 테두리 카드(`coin.png`)로, 우측 하단에 `plus.png` 배지를 겹쳐
+  올렸다. 지갑 카드와 알림벨을 하나의 `flex flex-col` 컨테이너에 넣어 절대좌표 겹침 없이
+  자연스럽게 쌓이게 했다(첫 시도에서 고정 px로 배치했다가 겹치는 걸 스크린샷으로 발견해
+  수정).
+- **`VoyageInfoCard.tsx`**: 리본 배너 확대(패딩/폰트/삼각 꼬리 전부), 캐릭터 132→158px로
+  확대, "출항하기" 배지에 `anchor.png` 아이콘 추가, 승선/하선 정보판에 `deco-heart.png`/
+  `anchor.png` 아이콘을 라벨 앞에 붙였다.
+- **`EventRow.tsx`**: 흐릿한 pill 형태를 크림색 그라디언트+흰 테두리의 카드형 배너로
+  교체, 캘린더 아이콘을 흰 원형 배지 안에 확대 배치(전용 이벤트 배너 그림 자산은
+  `design-assets`/`public/images` 전수 검색 결과 없음을 확인 — 기존 인라인 SVG를
+  확대해 재사용).
+- **`FunctionMenuGrid.tsx`**: 아이콘 38→50px로 확대, gap 축소로 밀도 향상(5+4 두 줄 구조는
+  유지 — 시안처럼 한 줄로 9개를 넣으면 390px 폭에서 아이콘이 26px 이하로 줄어들어 오히려
+  가독성이 떨어짐을 확인했다).
+- **`BottomNav.tsx`**: 아이콘 원형 배지 48→54px, 아이콘 34→40px로 확대.
+- **검증**: 로그인 없이 `/home`에 접속하면 `lib/game/homeData.ts`의 `DEMO_HOME_DATA`가
+  뜨는데, 이 값이 시안의 표기값(선용금 $43.50, 승선 D+74, 하선 D-27, 이벤트명 "해남이
+  분실물 회수 대작전")과 정확히 일치하도록 이미 세팅돼 있어 시안과 1:1로 비교 가능했다.
+  Playwright로 390×844, 430×932 두 크기에서 전/후 스크린샷을 캡처(전 상태는 `git stash`로
+  이번 변경을 잠깐 걷어내고 촬영)해 시안·수정전·수정후 3장을 나란히 비교 — 로고 확대, 하늘+
+  바다 통합 배경, 캐릭터 확대, 이벤트 배너 그림형 전환, 메뉴 아이콘 확대, 빈 공간 없음을
+  실제 캡처로 확인. `tsc`/`vitest run`(247개)/`next build` 전부 통과.
+- **의도적으로 유지한 것들**: "카카오톡 출항 인증" 버튼은 시안에는 없지만 실제 기능(카카오
+  공유 인증)이라 유지, `deck.png` 아이콘이 갑판 아이콘처럼 안 보인다는 점은 지난 세션에
+  디자이너 원본 아이콘 시트에 "갑판광장" 용도로 명시돼 있음을 이미 확인했으므로 그대로 둠.

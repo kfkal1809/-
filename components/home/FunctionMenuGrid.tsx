@@ -13,13 +13,13 @@ export function FunctionMenuGrid() {
   const secondRow = HOME_MENU.slice(5);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-5 gap-x-1">
+    <div className="flex flex-col gap-2">
+      <div className="grid grid-cols-5 gap-x-0.5">
         {firstRow.map((item) => (
           <MenuItem key={item.key} item={item} />
         ))}
       </div>
-      <div className="grid grid-cols-5 gap-x-1">
+      <div className="grid grid-cols-5 gap-x-0.5">
         {secondRow.map((item) => (
           <MenuItem key={item.key} item={item} />
         ))}
@@ -30,9 +30,9 @@ export function FunctionMenuGrid() {
 
 function MenuItem({ item }: { item: (typeof HOME_MENU)[number] }) {
   return (
-    <Link href={item.href} onClick={() => playSfx("ui-click")} className="flex flex-col items-center gap-1">
-      <GameIcon name={item.icon as never} size={38} />
-      <span className="whitespace-nowrap text-center text-[11px] font-bold leading-tight text-[var(--color-navy)]">
+    <Link href={item.href} onClick={() => playSfx("ui-click")} className="flex flex-col items-center gap-0.5">
+      <GameIcon name={item.icon as never} size={50} />
+      <span className="whitespace-nowrap text-center text-[10.5px] font-bold leading-tight text-[var(--color-navy)]">
         {item.label}
       </span>
     </Link>
