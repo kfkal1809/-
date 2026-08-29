@@ -108,29 +108,6 @@ export function HomeHeader({ balance }: { balance: number }) {
         </Link>
       </div>
 
-      <div className="relative z-10 -mt-2 flex items-end justify-between">
-        <Image
-          src="/images/home/lighthouse.png"
-          alt=""
-          aria-hidden
-          width={1021}
-          height={1368}
-          unoptimized
-          className="pointer-events-none w-[92px]"
-          style={{ height: "auto" }}
-        />
-        <Image
-          src="/images/home/ship.png"
-          alt=""
-          aria-hidden
-          width={1404}
-          height={1047}
-          unoptimized
-          className="pointer-events-none w-[126px]"
-          style={{ height: "auto" }}
-        />
-      </div>
-
       <Image
         src="/images/home/wave-divider.png"
         alt=""
