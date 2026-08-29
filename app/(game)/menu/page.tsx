@@ -11,7 +11,15 @@ export default async function MenuPage() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) return null;
-    const { data } = await supabase.from("character_managers").select("character_id").eq("user_id", user.id).limit(1).maybeSingle();
+    // managed_only(아직 안 온 파트너를 대신 관리하는 플레이스홀더) 캐릭터가 아니라 내
+    // 진짜 캐릭터로 승선확인증이 열려야 한다 — lib/game/deckData.ts getDeckSelf()와 동일한 이유.
+    const { data } = await supabase
+      .from("character_managers")
+      .select("character_id, characters!inner(managed_only)")
+      .eq("user_id", user.id)
+      .eq("characters.managed_only", false)
+      .limit(1)
+      .maybeSingle();
     return data?.character_id ?? null;
   }, null as string | null);
 
@@ -22,6 +30,7 @@ export default async function MenuPage() {
     { href: "/jewelry", label: "귀금속점", icon: "ring" as const },
     { href: "/marriage", label: "혼인신고", icon: "trophy" as const },
     { href: "/mailbox", label: "우편함", icon: "mailbox" as const },
+    { href: "/menu/join-code", label: "파트너 연결 코드", icon: "ring" as const },
     { href: "/notifications", label: "알림", icon: "bell" as const },
     { href: "/settings", label: "설정 (효과음/배경음악)", icon: "menu" as const },
   ];

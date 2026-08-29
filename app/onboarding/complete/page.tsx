@@ -13,6 +13,7 @@ export default function OnboardingCompletePage() {
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const [balance, setBalance] = useState(0);
   const [grant, setGrant] = useState(0);
+  const [joinCode, setJoinCode] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/onboarding/complete", { method: "POST" })
@@ -24,6 +25,12 @@ export default function OnboardingCompletePage() {
         setStatus("done");
       })
       .catch(() => setStatus("error"));
+
+    // 상대가 아직 안 왔다면 알려줄 연결 코드 — 실패해도 완료 화면 자체는 그대로 보여준다.
+    fetch("/api/household/join-code")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => setJoinCode(data?.joinCode ?? null))
+      .catch(() => setJoinCode(null));
   }, []);
 
   return (
@@ -49,6 +56,18 @@ export default function OnboardingCompletePage() {
             <p className="mt-1 text-[14px] text-[var(--color-navy-soft)]">신규 승선자 보급 선용금</p>
             <p className="mt-1 text-2xl font-extrabold text-[var(--color-coral)]">+${grant.toFixed(2)}</p>
             <p className="mt-3 text-[13px] text-[var(--color-navy-soft)]">현재 공동 선용금 ${balance.toFixed(2)}</p>
+
+            {joinCode && (
+              <div className="mt-5 rounded-2xl border-2 border-dashed border-[var(--color-tab-active)] bg-white px-4 py-3">
+                <p className="text-[12px] font-bold text-[var(--color-navy-soft)]">
+                  상대가 아직 가입 전이라면 이 코드를 알려주세요
+                </p>
+                <p className="mt-1 text-xl font-extrabold tracking-widest text-[var(--color-tab-active)]">{joinCode}</p>
+                <p className="mt-1 text-[11px] text-[var(--color-navy-soft)]">
+                  상대가 카카오 로그인 후 뜨는 화면에서 이 코드를 입력하면 같은 선실로 연결돼요
+                </p>
+              </div>
+            )}
 
             <Button tone="coral" full className="mt-6" onClick={() => router.push("/home")}>
               {SHIP_NAME}로 출항하기

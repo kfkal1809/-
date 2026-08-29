@@ -52,6 +52,35 @@ export async function POST(request: Request) {
     return NextResponse.json({ householdId, characterId: existingCharacter.character_id });
   }
 
+  // /onboarding/join으로 연결 코드를 입력해 들어온 사람이라면, 상대가 온보딩 때 미리 만들어둔
+  // managed_only 플레이스홀더(같은 kind)가 이 household에 있을 수 있다 — 그럴 땐 새 캐릭터를
+  // 또 만드는 대신 그 캐릭터를 그대로 넘겨받는다(voyages 등 이미 만들어진 연결 데이터도 유지됨).
+  const { data: placeholder } = await service
+    .from("characters")
+    .select("id")
+    .eq("household_id", householdId)
+    .eq("kind", kind)
+    .eq("managed_only", true)
+    .maybeSingle();
+
+  if (placeholder) {
+    await service
+      .from("characters")
+      .update({
+        nickname,
+        department: kind === "haenam" ? department ?? "deck" : null,
+        rank_label: rankLabel,
+        appearance_json: appearance,
+        managed_only: false,
+      })
+      .eq("id", placeholder.id);
+    await service.from("character_managers").upsert(
+      { character_id: placeholder.id, user_id: user.id },
+      { onConflict: "character_id,user_id" }
+    );
+    return NextResponse.json({ householdId, characterId: placeholder.id });
+  }
+
   const { data: character, error: characterError } = await service
     .from("characters")
     .insert({

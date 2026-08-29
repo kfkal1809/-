@@ -39,5 +39,5 @@ export async function GET(request: NextRequest) {
     { onConflict: "id" }
   );
 
-  return NextResponse.redirect(new URL("/onboarding/me", request.url));
+  return NextResponse.redirect(new URL("/onboarding/join", request.url));
 }
