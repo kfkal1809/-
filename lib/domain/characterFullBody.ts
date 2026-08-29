@@ -12,13 +12,36 @@ export const NECK_Y = 140;
 export const HEAD_WIDTH = 190;
 export const HEAD_OVERLAP = 10;
 
-// 머리 이미지는 목선(NECK_Y)보다 위로 올라가는 만큼 OUTFIT_CANVAS 상단을 벗어난다(해녀 기준
-// 최대 ~84px 초과). 이 여유를 안 두면 렌더링 컨테이너 높이(size)가 실제 화면에 그려지는
-// 키(머리~발끝)보다 작아져서, size가 같아도 outfitAssetKey 캐릭터가 fullPortraitKey/기존
-// 단일 이미지 캐릭터보다 눈에 띄게 커 보이는 버그가 생긴다 — 그래서 컨테이너 높이 계산에
-// 이 마진을 항상 포함시켜 "size = 머리~발끝 실제 높이"가 모든 렌더링 방식에서 똑같이
-// 성립하도록 한다.
-export const HEAD_MARGIN_TOP = 90;
+// 머리 이미지는 목선(NECK_Y)보다 위로 올라가는 만큼 OUTFIT_CANVAS 상단을 벗어난다. 이 여유를
+// 안 두면 렌더링 컨테이너 높이(size)가 실제 화면에 그려지는 키(머리~발끝)보다 작아져서, size가
+// 같아도 outfitAssetKey 캐릭터가 fullPortraitKey/기존 단일 이미지 캐릭터보다 눈에 띄게 커
+// 보이는 버그가 생긴다 — 그래서 컨테이너 높이 계산에 이 마진을 항상 포함시켜 "size = 머리~
+// 발끝 실제 높이"가 모든 렌더링 방식에서 똑같이 성립하도록 한다.
+//
+// 예전엔 이 값이 모든 kind에 공통인 고정값(90)이었다. 그런데 HEAD_SIZE를 보면 해녀 머리
+// (346x425, 세로로 긴 올림머리 포함 크롭)와 해남 머리(384x354, 가로로 넓은 크롭)는 종횡비가
+// 전혀 다르다 — HEAD_WIDTH(190)로 폭을 맞춰 렌더링하면 해녀 머리는 233px 높이가 나오는데
+// 해남 머리는 175px 높이밖에 안 나온다. 90이라는 여유값은 해녀 머리 높이에 맞춰 잡힌 값이라
+// (91.4가 정확히 맞는 값) 해남/새싹에 그대로 쓰면 머리 위로 남는 빈 공간이 실제 필요한 것보다
+// 훨씬 커진다 — 그 결과 "옷을 바꾸면(kind가 바뀌면) 캐릭터 키가 달라져 보인다" 버그로
+// 이어졌다(실측: 같은 size=220에서 해녀는 박스의 96%를 채우는데 해남은 88%만 채움, DOM
+// 렌더 크기를 Playwright로 직접 측정해 확인). 이제 각 kind의 실제 머리 종횡비로부터 역산한
+// per-kind 값을 쓴다 — 계산식: b(=8, 머리 위 여유 버퍼) - NECK_Y - HEAD_OVERLAP +
+// (HEAD_SIZE[key].h/HEAD_SIZE[key].w)*HEAD_WIDTH.
+export const HEAD_MARGIN_TOP_BY_KIND: Record<string, number> = {
+  haenyeo: 91.4,
+  haenam: 33.2,
+  child_toddler_male: 59.0,
+  child_toddler_female: 26.5,
+  child_kindergarten_male: 48.0,
+  child_kindergarten_female: 8.5,
+  child_elementary_male: 52.7,
+  child_elementary_female: 37.0,
+};
+
+export function headMarginTopFor(headKey: string): number {
+  return HEAD_MARGIN_TOP_BY_KIND[headKey] ?? 90;
+}
 
 // 해남/해녀를 같은 세계관 스케일로 맞추되, 해녀가 살짝 더 작아 보이도록 하는 키 보정.
 // 발 기준선(바닥)은 그대로 두고 위쪽만 줄어들도록 렌더링 쪽에서 하단 정렬로 적용한다

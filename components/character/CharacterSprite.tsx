@@ -15,7 +15,7 @@ import {
   NECK_Y,
   HEAD_WIDTH,
   HEAD_OVERLAP,
-  HEAD_MARGIN_TOP,
+  headMarginTopFor,
   HEAD_SIZE,
   heightScaleFor,
   HAT_SIZE,
@@ -351,11 +351,14 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const portraitKey = { kind, childGender, childStage };
     const headKey = characterPortraitKeyFor(portraitKey);
     const headDims = HEAD_SIZE[headKey];
-    // 머리가 목선 위로 올라가는 만큼(HEAD_MARGIN_TOP) 항상 포함한 "전체 캔버스" 기준으로
+    // 머리가 목선 위로 올라가는 만큼(headMarginTop) 항상 포함한 "전체 캔버스" 기준으로
     // scale을 잡아야, size가 다른 렌더링 방식(fullPortraitKey 등)과 똑같이 "머리~발끝 실제
     // 높이"를 의미하게 된다 — 안 그러면 머리가 컨테이너 밖으로 넘쳐서 size가 같아도
-    // outfitAssetKey 캐릭터만 유독 커 보이는 버그가 생긴다.
-    const totalCanvasH = OUTFIT_CANVAS_H + HEAD_MARGIN_TOP;
+    // outfitAssetKey 캐릭터만 유독 커 보이는 버그가 생긴다. kind마다 머리 종횡비가 달라
+    // 필요한 여유가 다르므로(해녀 91 vs 해남 33) headMarginTopFor()로 kind별 값을 쓴다 —
+    // 안 그러면 해남 캐릭터가 해녀보다 실제로 더 작게 렌더링되는 버그가 생긴다(실측 확인).
+    const headMarginTop = headMarginTopFor(headKey);
+    const totalCanvasH = OUTFIT_CANVAS_H + headMarginTop;
     const scale = size / totalCanvasH;
     const width = Math.round(OUTFIT_CANVAS_W * scale);
     const height = size;
@@ -365,11 +368,11 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const innerScale = scale * kindScale;
     const innerWidth = OUTFIT_CANVAS_W * innerScale;
     const innerHeight = totalCanvasH * innerScale;
-    const outfitTop = HEAD_MARGIN_TOP * innerScale;
+    const outfitTop = headMarginTop * innerScale;
     const headRenderW = HEAD_WIDTH * innerScale;
     const headRenderH = (headDims.h / headDims.w) * headRenderW;
     const headLeft = (OUTFIT_CANVAS_W - HEAD_WIDTH) / 2 * innerScale;
-    const headTop = (HEAD_MARGIN_TOP + NECK_Y + HEAD_OVERLAP) * innerScale - headRenderH;
+    const headTop = (headMarginTop + NECK_Y + HEAD_OVERLAP) * innerScale - headRenderH;
 
     // 헤어스타일 오버레이 — 민머리 베이스 위에 스타일별 그림을 얹는다(docs/PROGRESS.md 기록).
     // 해당 kind/스타일 조합에 그림 자산이 없으면(예: 새싹 bun) hairAssetKey가 null이 되고,
