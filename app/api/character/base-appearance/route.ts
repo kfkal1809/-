@@ -40,7 +40,6 @@ export async function POST(request: Request) {
     .eq("id", characterId)
     .maybeSingle();
   if (!character) return NextResponse.json({ error: "not_found" }, { status: 404 });
-  if (character.kind === "child") return NextResponse.json({ error: "unsupported_kind" }, { status: 400 });
 
   const nextAppearance: CharacterAppearance = {
     ...(character.appearance_json as CharacterAppearance),

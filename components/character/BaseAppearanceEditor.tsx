@@ -4,18 +4,21 @@ import { useState } from "react";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { Button } from "@/components/ui/Button";
 import type { CharacterAppearance, HairStyle } from "@/lib/domain/characterPresets";
-import type { CharacterKind } from "@/lib/domain/types";
+import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 import {
   SKIN_SWATCHES,
   HAIR_SWATCHES,
   HAENYEO_HAIR_STYLES,
   HAENAM_HAIR_STYLES,
+  CHILD_HAIR_STYLES,
   HAENYEO_OUTFIT_SWATCHES,
   HAENAM_DECK_OUTFIT_SWATCHES,
   HAENAM_ENGINE_OUTFIT_SWATCHES,
+  CHILD_OUTFIT_SWATCHES,
   HAENYEO_OUTFIT_ASSET_BY_SWATCH,
   HAENAM_DECK_OUTFIT_ASSET_BY_SWATCH,
   HAENAM_ENGINE_OUTFIT_ASSET_BY_SWATCH,
+  CHILD_OUTFIT_ASSET_BY_SWATCH,
 } from "@/components/onboarding/swatches";
 
 const HAIR_STYLE_LABEL: Record<string, string> = {
@@ -33,6 +36,8 @@ export function BaseAppearanceEditor({
   characterId,
   kind,
   department,
+  childGender,
+  childStage,
   initialAppearance,
   onSaved,
   onClose,
@@ -40,6 +45,8 @@ export function BaseAppearanceEditor({
   characterId: string;
   kind: CharacterKind;
   department: "deck" | "engine" | null;
+  childGender?: ChildGender | null;
+  childStage?: ChildStage | null;
   initialAppearance: CharacterAppearance;
   onSaved: (appearance: CharacterAppearance) => void;
   onClose: () => void;
@@ -51,15 +58,23 @@ export function BaseAppearanceEditor({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const hairStyles = kind === "haenyeo" ? HAENYEO_HAIR_STYLES : HAENAM_HAIR_STYLES;
+  const hairStyles = kind === "haenyeo" ? HAENYEO_HAIR_STYLES : kind === "child" ? CHILD_HAIR_STYLES : HAENAM_HAIR_STYLES;
   const outfitSwatches =
-    kind === "haenyeo" ? HAENYEO_OUTFIT_SWATCHES : department === "engine" ? HAENAM_ENGINE_OUTFIT_SWATCHES : HAENAM_DECK_OUTFIT_SWATCHES;
+    kind === "haenyeo"
+      ? HAENYEO_OUTFIT_SWATCHES
+      : kind === "child"
+        ? CHILD_OUTFIT_SWATCHES
+        : department === "engine"
+          ? HAENAM_ENGINE_OUTFIT_SWATCHES
+          : HAENAM_DECK_OUTFIT_SWATCHES;
   const outfitAssetBySwatch =
     kind === "haenyeo"
       ? HAENYEO_OUTFIT_ASSET_BY_SWATCH
-      : department === "engine"
-        ? HAENAM_ENGINE_OUTFIT_ASSET_BY_SWATCH
-        : HAENAM_DECK_OUTFIT_ASSET_BY_SWATCH;
+      : kind === "child"
+        ? CHILD_OUTFIT_ASSET_BY_SWATCH
+        : department === "engine"
+          ? HAENAM_ENGINE_OUTFIT_ASSET_BY_SWATCH
+          : HAENAM_DECK_OUTFIT_ASSET_BY_SWATCH;
 
   const previewAppearance: CharacterAppearance = {
     ...initialAppearance,
@@ -99,7 +114,7 @@ export function BaseAppearanceEditor({
   return (
     <div className="flex flex-col gap-4 rounded-[24px] bg-white p-4 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
       <div className="flex justify-center">
-        <CharacterSprite appearance={previewAppearance} kind={kind} size={140} />
+        <CharacterSprite appearance={previewAppearance} kind={kind} childGender={childGender} childStage={childStage} size={140} />
       </div>
 
       <SwatchRow label="피부톤" values={SKIN_SWATCHES} selected={skinTone} onSelect={setSkinTone} />
