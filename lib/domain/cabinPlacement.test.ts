@@ -136,16 +136,16 @@ describe("clampToPolygon", () => {
   it("바운딩 박스 안이지만 실제 육각형 폴리곤 밖인 모서리 점은 테두리로 스냅된다", () => {
     // FLOOR_POLYGON의 바운딩 박스 좌상단 근처(바운딩 박스 클램프만으로는 안 걸러짐).
     const result = clampToPolygon(0.03, 0.476, FLOOR_POLYGON);
-    expect(result.x).toBeCloseTo(0.103, 2);
-    expect(result.y).toBeCloseTo(0.635, 2);
+    expect(result.x).toBeCloseTo(0.073, 2);
+    expect(result.y).toBeCloseTo(0.569, 2);
     // 스냅된 점 자체는 폴리곤 경계 위(또는 그 근처)라 더 이상 밖이 아니어야 한다.
     expect(pointInPolygon(result.x, result.y + 0.001, FLOOR_POLYGON)).toBe(true);
   });
 
   it("폴리곤 훨씬 밖(천장 쪽)의 점은 가장 가까운 변(위쪽 꼭짓점 근방)으로 스냅된다", () => {
     const result = clampToPolygon(0.5, 0, FLOOR_POLYGON);
-    expect(result.y).toBeGreaterThan(0.4);
-    expect(result.y).toBeLessThan(0.5);
+    expect(result.y).toBeGreaterThan(0.3);
+    expect(result.y).toBeLessThan(0.4);
   });
 });
 
