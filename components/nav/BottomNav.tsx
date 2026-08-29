@@ -11,7 +11,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="sticky bottom-0 z-30 mx-auto flex w-full max-w-[460px] items-stretch justify-between px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-6"
+      className="fixed bottom-0 left-1/2 z-30 flex w-full max-w-[460px] -translate-x-1/2 items-stretch justify-between px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-6"
       style={{
         backgroundImage: "url(/images/home/wave-navbar-bg.png)",
         backgroundSize: "100% 100%",

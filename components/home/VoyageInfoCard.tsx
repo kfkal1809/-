@@ -59,26 +59,38 @@ export function VoyageInfoCard({
 
   return (
     <div className="relative pt-4">
-      <div className="absolute left-1/2 top-0 z-10 flex w-max -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-[var(--color-tab-active)] px-6 py-2 shadow-[0_4px_12px_rgba(36,54,90,0.22)]">
-        <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
-          <path
-            d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </svg>
-        <span className="text-[14px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
-        <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
-          <path
-            d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </svg>
+      {/* 리본 배너 — 가운데 알약 모양 본체 양옆에 접힌 리본 꼬리를 삼각형으로 덧붙여서
+          단순 pill이 아니라 "리본을 매단 팻말"처럼 보이게 한다(새 이미지 에셋 없이 CSS만으로). */}
+      <div className="absolute left-1/2 top-0 z-10 flex w-max -translate-x-1/2 items-center">
+        <span
+          aria-hidden
+          className="-mr-1 h-0 w-0 border-y-[15px] border-r-[10px] border-y-transparent border-r-[#1f57c9]"
+        />
+        <div className="flex items-center gap-2 whitespace-nowrap rounded-full bg-[var(--color-tab-active)] px-6 py-2 shadow-[0_4px_12px_rgba(36,54,90,0.22)]">
+          <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
+            <path
+              d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </svg>
+          <span className="text-[14px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
+          <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
+            <path
+              d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
+              stroke="currentColor"
+              strokeWidth="1.6"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </svg>
+        </div>
+        <span
+          aria-hidden
+          className="-ml-1 h-0 w-0 border-y-[15px] border-l-[10px] border-y-transparent border-l-[#1f57c9]"
+        />
       </div>
 
       <div className="relative overflow-hidden rounded-[28px] border-2 border-white bg-gradient-to-b from-[#bfe6ff] to-[#eaf6ff] pb-5 pt-8 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
@@ -148,7 +160,7 @@ export function VoyageInfoCard({
 
           <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-3">
             <div className="flex flex-col items-center">
-              <CharacterSprite appearance={voyage.haenyeoAppearance} kind="haenyeo" size={115} />
+              <CharacterSprite appearance={voyage.haenyeoAppearance} kind="haenyeo" size={132} />
               <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[13px] font-bold text-[var(--color-navy)]">
                 해녀 {voyage.haenyeoName}
               </p>
@@ -164,7 +176,7 @@ export function VoyageInfoCard({
               style={{ height: "auto" }}
             />
             <div className="flex flex-col items-center">
-              <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={115} />
+              <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={132} />
               <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[13px] font-bold text-[var(--color-navy)]">
                 해남 {voyage.haenamName}
               </p>
