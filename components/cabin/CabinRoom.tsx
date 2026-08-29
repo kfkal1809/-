@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { GameIcon } from "@/components/icons/GameIcon";
 import { RoomBackground } from "@/components/cabin/RoomBackground";
+import { AddChildButton } from "@/components/cabin/AddChildButton";
 import type { CabinData } from "@/lib/game/cabinData";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
 import { getPlacementDef, furnitureWrapperStyle, depthOf, wallTiltFor } from "@/lib/domain/cabinPlacement";
@@ -14,6 +15,7 @@ const CHARACTER_Y = 0.86;
 
 export function CabinRoom({ data }: { data: CabinData }) {
   const characterDepth = depthOf(CHARACTER_Y, 0);
+  const childCount = data.characters.filter((c) => c.kind === "child").length;
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">
@@ -80,6 +82,7 @@ export function CabinRoom({ data }: { data: CabinData }) {
               </Link>
             )
           )}
+          {data.isOwner && <AddChildButton canAdd={childCount < 3} />}
         </div>
       </div>
 
