@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
+import { GameIcon } from "@/components/icons/GameIcon";
 import { playSfx } from "@/lib/audio/audioManager";
 import type { HomeVoyageCard } from "@/lib/game/homeData";
 
@@ -64,10 +65,10 @@ export function VoyageInfoCard({
       <div className="absolute left-1/2 top-0 z-10 flex w-max -translate-x-1/2 items-center">
         <span
           aria-hidden
-          className="-mr-1 h-0 w-0 border-y-[15px] border-r-[10px] border-y-transparent border-r-[#1f57c9]"
+          className="-mr-1.5 h-0 w-0 border-y-[20px] border-r-[13px] border-y-transparent border-r-[#1f57c9]"
         />
-        <div className="flex items-center gap-2 whitespace-nowrap rounded-full bg-[var(--color-tab-active)] px-6 py-2 shadow-[0_4px_12px_rgba(36,54,90,0.22)]">
-          <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
+        <div className="flex items-center gap-2.5 whitespace-nowrap rounded-full bg-[var(--color-tab-active)] px-7 py-2.5 shadow-[0_5px_14px_rgba(36,54,90,0.26)]">
+          <svg width="20" height="16" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
             <path
               d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
               stroke="currentColor"
@@ -76,8 +77,8 @@ export function VoyageInfoCard({
               strokeLinecap="round"
             />
           </svg>
-          <span className="text-[14px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
-          <svg width="17" height="14" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
+          <span className="text-[17px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
+          <svg width="20" height="16" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
             <path
               d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
               stroke="currentColor"
@@ -89,11 +90,11 @@ export function VoyageInfoCard({
         </div>
         <span
           aria-hidden
-          className="-ml-1 h-0 w-0 border-y-[15px] border-l-[10px] border-y-transparent border-l-[#1f57c9]"
+          className="-ml-1.5 h-0 w-0 border-y-[20px] border-l-[13px] border-y-transparent border-l-[#1f57c9]"
         />
       </div>
 
-      <div className="relative overflow-hidden rounded-[28px] border-2 border-white bg-gradient-to-b from-[#bfe6ff] to-[#eaf6ff] pb-5 pt-8 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
+      <div className="relative overflow-hidden rounded-[28px] border-2 border-white bg-gradient-to-b from-[#bfe6ff] to-[#eaf6ff] pb-5 pt-9 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
         {!attended && (
           <Image
             src="/images/home/deco-sparkle-big.png"
@@ -109,8 +110,9 @@ export function VoyageInfoCard({
         <button
           onClick={handleBoard}
           disabled={attended || loading}
-          className="absolute right-3 top-4 z-10 flex h-[72px] w-[72px] flex-col items-center justify-center rounded-full border-2 border-dashed border-[var(--color-tab-active)] bg-white/90 text-center shadow-[0_4px_12px_rgba(36,54,90,0.14)] disabled:opacity-70"
+          className="absolute right-3 top-4 z-10 flex h-[78px] w-[78px] flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-[var(--color-tab-active)] bg-white/90 text-center shadow-[0_4px_12px_rgba(36,54,90,0.14)] disabled:opacity-70"
         >
+          <GameIcon name="anchor" size={20} />
           {attended ? (
             <span className="text-[12px] font-extrabold leading-tight text-[var(--color-navy)]">
               출항
@@ -158,9 +160,9 @@ export function VoyageInfoCard({
             style={{ height: "auto" }}
           />
 
-          <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-3">
+          <div className="relative z-10 mx-auto mt-1 flex items-end justify-center gap-2">
             <div className="flex flex-col items-center">
-              <CharacterSprite appearance={voyage.haenyeoAppearance} kind="haenyeo" size={132} />
+              <CharacterSprite appearance={voyage.haenyeoAppearance} kind="haenyeo" size={158} />
               <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[13px] font-bold text-[var(--color-navy)]">
                 해녀 {voyage.haenyeoName}
               </p>
@@ -172,11 +174,11 @@ export function VoyageInfoCard({
               width={623}
               height={490}
               unoptimized
-              className="pointer-events-none mb-9 w-5"
+              className="pointer-events-none mb-11 w-6"
               style={{ height: "auto" }}
             />
             <div className="flex flex-col items-center">
-              <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={132} />
+              <CharacterSprite appearance={voyage.haenamAppearance} kind="haenam" size={158} />
               <p className="mt-1.5 whitespace-nowrap rounded-full bg-white/90 px-3 py-1 text-[13px] font-bold text-[var(--color-navy)]">
                 해남 {voyage.haenamName}
               </p>
@@ -185,15 +187,20 @@ export function VoyageInfoCard({
         </Link>
 
         <div className="relative mx-4 mt-5 flex items-stretch justify-between gap-2 rounded-2xl bg-white/85 p-4">
-          <div className="flex-1 text-center">
-            <p className="text-[12px] font-bold text-[var(--color-navy-soft)]">승선</p>
+          <div className="flex flex-1 flex-col items-center gap-0.5 text-center">
+            <span className="flex items-center gap-1 text-[12px] font-bold text-[var(--color-navy-soft)]">
+              <Image src="/images/home/deco-heart.png" alt="" aria-hidden width={623} height={490} unoptimized className="w-3" style={{ height: "auto" }} />
+              승선
+            </span>
             <p className="text-[19px] font-extrabold text-[var(--color-coral)]">
               {voyage.boardedDays !== null ? `D+${voyage.boardedDays}` : "정보 없음"}
             </p>
           </div>
           <div className="w-px bg-[var(--color-navy)]/10" />
-          <div className="flex-1 text-center">
-            <p className="text-[12px] font-bold text-[var(--color-navy-soft)]">하선</p>
+          <div className="flex flex-1 flex-col items-center gap-0.5 text-center">
+            <span className="flex items-center gap-1 text-[12px] font-bold text-[var(--color-navy-soft)]">
+              <GameIcon name="anchor" size={14} /> 하선
+            </span>
             <p className="text-[19px] font-extrabold text-[var(--color-tab-active)]">
               {voyage.signoffDays !== null ? `D-${voyage.signoffDays}` : "정보 없음"}
             </p>
