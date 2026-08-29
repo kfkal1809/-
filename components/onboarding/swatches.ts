@@ -2,7 +2,9 @@ export const SKIN_SWATCHES = ["#ffe9d9", "#ffe3cf", "#ffd9bc"];
 export const HAIR_SWATCHES = ["#3b2f28", "#5b4433", "#6b4a35", "#8a5a3c", "#a9754a"];
 export const HAENYEO_HAIR_STYLES = ["wave", "pony", "bob", "twin", "bun"] as const;
 export const HAENAM_HAIR_STYLES = ["short_neat", "buzz", "sideswept", "bob"] as const;
-export const CHILD_HAIR_STYLES = ["bob", "twin", "pony", "bun"] as const;
+// "bun"은 새싹용 올림머리 그림 자산이 없어(HAIR_STYLE_INDEX.child 참고) 목록에서 뺐다 —
+// 골라도 실제로는 안 바뀌는 채로 남겨두면 "머리가 선택이랑 안 맞는다" 버그가 그대로다.
+export const CHILD_HAIR_STYLES = ["bob", "twin", "pony"] as const;
 
 export const HAENYEO_OUTFIT_SWATCHES = ["#7fa8dd", "#9cc9ef", "#a7d8c9", "#f2b8c6"];
 export const HAENAM_DECK_OUTFIT_SWATCHES = ["#2c3f66", "#3a5a8c", "#24365a"];

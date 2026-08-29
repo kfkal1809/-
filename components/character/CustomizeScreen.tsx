@@ -48,7 +48,7 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
             옷가게에서 옷 사러 가기 ›
           </Link>
         )}
-        {data.canEdit && data.kind !== "child" && (
+        {data.canEdit && (
           <button
             type="button"
             onClick={() => setEditingBase((v) => !v)}
@@ -59,11 +59,13 @@ export function CustomizeScreen({ data }: { data: CustomizeData }) {
         )}
       </div>
 
-      {editingBase && data.canEdit && data.kind !== "child" ? (
+      {editingBase && data.canEdit ? (
         <BaseAppearanceEditor
           characterId={data.characterId}
           kind={data.kind}
           department={data.department}
+          childGender={data.childGender}
+          childStage={data.childStage}
           initialAppearance={appearance}
           onSaved={(next) => {
             setAppearance(next);
