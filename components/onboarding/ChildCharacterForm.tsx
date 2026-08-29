@@ -25,7 +25,17 @@ export interface ChildPayload {
   appearance: CharacterAppearance;
 }
 
-export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayload) => Promise<void> | void }) {
+const HAIR_STYLE_LABEL: Record<string, string> = { bob: "단발", twin: "트윈테일", pony: "포니테일" };
+
+// 선실의 "새싹 추가" 모달처럼 화면이 좁은 곳에 넣을 때(compact)는 미리보기와 간격을
+// 줄인다 — 온보딩(/onboarding/children)에서는 기존처럼 넉넉한 크기 그대로 쓴다.
+export function ChildCharacterForm({
+  onSubmit,
+  compact = false,
+}: {
+  onSubmit: (payload: ChildPayload) => Promise<void> | void;
+  compact?: boolean;
+}) {
   const [nickname, setNickname] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "unset">("unset");
   const [stage, setStage] = useState<ChildStage>("toddler");
@@ -58,11 +68,15 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
     }
   }
 
+  const previewSize = compact ? 90 : 130;
+  const swatchSize = compact ? "h-6 w-6" : "h-7 w-7";
+  const gap = compact ? "gap-2.5" : "gap-4";
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className={`flex flex-col ${gap}`}>
       <div className="flex justify-center">
         <div className="rounded-[24px] bg-white p-2.5 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
-          <CharacterSprite appearance={appearance} kind="child" childGender={gender} childStage={stage} size={130} />
+          <CharacterSprite appearance={appearance} kind="child" childGender={gender} childStage={stage} size={previewSize} />
         </div>
       </div>
 
@@ -80,11 +94,11 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
             key={g}
             type="button"
             onClick={() => setGender(g)}
-            className={`flex-1 rounded-xl border-2 py-2 text-[13px] font-bold ${
+            className={`flex-1 whitespace-nowrap rounded-xl border-2 py-2 text-[12px] font-bold ${
               gender === g ? "border-[var(--color-tab-active)] bg-[var(--color-sky-deep)]" : "border-transparent bg-white"
             }`}
           >
-            {g === "male" ? "남" : g === "female" ? "여" : "설정 안 함"}
+            {g === "male" ? "남" : g === "female" ? "여" : "무관"}
           </button>
         ))}
       </div>
@@ -101,13 +115,13 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
         ))}
       </select>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {SKIN_SWATCHES.map((v) => (
           <button
             key={v}
             type="button"
             onClick={() => setSkinTone(v)}
-            className={`h-7 w-7 rounded-full border-2 ${skinTone === v ? "border-[var(--color-navy)]" : "border-white"}`}
+            className={`${swatchSize} rounded-full border-2 ${skinTone === v ? "border-[var(--color-navy)]" : "border-white"}`}
             style={{ backgroundColor: v }}
           />
         ))}
@@ -117,34 +131,34 @@ export function ChildCharacterForm({ onSubmit }: { onSubmit: (payload: ChildPayl
             key={v}
             type="button"
             onClick={() => setHairColor(v)}
-            className={`h-7 w-7 rounded-full border-2 ${hairColor === v ? "border-[var(--color-navy)]" : "border-white"}`}
+            className={`${swatchSize} rounded-full border-2 ${hairColor === v ? "border-[var(--color-navy)]" : "border-white"}`}
             style={{ backgroundColor: v }}
           />
         ))}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         {CHILD_HAIR_STYLES.map((style) => (
           <button
             key={style}
             type="button"
             onClick={() => setHairStyle(style)}
-            className={`flex-1 rounded-xl border-2 py-1.5 text-[12px] font-bold ${
+            className={`flex-1 whitespace-nowrap rounded-xl border-2 py-1.5 text-[11px] font-bold ${
               hairStyle === style ? "border-[var(--color-tab-active)] bg-[var(--color-sky-deep)]" : "border-transparent bg-white"
             }`}
           >
-            {style}
+            {HAIR_STYLE_LABEL[style]}
           </button>
         ))}
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {CHILD_OUTFIT_SWATCHES.map((v) => (
           <button
             key={v}
             type="button"
             onClick={() => setOutfitColor(v)}
-            className={`h-7 w-7 rounded-full border-2 ${outfitColor === v ? "border-[var(--color-navy)]" : "border-white"}`}
+            className={`${swatchSize} rounded-full border-2 ${outfitColor === v ? "border-[var(--color-navy)]" : "border-white"}`}
             style={{ backgroundColor: v }}
           />
         ))}

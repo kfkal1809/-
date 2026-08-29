@@ -43,15 +43,15 @@ export function AddChildButton({ canAdd }: { canAdd: boolean }) {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
-          <div className="max-h-[85vh] w-full max-w-[380px] overflow-y-auto rounded-[24px] bg-white p-4 shadow-[0_10px_40px_rgba(0,0,0,0.3)]">
-            <div className="mb-3 flex items-center justify-between">
-              <p className="text-[15px] font-extrabold text-[var(--color-navy)]">새싹 추가하기</p>
-              <button onClick={() => setOpen(false)} className="text-[13px] font-bold text-[var(--color-navy-soft)]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="max-h-[85vh] w-full max-w-[300px] overflow-y-auto rounded-[20px] bg-white p-3 shadow-[0_10px_40px_rgba(0,0,0,0.3)]">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-[14px] font-extrabold text-[var(--color-navy)]">새싹 추가하기</p>
+              <button onClick={() => setOpen(false)} className="text-[12px] font-bold text-[var(--color-navy-soft)]">
                 닫기
               </button>
             </div>
-            <ChildCharacterForm onSubmit={handleAdd} />
+            <ChildCharacterForm onSubmit={handleAdd} compact />
             {error && <p className="mt-2 text-center text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
           </div>
         </div>
