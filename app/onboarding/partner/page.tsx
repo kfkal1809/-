@@ -23,7 +23,7 @@ export default function OnboardingPartnerPage() {
       <p className="mb-4 text-center text-[12px] font-bold text-[var(--color-tab-active)]">STEP 3 / 4</p>
       <AdultCharacterForm
         title="상대의 캐릭터도 만들어요"
-        subtitle="아직 상대가 가입하지 않았다면, 초대코드로 나중에 연결할 수 있어요"
+        subtitle="아직 상대가 가입하지 않았다면, 대신 만들어두고 나중에 상대가 가입하면 알려주세요"
         submitLabel="다음"
         onSubmit={handleSubmit}
         secondary={

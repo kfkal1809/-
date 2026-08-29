@@ -2292,3 +2292,76 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
   "나의 항해 정보" 카드 스타일도 다름). 코드상으로는 이 장식들이 원래도 이미 렌더링되고
   있어야 해서, 실제 배포 브라우저의 캐시나 이전 배포 시점 차이일 가능성이 있다 — 이번 변경
   배포 후에도 여전히 장식이 안 보이면 알려달라고 부탁드림.
+
+### 캐릭터 렌더링 전면 감사 — 로그인 사용자/파트너 캐릭터 뒤바뀜 원인 발견 및 수정
+
+- **감사 범위**: "실제 캐릭터 에셋이 게임에 반영 안 되고 임시/파트너 캐릭터가 대신 표시된다"는
+  리포트를 받고, 요청하신 순서(에셋 조사 → 렌더링 경로 추적 → 로그인/파트너 구분 → 착용 정보
+  연결 → 공통 렌더러 확인 → 이미지 404 확인 → fallback 확인)대로 전수 조사.
+- **공통 렌더러(요청 #5)**: 캐릭터가 나오는 14개 파일(홈/선실/방꾸미기/캐릭터꾸미기/갑판/
+  낚시터/승선확인증/항해일지/온보딩 각 단계/옷가게 피팅룸 등) 전부 `components/character/
+  CharacterSprite.tsx` **단 하나**를 쓴다 — grep으로 전수 확인, 이미 만족돼 있었음.
+- **CSS/SVG placeholder 잔존 여부(요청 #2)**: `CharacterSprite.tsx` 안에 예전 벡터 SVG
+  렌더링 코드(원/사각형으로 그린 캐릭터, 약 250줄)가 아직 파일에 남아있긴 하지만, 이건
+  `kind` prop이 **없을 때만** 타는 폴백 경로다. 14개 호출부 전부 `kind`를 명시적으로 넘기는
+  것을 하나하나 확인했다(`app/(game)/voyage/page.tsx`의 `kind="haenam"` 하드코딩도 처음엔
+  의심했지만, `getVoyagePageData()`가 애초에 `.eq("kind", "haenam")`으로만 조회해서 실제로
+  안전한 코드였다). 즉 벡터 코드는 파일에 죽어있는 채로 남아있을 뿐 실제로는 어떤 화면에서도
+  타지 않는다 — 이번 범위에서 삭제하진 않았다(별도 정리 작업으로 분리하는 게 안전).
+- **🔴 실제로 발견한 진짜 버그 — 로그인 사용자/파트너 캐릭터 뒤바뀜의 정확한 원인**:
+  `lib/game/deckData.ts`의 `getDeckSelf()`(갑판·낚시터가 "내 캐릭터"를 가져오는 함수)가
+  ```ts
+  supabase.from("character_managers").select("characters(...)").eq("user_id", user.id).limit(1).maybeSingle()
+  ```
+  로 정렬 기준 없이 1건만 가져오고 있었다. 그런데 온보딩에서 "상대 캐릭터도 만들어요" 단계
+  (`/api/onboarding/partner`)는 아직 가입 안 한 파트너를 위해 `managed_only: true`인
+  플레이스홀더 캐릭터를 만들고 **첫 가입자를 그 캐릭터의 매니저로도 함께 등록**한다(코드 주석:
+  "첫 가입자가 상대 캐릭터를 대신 관리할 수 있도록"). 즉 `character_managers`에 한 유저가
+  자기 캐릭터 + 파트너 플레이스홀더 캐릭터, 두 행을 동시에 갖게 되는데, `ORDER BY` 없는
+  `.limit(1)`은 Postgres가 어느 행을 반환할지 보장하지 않는다 — 그래서 갑판/낚시터에 내
+  캐릭터 대신 아직 가입도 안 한 파트너의 캐릭터가 뜰 수 있었다.
+  **수정**: `.eq("characters.managed_only", false)`(embedded resource filter, `!inner` 조인)를
+  추가해서 "내가 관리하는 것 중 진짜 내 캐릭터(managed_only=false)"만 확정적으로 골라오게
+  했다. `getMyCharacters()`/`clothingStoreData.ts`처럼 "내가 관리하는 캐릭터 목록"(옷 입히기
+  대상 선택 등)이 목적인 다른 함수들은 파트너 플레이스홀더도 계속 포함해야 맞는 동작이라
+  건드리지 않았다(그 함수들은 원래도 `.limit(1)` 없이 전체 목록을 반환해서 모호함이 없음).
+- **이 버그의 더 근본적인 원인**: 이 세션 앞부분에서 "초대코드 기능 제거" 작업을 하면서
+  `partner_target_character` 쿠키 기반 연결 로직(파트너가 실제로 초대코드로 가입하면 이
+  플레이스홀더 캐릭터를 진짜로 넘겨받는 유일한 경로)을 죽은 코드로 판단해 지웠는데, 이게
+  사실 이 플레이스홀더 매커니즘의 "출구"였다 — 지금은 플레이스홀더를 만들 수는 있어도, 실제
+  상대가 나중에 가입해도 그 캐릭터를 넘겨받을 방법이 없다(같은 가구가 아니라 완전히 새
+  household로 따로 가입하게 됨). `app/onboarding/partner/page.tsx`의 안내 문구가 "초대코드로
+  나중에 연결할 수 있어요"라고 이제는 사실이 아닌 내용을 말하고 있어서 문구만 정정했다
+  ("대신 만들어두고 나중에 상대가 가입하면 알려주세요"로 변경, 거짓 약속 제거).
+  **이 부분은 이번 범위에서 완전히 고치지 않았다** — "가입 후 회원 간에 같은 household로
+  합치는 기능"은 새 기능 설계가 필요한 작업이라(코드 몇 줄이 아니라 연결 코드 발급/입력
+  플로우 자체를 새로 만들어야 함), 이번 캐릭터 렌더링 감사 범위를 벗어난다고 판단해 문구
+  정정과 뒤바뀜 버그 수정까지만 하고, 실제 기능은 별도로 요청해주시면 진행하겠습니다.
+- **에셋 대응표** (요청 형식 그대로):
+
+  | 캐릭터 요소 | 실제 파일 경로 | 사용 여부 |
+  | --- | --- | --- |
+  | 해녀/해남/새싹 기본 체형(민머리) | `public/images/character/base_heads/{haenyeo,haenam_deck,haenam_engine,child_*}.png` 등 (`characterFullBody.ts` `headSrc()`) | 사용 중 |
+  | 헤어(스타일별 오버레이) | `public/images/character/hair_overlays/*.png` (`HAIR_ASSET_PLACEMENT`, 스타일 자산 없으면 마스크+색상 합성으로 폴백) | 사용 중 |
+  | 상의/하의/원피스(정규화 전신) | `public/images/character/outfit_full/*.png`, `dress_full/*.png` | 사용 중(12종/81종, 전부 실존 확인) |
+  | 신발 | outfit_full/dress_full 합성 이미지에 이미 포함(별도 레이어 없음 — 신발만 따로 갈아 끼우는 구조가 아니라 의상 전체가 한 장) | 사용 중 |
+  | 모자 | `public/images/character/hats/*.png` (`HAT_SIZE`/`HAT_PLACEMENT`) | 사용 중 |
+  | 얼굴 액세서리(선글라스 등) | 모자 슬롯 재사용(`hat_sunglasses` 등) | 사용 중 |
+  | 손 소품(낚싯대 등 상황별 포함) | `public/images/character/hand_accessories/*.png`(`HAND_SIZE`/`HAND_PLACEMENT`, `hand_fishing_rod` 포함) | 사용 중 |
+  | 목 소품 | `public/images/character/neck_accessories/*.png` | 사용 중 |
+
+  → `itemAppearance.ts`(40개 hat/hand/neck 참조)·`itemAppearanceVariants.ts`(81개 dress_full
+  참조)·`characterPresets.ts`/`swatches.ts`(12개 outfit_full 참조) 전체를 스크립트로 실제
+  파일 존재 여부와 대조 — **누락 0건**.
+- **이미지 로딩 오류 확인(요청 #7)**: 임시 `app/(dev)/preview-character-audit`(해녀/해남
+  항해사/해남 기관사/새싹 남·녀, 선글라스+우산+반다나 조합, 낚싯대 든 해남, 고글+공구파우치
+  조합 8종을 실제 `CharacterSprite`로 렌더링, 커밋 전 삭제)에서 Playwright로 렌더링하며
+  `/images/character/` 관련 네트워크 요청을 전부 감시 — **404 등 실패 요청 0건**,
+  `pageerror` 0건. 8종 모두 레이어(머리/헤어/의상/모자/손소품/목소품) 정렬이 자연스럽게
+  합성되는 것을 스크린샷으로 확인(첨부).
+- **확인한 결과 fallback 로직(요청 #8)도 이미 안전했다**: `characterPortraitKeyFor()`가
+  kind/성별/연령대별로 별도 키를 만들어서 해녀 데이터 없다고 해남이 뜨는 교차 폴백이 구조적으로
+  불가능하고(각 kind는 완전히 분리된 키 공간), 헤어 스타일 자산이 없는 조합만 "민머리+마스크
+  색상 합성"으로 폴백한다(전체 캐릭터가 깨지는 게 아니라 헤어만 대체).
+- **검증**: `tsc`/`eslint`/`vitest run`(247개)/`next build` 전부 통과. 마이그레이션 변경
+  없음(코드 수정만).
