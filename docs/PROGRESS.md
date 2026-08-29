@@ -2412,3 +2412,27 @@ issue) 얘기인 줄 알고 되물으려다, 랜딩 페이지(`app/page.tsx`)를
   테스트해봐 주세요**(A가 온보딩 완료 화면/메뉴에서 코드 확인 → B가 새 계정으로 카카오
   로그인 → `/onboarding/join`에서 그 코드 입력 → 캐릭터 생성까지). `tsc`/`eslint`/
   `vitest run`(247개)/`next build` 전부 통과.
+
+### 선실에 새싹이 안 보인다는 리포트 — 원인은 코드가 아니라 "새싹을 만든 적이 없음"
+
+- **조사**: task #30에서 이미 고쳤던 대로 `getCabinData()`는 `kind` 필터 없이 household의
+  모든 캐릭터(새싹 포함)를 가져오고 있었고, `CabinRoom.tsx`도 필터·`.slice()` 없이
+  `data.characters` 전체를 그대로 렌더링하고 있었다 — 코드 자체는 멀쩡했다. 새싹 렌더링
+  경로도 임시 미리보기로 7개 연령대 × 3개 성별(21가지 조합)을 전부 실제 `CharacterSprite`로
+  렌더링해 이미지 로딩 실패 0건 확인, `CabinRoom`에 새싹을 넣어 렌더링해도 정상적으로
+  캐릭터 줄에 나타나는 것까지 확인했다. → 결론: **이 계정에 새싹 캐릭터 자체가 없어서**
+  안 보였을 뿐이다.
+- **더 근본적인 문제**: 새싹은 온보딩(`/onboarding/children`, STEP 4/4)에서만 만들 수 있고,
+  그 단계를 건너뛰거나 그 시점에 안 만들면 **나중에 추가할 방법이 아예 없었다** — "기본
+  외형 재설정"(헤어/피부톤) 때와 똑같은 유형의 "온보딩 이후 되돌릴 방법 없음" 공백.
+- **수정**: `components/cabin/AddChildButton.tsx`(신규) — 선실 화면의 캐릭터 줄에 "+새싹
+  추가" 버튼을 추가(내 선실이고 새싹이 3명 미만일 때만 노출). 누르면 모달로
+  `ChildCharacterForm`(온보딩과 완전히 같은 폼)이 뜨고, 기존 `/api/onboarding/children`
+  POST를 그대로 재사용해 새 새싹을 만든다(이 API는 애초에 온보딩 전용 로직이 아니라
+  "household에 새싹 추가"라 재사용에 문제없음). 저장되면 `router.refresh()`로 선실 화면에
+  바로 반영된다. `CabinRoom.tsx`에 `childCount` 계산 + `AddChildButton` 연결.
+- **검증**: 임시 `app/(dev)/preview-child-audit`(21가지 연령대×성별 조합 + 새싹 포함
+  `CabinRoom` + 새싹 추가 모달, 커밋 전 삭제)를 Playwright로 렌더링 — 이미지 404/pageerror
+  0건, "+새싹 추가" 버튼 클릭 시 모달이 정상적으로 뜨고 폼(별명/성별/연령대/피부톤·헤어색·
+  헤어스타일·의상색 스와치)이 전부 정상 표시되는 것 스크린샷으로 확인. `tsc`/`eslint`/
+  `vitest run`(247개)/`next build` 전부 통과. DB 스키마 변경 없음(기존 테이블/API 재사용).
