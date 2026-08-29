@@ -32,10 +32,16 @@ export async function getDeckSelf(): Promise<DeckSelf> {
     if (!user)
       return { ready: false, userId: null, nickname: "", characterId: null, appearance: haenyeoPreset(), kind: "haenyeo", childGender: null, childStage: null };
 
+    // character_managers에는 내 캐릭터 말고도, 아직 가입 안 한 파트너를 대신 관리하는
+    // managed_only=true 플레이스홀더 캐릭터가 같이 들어있을 수 있다(온보딩 "상대 캐릭터
+    // 먼저 만들기") — order 없는 .limit(1)이 어느 쪽을 돌려줄지 보장이 안 돼서, 실제로
+    // 파트너 캐릭터가 "나"인 것처럼 갑판/낚시터에 뜨는 버그가 있었다. managed_only=false인
+    // 진짜 내 캐릭터만 골라서 이 문제를 없앤다.
     const { data: managed } = await supabase
       .from("character_managers")
-      .select("characters(id, nickname, kind, child_gender, child_stage, appearance_json)")
+      .select("characters!inner(id, nickname, kind, child_gender, child_stage, appearance_json)")
       .eq("user_id", user.id)
+      .eq("characters.managed_only", false)
       .limit(1)
       .maybeSingle();
 
