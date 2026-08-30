@@ -2,7 +2,8 @@ import { describe, it, expect } from "vitest";
 import { clothingTabFor } from "@/lib/domain/clothingStoreCategories";
 
 describe("clothingTabFor", () => {
-  it("hat/accessory 카테고리는 outfitKind와 무관하게 각자 탭으로 간다", () => {
+  it("hair/hat/accessory 카테고리는 outfitKind와 무관하게 각자 탭으로 간다", () => {
+    expect(clothingTabFor("hair", "any_sku")).toBe("hair");
     expect(clothingTabFor("hat", "any_sku")).toBe("hat");
     expect(clothingTabFor("accessory", "any_sku")).toBe("accessory");
   });

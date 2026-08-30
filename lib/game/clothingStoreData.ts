@@ -21,7 +21,7 @@ export interface ClothingProduct {
   sku: string;
   name: string;
   description: string | null;
-  category: "outfit" | "hat" | "accessory";
+  category: "outfit" | "hair" | "hat" | "accessory";
   tab: ClothingTabKey;
   price: number;
   ownedInventoryItemIds: string[];
@@ -159,7 +159,7 @@ export async function getClothingStoreData(requestedCharacterId?: string): Promi
         // 아예 그 캐릭터에게는 상품 자체를 숨긴다(옷가게 목록 단계에서 이미 걸러짐).
         if (!isCompatibleWithBody(catalog.sku, bodyPresetKey)) return null;
         const metadata = catalog.metadata_json as { new?: boolean } | null;
-        const category = catalog.category as "outfit" | "hat" | "accessory";
+        const category = catalog.category as "outfit" | "hair" | "hat" | "accessory";
         // 체형별 variant 상품(child_dress_s*)은 sku 자체가 파이프라인 산출물 이름(dress_full
         // 폴더 관례)이라 실제로는 멜빵바지/후드티 등도 "dress"를 포함한다 — sku 문자열 대신
         // 실제 옷 종류(patch.outfit)로 원피스/상의 탭을 정확히 가른다.
@@ -191,7 +191,11 @@ export async function getClothingStoreData(requestedCharacterId?: string): Promi
       canEdit: true,
       products,
     };
-  } catch {
+  } catch (err) {
+    // 이 함수 전체를 감싸는 catch가 조용히 EMPTY를 돌려주기만 해서, 쿼리 하나라도 실패하면
+    // 옷가게 화면엔 "상품이 없어요"만 보이고 실제 원인(RLS, 조인 오류 등)은 로그에도 안
+    // 남았다 — 최소한 서버 로그에는 남도록 함.
+    console.error("getClothingStoreData failed", err);
     return EMPTY;
   }
 }
