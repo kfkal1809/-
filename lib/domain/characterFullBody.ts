@@ -28,6 +28,12 @@ export const HEAD_OVERLAP = 10;
 // 렌더 크기를 Playwright로 직접 측정해 확인). 이제 각 kind의 실제 머리 종횡비로부터 역산한
 // per-kind 값을 쓴다 — 계산식: b(=8, 머리 위 여유 버퍼) - NECK_Y - HEAD_OVERLAP +
 // (HEAD_SIZE[key].h/HEAD_SIZE[key].w)*HEAD_WIDTH.
+//
+// 이 값은 "머리~발끝" 전체 캔버스 높이(HEAD_MARGIN_TOP + OUTFIT_CANVAS_H)를 계산하는 데만
+// 쓰이고, 고정 헤어스타일이 그려진 head.png(민머리 아님, resolveHairAssetKey가 null을
+// 반환하는 극히 드문 폴백 경로 — 현재 UI에서 선택 가능한 모든 헤어스타일은 실제로는 전부
+// 민머리+헤어 오버레이 경로를 타므로 이 경로는 사실상 거의 도달하지 않는다)에서만 쓰인다.
+// 실제로 항상 쓰이는 민머리 경로용 값은 아래 HEAD_MARGIN_TOP_BALD_BY_KIND.
 export const HEAD_MARGIN_TOP_BY_KIND: Record<string, number> = {
   haenyeo: 91.4,
   haenam: 33.2,
@@ -39,7 +45,41 @@ export const HEAD_MARGIN_TOP_BY_KIND: Record<string, number> = {
   child_elementary_female: 37.0,
 };
 
-export function headMarginTopFor(headKey: string): number {
+// 민머리 베이스(head_bald/*.png)는 head.png(고정 헤어스타일 그림)와 종횡비가 전혀 다르다 —
+// 예를 들어 해녀는 head.png가 346x425(세로로 긴 올림머리 포함 크롭)인데 head_bald.png는
+// 340x290(머리카락이 없어 훨씬 짧고 넓은 크롭)이다. 그런데 CharacterSprite가 렌더링 높이를
+// 계산할 때 민머리 이미지를 그릴 때도 head.png 쪽 종횡비(HEAD_SIZE)를 그대로 썼다 — 그
+// 결과 민머리+얼굴 이미지가 세로로 최대 44%(해녀 기준)까지 강제로 늘어나 그려지는 버그가
+// 있었다. 현재 UI에서 고를 수 있는 모든 헤어스타일은 HAIR_STYLE_INDEX에 전부 매핑돼 있어서
+// 실제로는 항상 민머리+헤어 오버레이 경로(useBaldHead=true)를 타므로, 이게 "화면에 실제로
+// 보이는 거의 모든 캐릭터"에 영향을 준 핵심 원인이었다(특히 올림머리처럼 머리숱이 얼굴
+// 옆을 안 가리는 스타일에서 얼굴이 짜부라져 보이는 형태로 두드러짐).
+export const HEAD_BALD_SIZE: Record<string, { w: number; h: number }> = {
+  haenyeo: { w: 340, h: 290 },
+  haenam: { w: 351, h: 286 },
+  child_toddler_male: { w: 349, h: 318 },
+  child_toddler_female: { w: 414, h: 335 },
+  child_kindergarten_male: { w: 408, h: 328 },
+  child_kindergarten_female: { w: 400, h: 336 },
+  child_elementary_male: { w: 436, h: 343 },
+  child_elementary_female: { w: 323, h: 288 },
+};
+
+// 민머리 종횡비 기준으로 다시 계산한 kind별 머리 위 여유값(공식은 위와 동일, HEAD_SIZE
+// 대신 HEAD_BALD_SIZE 사용) — useBaldHead=true일 때(=거의 항상) 이 값을 쓴다.
+export const HEAD_MARGIN_TOP_BALD_BY_KIND: Record<string, number> = {
+  haenyeo: 20.1,
+  haenam: 12.8,
+  child_toddler_male: 31.1,
+  child_toddler_female: 11.7,
+  child_kindergarten_male: 10.7,
+  child_kindergarten_female: 17.6,
+  child_elementary_male: 7.5,
+  child_elementary_female: 27.4,
+};
+
+export function headMarginTopFor(headKey: string, useBaldHead: boolean): number {
+  if (useBaldHead) return HEAD_MARGIN_TOP_BALD_BY_KIND[headKey] ?? HEAD_MARGIN_TOP_BY_KIND[headKey] ?? 90;
   return HEAD_MARGIN_TOP_BY_KIND[headKey] ?? 90;
 }
 
@@ -254,27 +294,37 @@ export function dressFullSrc(assetKey: string): string {
 }
 // scripts/asset-tools 로 생성 — 해녀/해남/새싹 민머리 베이스 + 헤어스타일 오버레이 배치값.
 // widthFrac/leftFrac/topFrac은 headRenderW/headRenderH(렌더된 머리 폭/높이) 기준 비율.
+// 해녀 헤어 20종의 topFrac은 예전엔 전부 -0.1379로 동일했다(실측이 아니라 헤어마다 그대로
+// 복사된 값 — 해남/새싹 쪽 값은 스타일마다 다 달라서 실측된 티가 나는데 해녀만 유독 전부
+// 똑같았던 게 단서였다). 실제로는 각 헤어 PNG마다 "앞머리가 끝나고 얼굴이 드러나는 지점"이
+// 스타일마다 전혀 다른데 하나의 값을 억지로 썼으니, 앞머리가 짧은 스타일은 얼굴이 너무
+// 아래로 밀리고(이마가 안 보임) 올림머리처럼 화면 중앙에 큰 틈이 있는 스타일은 반대로 눈까지
+// 덮어버리는 문제가 났다(사용자가 스크린샷으로 제보한 올림머리 케이스가 후자).
+// scripts로 각 PNG의 알파 채널을 스캔해 "앞머리 덩어리가 끝나고 얼굴 구멍이 시작되는 y좌표"를
+// 찾고, head_bald/haenyeo.png(340x290)에서 실측한 눈썹 라인(y≈150)에 그 지점이 오도록
+// topFrac = (150 - hole_y) / 290 공식으로 재계산했다. 올림머리(haenyeo_10)로 먼저 실제
+// 브라우저 렌더링까지 확인(눈·귀·이마 전부 정상 위치) 후 나머지 19종에 동일 방법 적용.
 export const HAIR_ASSET_PLACEMENT: Record<string, { widthFrac: number; leftFrac: number; topFrac: number; w: number; h: number }> = {
-  haenyeo_01: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 331 },
-  haenyeo_02: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 307 },
-  haenyeo_03: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 348 },
-  haenyeo_04: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 301 },
-  haenyeo_05: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 381 },
-  haenyeo_06: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 310 },
-  haenyeo_07: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 341 },
-  haenyeo_08: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 380 },
-  haenyeo_09: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 330 },
-  haenyeo_10: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 423 },
-  haenyeo_11: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 354 },
-  haenyeo_12: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 340 },
-  haenyeo_13: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 454 },
-  haenyeo_14: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 310 },
-  haenyeo_15: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 324 },
-  haenyeo_16: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 358 },
-  haenyeo_17: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 338 },
-  haenyeo_18: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 329 },
-  haenyeo_19: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 381 },
-  haenyeo_20: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1379, w: 340, h: 412 },
+  haenyeo_01: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.1931, w: 340, h: 331 },
+  haenyeo_02: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0931, w: 340, h: 307 },
+  haenyeo_03: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0207, w: 340, h: 348 },
+  haenyeo_04: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0586, w: 340, h: 301 },
+  haenyeo_05: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0655, w: 340, h: 381 },
+  haenyeo_06: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0552, w: 340, h: 310 },
+  haenyeo_07: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0138, w: 340, h: 341 },
+  haenyeo_08: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0724, w: 340, h: 380 },
+  haenyeo_09: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.3862, w: 340, h: 330 },
+  haenyeo_10: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.379, w: 340, h: 423 },
+  haenyeo_11: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0586, w: 340, h: 354 },
+  haenyeo_12: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0207, w: 340, h: 340 },
+  haenyeo_13: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1586, w: 340, h: 454 },
+  haenyeo_14: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0759, w: 340, h: 310 },
+  haenyeo_15: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0379, w: 340, h: 324 },
+  haenyeo_16: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0448, w: 340, h: 358 },
+  haenyeo_17: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0207, w: 340, h: 338 },
+  haenyeo_18: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0931, w: 340, h: 329 },
+  haenyeo_19: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.3586, w: 340, h: 381 },
+  haenyeo_20: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.3655, w: 340, h: 412 },
   haenam_01: { widthFrac: 0.9174, leftFrac: -0.0174, topFrac: -0.0079, w: 322, h: 228 },
   haenam_02: { widthFrac: 0.9573, leftFrac: -0.0064, topFrac: -0.0431, w: 336, h: 238 },
   haenam_03: { widthFrac: 0.9373, leftFrac: -0.0017, topFrac: -0.0126, w: 329, h: 241 },
