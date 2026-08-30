@@ -75,7 +75,10 @@ export function VoyageInfoCard({
           className="pointer-events-none w-full"
           style={{ height: "auto" }}
         />
-        <span className="absolute inset-0 flex items-center justify-center pb-1 text-[16px] font-extrabold tracking-wide text-white [text-shadow:0_1px_3px_rgba(15,33,66,0.35)]">
+        {/* 리본 그림 자체의 파란 띠는 전체 높이의 위쪽(약 15~61%)에 있고 아래는 늘어진
+            꼬리 장식이라, inset-0+items-center(50% 중앙)로 놓으면 띠보다 아래로 처져 보였다.
+            실측한 띠의 세로 중앙(약 38%)에 맞춰 올린다. */}
+        <span className="absolute left-0 right-0 top-[38%] flex -translate-y-1/2 items-center justify-center text-[16px] font-extrabold tracking-wide text-white [text-shadow:0_1px_3px_rgba(15,33,66,0.35)]">
           나의 항해 정보
         </span>
       </div>
