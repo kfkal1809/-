@@ -1,22 +1,18 @@
 import Link from "next/link";
 import Image from "next/image";
-import { APP_NAME, CURRENCY_NAME } from "@/lib/domain/constants";
+import { CURRENCY_NAME } from "@/lib/domain/constants";
 import { GameIcon } from "@/components/icons/GameIcon";
 
-// 목표 시안(design-assets/게임 UI 및 메뉴 화면.png = public/images/misc/home-mockup.png)처럼
-// 등대/배/구름/갈매기가 하나의 하늘+바다 장면 위에 얹혀 있고, 그 아래 "나의 항해 정보" 카드의
-// 바다로 자연스럽게 이어지도록 헤더 전체를 하늘바다 배경 하나로 통일한다. 저장소에 통짜
-// 하늘바다 배경 원화는 없어서(design-assets 전수 검색 결과 없음), 낚시터 배경(피셔 있음/
-// 등대·배·갈매기가 이미 박혀 있는 합성 원화라 그대로 못 씀)에서 아무 것도 안 그려진 순수
-// 하늘→바다 그라디언트 구간만(public/images/backgrounds/fishing.jpg의 x:340-460,
-// y:0-42%) 잘라내 sky-sea-texture.png로 저장해 배경 텍스처로 재사용한다 — CSS 단색
-// 그라디언트 대신 실제 수채화 질감이 살아있는 그림.
-// 로고는 기존(190px) 대비 2배 이상(390px) 확대 — 헤더 폭에 맞춰 좌우로는 92%까지만 늘어나게
-// 해서 좁은 화면에서도 잘리지 않는다.
+// GitHub에 새로 올라온 "홈화면 UI (1~24).png" 세트(design-assets/, public/images/home-ui/에
+// 영문 파일명으로 정리)를 이번 라운드의 기준 에셋으로 쓴다. 로고는 기존
+// misc/logo-wordmark.png(좌측에 등대가 박혀 있던 버전) 대신 새로 받은 logo-glow.png로
+// 교체 — 등대가 안 그려져 있어서 헤더에 별도 등대(home-ui/lighthouse.png)를 같이 놓아도
+// 중복되지 않는다. 하늘바다 배경은 지난 라운드에 만든 sky-sea-texture.png(낚시터 배경에서
+// 크롭)를 그대로 쓴다 — 이번 24장 세트에는 하늘/바다 통짜 배경이 없어서다.
 export function HomeHeader({ balance }: { balance: number }) {
   return (
     <header
-      className="relative overflow-hidden px-4 pb-6 pt-4"
+      className="relative overflow-hidden px-4 pb-8 pt-5"
       style={{ backgroundImage: "url(/images/home/sky-sea-texture.png)", backgroundSize: "100% 100%", backgroundRepeat: "no-repeat" }}
     >
       <Image
@@ -26,17 +22,17 @@ export function HomeHeader({ balance }: { balance: number }) {
         width={559}
         height={310}
         unoptimized
-        className="pointer-events-none absolute left-[3%] top-[4%] w-20 opacity-95"
+        className="pointer-events-none absolute left-[2%] top-[3%] w-16 opacity-95"
         style={{ height: "auto" }}
       />
       <Image
-        src="/images/home/cloud-2.png"
+        src="/images/home-ui/cloud.png"
         alt=""
         aria-hidden
-        width={381}
-        height={241}
+        width={1254}
+        height={1254}
         unoptimized
-        className="pointer-events-none absolute right-[8%] top-0 w-16 opacity-90"
+        className="pointer-events-none absolute right-[4%] top-0 w-16 opacity-90"
         style={{ height: "auto" }}
       />
       <Image
@@ -46,17 +42,17 @@ export function HomeHeader({ balance }: { balance: number }) {
         width={381}
         height={241}
         unoptimized
-        className="pointer-events-none absolute right-[30%] top-[10%] w-12 opacity-80"
+        className="pointer-events-none absolute right-[32%] top-[7%] w-10 opacity-80"
         style={{ height: "auto" }}
       />
       <Image
-        src="/images/home/seagull-fly-1.png"
+        src="/images/home-ui/seagull-flying.png"
         alt=""
         aria-hidden
-        width={804}
-        height={511}
+        width={1254}
+        height={1254}
         unoptimized
-        className="pointer-events-none absolute left-[24%] top-[2%] w-9 opacity-90"
+        className="pointer-events-none absolute left-[26%] top-[1%] w-10 opacity-90"
         style={{ height: "auto" }}
       />
       <Image
@@ -66,51 +62,50 @@ export function HomeHeader({ balance }: { balance: number }) {
         width={860}
         height={469}
         unoptimized
-        className="pointer-events-none absolute left-[52%] top-[3%] w-8 opacity-85"
-        style={{ height: "auto" }}
-      />
-      <Image
-        src="/images/home/deco-dot-blue.png"
-        alt=""
-        aria-hidden
-        width={244}
-        height={238}
-        unoptimized
-        className="pointer-events-none absolute left-[10%] top-[38%] w-2.5"
-        style={{ height: "auto" }}
-      />
-      {/* 배 — 시안처럼 하늘바다 장면 하단에 작게 배치. 등대는 다시 넣지 않는다: logo-wordmark.png
-          자체에 이미 등대 일러스트가 그려져 있어서(로고 좌측), 별도 등대 그림을 또 넣으면
-          같은 화면에 등대가 두 개 겹쳐 보인다 — 지난 라운드에 사용자가 "이 부분 그림들은
-          삭제해달라"고 한 것도 정확히 이 중복 때문이었다. */}
-      <Image
-        src="/images/home/ship.png"
-        alt=""
-        aria-hidden
-        width={1404}
-        height={1047}
-        unoptimized
-        className="pointer-events-none absolute bottom-3 right-[8%] w-16"
+        className="pointer-events-none absolute left-[54%] top-[4%] w-8 opacity-85"
         style={{ height: "auto" }}
       />
 
-      {/* 로고: 좌우로 헤더 패딩을 넘어 거의 화면 끝까지 번지게(-mx-4) 해서 2배 이상 확대해도
-          390px 폭 화면에서 잘리지 않는다. */}
-      <div className="relative z-10 -mx-4 flex justify-center pt-2">
+      {/* 로고: 좌우로 헤더 패딩을 넘어 거의 화면 끝까지 번지게(-mx-4) 해서 크게 확대해도
+          390px 폭 화면에서 잘리지 않는다. logo-glow.png는 은은한 후광이 이미 알파로
+          페이드아웃되게 그려져 있어(가장자리 alpha=0 확인됨) 배경과 자연스럽게 섞인다. */}
+      <div className="relative z-10 -mx-4 flex justify-center pt-1">
         <Image
-          src="/images/misc/logo-wordmark.png"
-          alt={APP_NAME}
-          width={732}
-          height={346}
+          src="/images/home-ui/logo-glow.png"
+          alt="해기사와 연인들의 항해일지"
+          width={1536}
+          height={1024}
           unoptimized
           priority
-          className="w-[92%] max-w-[400px]"
+          className="w-[86%] max-w-[380px]"
           style={{ height: "auto" }}
         />
       </div>
 
-      {/* 선용금 정보판 — 시안처럼 우측 상단에 그림형 카드로. coin.png/plus.png 실제 아이콘 사용.
-          알림벨은 같은 flex column에 넣어 절대좌표 추측 없이 자연스럽게 아래에 쌓이게 한다. */}
+      {/* 등대·배 — logo-glow.png에는 등대가 없어서(기존 logo-wordmark.png와 달리) 중복 없이
+          하나의 하늘바다 장면 하단 모서리에 배치할 수 있다. */}
+      <Image
+        src="/images/home-ui/lighthouse.png"
+        alt=""
+        aria-hidden
+        width={1254}
+        height={1254}
+        unoptimized
+        className="pointer-events-none absolute bottom-1 left-[4%] w-14"
+        style={{ height: "auto" }}
+      />
+      <Image
+        src="/images/home-ui/ship.png"
+        alt=""
+        aria-hidden
+        width={1254}
+        height={1254}
+        unoptimized
+        className="pointer-events-none absolute bottom-2 right-[6%] w-20"
+        style={{ height: "auto" }}
+      />
+
+      {/* 선용금 정보판 — 우측 상단 그림형 카드. "+" 배지는 새 home-ui/plus-button.png로 교체. */}
       <div className="absolute right-4 top-4 z-20 flex flex-col items-end gap-2">
         <Link
           href="/wallet"
@@ -121,8 +116,8 @@ export function HomeHeader({ balance }: { balance: number }) {
             <GameIcon name="coin" size={20} />
             <span className="text-[15px] font-extrabold text-[var(--color-navy)]">${balance.toFixed(2)}</span>
           </span>
-          <span className="absolute -bottom-2.5 -right-2.5 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--color-tab-active)] shadow-[0_2px_6px_rgba(36,54,90,0.3)]">
-            <GameIcon name="plus" size={13} />
+          <span className="absolute -bottom-2.5 -right-2.5 h-6 w-6">
+            <Image src="/images/home-ui/plus-button.png" alt="" aria-hidden width={1254} height={1254} unoptimized className="h-full w-full" />
           </span>
         </Link>
         <Link href="/notifications" className="rounded-full bg-white p-2 shadow-[0_4px_14px_rgba(36,54,90,0.16)]">

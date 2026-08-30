@@ -60,38 +60,24 @@ export function VoyageInfoCard({
 
   return (
     <div className="relative pt-4">
-      {/* 리본 배너 — 가운데 알약 모양 본체 양옆에 접힌 리본 꼬리를 삼각형으로 덧붙여서
-          단순 pill이 아니라 "리본을 매단 팻말"처럼 보이게 한다(새 이미지 에셋 없이 CSS만으로). */}
-      <div className="absolute left-1/2 top-0 z-10 flex w-max -translate-x-1/2 items-center">
-        <span
+      {/* 리본 배너 — 새로 받은 home-ui/ribbon-banner.png(양끝에 배의 타 장식이 그려진 실제
+          그림 리본)를 배경으로 쓰고, 그 위에 "나의 항해 정보" 텍스트만 얹는다. 이미지 자체엔
+          글자가 없어서(디자이너가 텍스트 없는 프레임으로 그려둠) 실제 라벨을 자유롭게 겹칠
+          수 있다. */}
+      <div className="absolute left-1/2 top-0 z-10 w-[78%] max-w-[300px] -translate-x-1/2">
+        <Image
+          src="/images/home-ui/ribbon-banner.png"
+          alt=""
           aria-hidden
-          className="-mr-1.5 h-0 w-0 border-y-[20px] border-r-[13px] border-y-transparent border-r-[#1f57c9]"
+          width={2172}
+          height={724}
+          unoptimized
+          className="pointer-events-none w-full"
+          style={{ height: "auto" }}
         />
-        <div className="flex items-center gap-2.5 whitespace-nowrap rounded-full bg-[var(--color-tab-active)] px-7 py-2.5 shadow-[0_5px_14px_rgba(36,54,90,0.26)]">
-          <svg width="20" height="16" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
-            <path
-              d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              fill="none"
-              strokeLinecap="round"
-            />
-          </svg>
-          <span className="text-[17px] font-extrabold tracking-wide text-white">나의 항해 정보</span>
-          <svg width="20" height="16" viewBox="0 0 26 20" aria-hidden className="shrink-0 text-white">
-            <path
-              d="M13 2 L13 16 M13 16 l-3 -3 M13 16 l3 -3 M4 6 q4 -3 5 0 M22 6 q-4 -3 -5 0"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              fill="none"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
-        <span
-          aria-hidden
-          className="-ml-1.5 h-0 w-0 border-y-[20px] border-l-[13px] border-y-transparent border-l-[#1f57c9]"
-        />
+        <span className="absolute inset-0 flex items-center justify-center pb-1 text-[16px] font-extrabold tracking-wide text-white [text-shadow:0_1px_3px_rgba(15,33,66,0.35)]">
+          나의 항해 정보
+        </span>
       </div>
 
       <div className="relative overflow-hidden rounded-[28px] border-2 border-white bg-gradient-to-b from-[#bfe6ff] to-[#eaf6ff] pb-5 pt-9 shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
@@ -107,26 +93,35 @@ export function VoyageInfoCard({
             style={{ height: "auto" }}
           />
         )}
-        <button
-          onClick={handleBoard}
-          disabled={attended || loading}
-          className="absolute right-3 top-4 z-10 flex h-[78px] w-[78px] flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-[var(--color-tab-active)] bg-white/90 text-center shadow-[0_4px_12px_rgba(36,54,90,0.14)] disabled:opacity-70"
-        >
-          <GameIcon name="anchor" size={20} />
-          {attended ? (
+        {/* 출항하기 버튼 — 미출항 상태는 새 home-ui/departure-button.png(원형 그림판에
+            "출항하기 +$1" 글자가 이미 그려져 있음)를 그대로 버튼으로 쓴다. 완료 상태는 그림에
+            박힌 문구를 "완료"로 바꿀 수 없어서(글자가 그림 일부라 동적으로 못 바꿈) 기존
+            점선 원 + "출항 완료" 텍스트로 계속 표시한다. */}
+        {attended ? (
+          <button
+            onClick={handleBoard}
+            disabled
+            className="absolute right-2 top-3 z-20 flex h-[68px] w-[68px] flex-col items-center justify-center gap-0.5 rounded-full border-2 border-dashed border-[var(--color-tab-active)] bg-white/90 text-center shadow-[0_4px_12px_rgba(36,54,90,0.14)] disabled:opacity-70"
+          >
+            <GameIcon name="anchor" size={20} />
             <span className="text-[12px] font-extrabold leading-tight text-[var(--color-navy)]">
               출항
               <br />
               완료
             </span>
-          ) : (
-            <span className="text-[12px] font-extrabold leading-tight text-[var(--color-tab-active)]">
-              출항하기
-              <br />
-              +$1
-            </span>
-          )}
-        </button>
+          </button>
+        ) : (
+          <button onClick={handleBoard} disabled={loading} className="absolute right-2 top-3 z-20 h-[68px] w-[68px] disabled:opacity-70">
+            <Image
+              src="/images/home-ui/departure-button.png"
+              alt="출항하기 +$1"
+              width={1254}
+              height={1254}
+              unoptimized
+              className="h-full w-full drop-shadow-[0_4px_10px_rgba(36,54,90,0.2)]"
+            />
+          </button>
+        )}
 
         <Link href="/voyage" className="relative block px-3">
           <Image
@@ -140,13 +135,13 @@ export function VoyageInfoCard({
             style={{ objectFit: "fill" }}
           />
           <Image
-            src="/images/home/lifebuoy.png"
+            src="/images/home-ui/lifebuoy.png"
             alt=""
             aria-hidden
-            width={1036}
-            height={1170}
+            width={1254}
+            height={1254}
             unoptimized
-            className="pointer-events-none absolute bottom-4 left-3 w-[58px]"
+            className="pointer-events-none absolute bottom-4 left-3 w-[54px]"
             style={{ height: "auto" }}
           />
           <Image
@@ -202,7 +197,8 @@ export function VoyageInfoCard({
           </div>
           <div className="flex flex-1 flex-col items-center gap-0.5 bg-[#e3f0ff] py-3 text-center">
             <span className="flex items-center gap-1 text-[12px] font-bold text-[var(--color-navy-soft)]">
-              <GameIcon name="anchor" size={14} /> 하선
+              <Image src="/images/home-ui/anchor.png" alt="" aria-hidden width={1254} height={1254} unoptimized className="w-3.5" style={{ height: "auto" }} />
+              하선
             </span>
             <p className="text-[19px] font-extrabold text-[var(--color-tab-active)]">
               {voyage.signoffDays !== null ? `D-${voyage.signoffDays}` : "정보 없음"}
