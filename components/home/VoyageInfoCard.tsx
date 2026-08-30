@@ -29,13 +29,13 @@ export function VoyageInfoCard({
     setToast(null);
 
     if (isDemo) {
-      setTimeout(() => {
-        setAttended(true);
-        setToast("선용금 지급 완료 +$1");
-        setLoading(false);
-        playSfx("attendance");
-        setTimeout(() => playSfx("coin"), 180);
-      }, 400);
+      // 서버 호출이 없는 데모 모드에서도 인위적인 대기(400ms)를 넣어뒀던 것 — 실제로 기다릴
+      // 이유가 없으므로 즉시 반영한다.
+      setAttended(true);
+      setToast("선용금 지급 완료 +$1");
+      setLoading(false);
+      playSfx("attendance");
+      setTimeout(() => playSfx("coin"), 180);
       return;
     }
 

@@ -17,6 +17,7 @@ import {
   HEAD_OVERLAP,
   headMarginTopFor,
   HEAD_SIZE,
+  HEAD_BALD_SIZE,
   heightScaleFor,
   HAT_SIZE,
   HAT_PLACEMENT,
@@ -350,14 +351,30 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     // 없앤다(lib/domain/characterFullBody.ts, scripts/normalize_outfits.py 참고).
     const portraitKey = { kind, childGender, childStage };
     const headKey = characterPortraitKeyFor(portraitKey);
-    const headDims = HEAD_SIZE[headKey];
+
+    // 헤어스타일 오버레이 — 민머리 베이스 위에 스타일별 그림을 얹는다(docs/PROGRESS.md 기록).
+    // 해당 kind/스타일 조합에 그림 자산이 없으면(예: 새싹 bun) hairAssetKey가 null이 되고,
+    // 기존처럼 고정 헤어스타일이 그려진 head 그림 + hairColor 마스크로 폴백한다. 현재 UI에서
+    // 고를 수 있는 모든 헤어스타일은 실제로는 전부 이 매핑을 가지고 있어서 useBaldHead는
+    // 사실상 항상 true다 — headDims를 여기서 먼저 정해야 하는 이유(아래 참고).
+    const hairAssetKey = resolveHairAssetKey(portraitKey, a.hairStyle);
+    const hairPlacement = hairAssetKey ? HAIR_ASSET_PLACEMENT[hairAssetKey] : null;
+    const useBaldHead = Boolean(hairAssetKey && hairPlacement);
+
+    // 민머리 이미지(head_bald/*.png)와 고정 헤어스타일 이미지(head/*.png)는 종횡비가 전혀
+    // 다르다(해녀 기준 0.85 vs 1.23) — 예전엔 이 구분 없이 항상 HEAD_SIZE(고정 헤어스타일
+    // 쪽 종횡비)로 렌더링 높이를 계산해서, 실제로 거의 항상 쓰이는 민머리 경로에서 얼굴이
+    // 세로로 최대 44%까지 늘어나 그려지는 버그가 있었다(올림머리처럼 머리숱이 얼굴 옆을 안
+    // 가리는 스타일에서 특히 두드러짐). useBaldHead 여부에 따라 맞는 크기 테이블과 여유값을
+    // 골라 써야 한다.
+    const headDims = useBaldHead ? HEAD_BALD_SIZE[headKey] : HEAD_SIZE[headKey];
     // 머리가 목선 위로 올라가는 만큼(headMarginTop) 항상 포함한 "전체 캔버스" 기준으로
     // scale을 잡아야, size가 다른 렌더링 방식(fullPortraitKey 등)과 똑같이 "머리~발끝 실제
     // 높이"를 의미하게 된다 — 안 그러면 머리가 컨테이너 밖으로 넘쳐서 size가 같아도
     // outfitAssetKey 캐릭터만 유독 커 보이는 버그가 생긴다. kind마다 머리 종횡비가 달라
     // 필요한 여유가 다르므로(해녀 91 vs 해남 33) headMarginTopFor()로 kind별 값을 쓴다 —
     // 안 그러면 해남 캐릭터가 해녀보다 실제로 더 작게 렌더링되는 버그가 생긴다(실측 확인).
-    const headMarginTop = headMarginTopFor(headKey);
+    const headMarginTop = headMarginTopFor(headKey, useBaldHead);
     const totalCanvasH = OUTFIT_CANVAS_H + headMarginTop;
     const scale = size / totalCanvasH;
     const width = Math.round(OUTFIT_CANVAS_W * scale);
@@ -374,12 +391,6 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     const headLeft = (OUTFIT_CANVAS_W - HEAD_WIDTH) / 2 * innerScale;
     const headTop = (headMarginTop + NECK_Y + HEAD_OVERLAP) * innerScale - headRenderH;
 
-    // 헤어스타일 오버레이 — 민머리 베이스 위에 스타일별 그림을 얹는다(docs/PROGRESS.md 기록).
-    // 해당 kind/스타일 조합에 그림 자산이 없으면(예: 새싹 bun) hairAssetKey가 null이 되고,
-    // 기존처럼 고정 헤어스타일이 그려진 head 그림 + hairColor 마스크로 폴백한다.
-    const hairAssetKey = resolveHairAssetKey(portraitKey, a.hairStyle);
-    const hairPlacement = hairAssetKey ? HAIR_ASSET_PLACEMENT[hairAssetKey] : null;
-    const useBaldHead = Boolean(hairAssetKey && hairPlacement);
     const hairOverlayRenderW = hairPlacement ? headRenderW * hairPlacement.widthFrac : 0;
     const hairOverlayRenderH = hairPlacement ? (hairPlacement.h / hairPlacement.w) * hairOverlayRenderW : 0;
     const hairOverlayLeft = hairPlacement ? headLeft + headRenderW * hairPlacement.leftFrac : 0;

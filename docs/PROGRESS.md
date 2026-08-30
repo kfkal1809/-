@@ -2674,3 +2674,183 @@ center`로 고친 뒤 재측정해서 바로잡았다. 이 경험 자체가 "PNG
   원본을 그대로 스케일하는 것이라 원본 사진 자체의 상단 여백(약 6px, 알파 bbox 기준)에
   의존함)에서 온다 — 이미지 자체를 다시 다듬지 않는 한 완전히 0으로 만들기는 어렵고, 시각적
   으로도 이미 거의 구분 안 되는 수준이라 이번엔 우선순위를 낮춰 그대로 뒀다.
+
+## 6개 문제 일괄 수정 — 헤어 정렬 근본 원인, 채팅 낙관적 전송, 클릭 속도, 모달 잘림, 버튼 배치, 옷가게 헤어 탭
+
+사용자가 스크린샷(해녀 올림머리가 얼굴을 가리고 얼굴이 오른쪽으로 밀려 보임)과 함께 6개
+문제를 한 번에 제보 — 체크리스트를 먼저 만들고 하나씩 실제 브라우저로 검수했다.
+
+### 1. 헤어 정렬 — 진짜 원인을 찾음
+
+첨부 스크린샷을 실제 코드로 재현(`haenyeoPreset({hairStyle:"bun"})`)해보니 그대로
+재현됐다. 원인을 추적한 결과 **두 가지 별개의 버그가 겹쳐 있었다**:
+
+- **버그 A(더 큰 원인)**: `CharacterSprite.tsx`가 민머리 이미지(`head_bald/*.png`)를 그릴
+  때도 항상 고정 헤어스타일 이미지(`head/*.png`)의 종횡비(`HEAD_SIZE`)로 렌더링 높이를
+  계산하고 있었다. 그런데 두 이미지는 종횡비가 전혀 다르다(해녀 기준 민머리 0.85 vs
+  고정헤어 1.23, 최대 44% 차이) — 그리고 현재 UI에서 고를 수 있는 헤어스타일은 전부
+  `HAIR_STYLE_INDEX`에 매핑돼 있어서 실제로는 항상 민머리 경로(`useBaldHead=true`)를
+  탄다. 즉 화면에 보이는 거의 모든 캐릭터의 얼굴이 세로로 짜부라져 그려지고 있었다.
+  → `HEAD_BALD_SIZE`(8종 kind 전부 실측)를 새로 추가하고, `CharacterSprite`에서
+  `useBaldHead` 여부를 먼저 정하고 그에 맞는 크기 테이블을 골라 쓰도록 계산 순서를
+  바꿨다. `HEAD_MARGIN_TOP_BALD_BY_KIND`(민머리 종횡비 기준으로 재계산한 kind별 여유값)도
+  추가.
+- **버그 B**: `HAIR_ASSET_PLACEMENT`의 해녀 헤어 20종이 전부 `topFrac: -0.1379`로 완전히
+  동일한 값이었다(해남/새싹 쪽은 스타일마다 실측된 듯 다 다른데 해녀만 그랬다 — 하나의
+  공식을 복붙한 흔적). 실제로는 각 헤어 그림마다 "앞머리가 끝나고 얼굴이 드러나는 지점"이
+  전혀 다른데 하나의 값을 억지로 쓰다 보니, 올림머리처럼 화면 중앙에 큰 트임이 있는
+  스타일은 그 값이 얼굴(특히 눈)까지 덮어버리는 결과가 됐다.
+  → PIL로 해녀 헤어 20종 PNG 전부의 알파 채널을 스캔해 "앞머리 덩어리가 끝나는 y좌표"를
+  자동 측정하고, `head_bald/haenyeo.png`에서 실측한 눈썹 라인(y≈150/290)에 그 지점이
+  오도록 `topFrac`을 스타일별로 재계산해 20종 전부 교체했다.
+
+**검증**: 버그 A 수정 후 재현 화면(올림머리)을 다시 렌더링했더니 이번엔 오히려 얼굴
+전체가 안 보이는(눈이 사라진) 새로운 증상이 나타났다 — 버그 A만 고치면 버그 B의 잘못된
+`topFrac`이 새 기준(더 작아진 `headRenderH`)에서 훨씬 더 크게 어긋나기 때문이었다. 버그
+B까지 같이 고친 뒤 재검증하니 눈·코·입·귀가 전부 제자리에 보였다. 이어서 해녀 5종(wave/
+pony/bob/twin/bun)·해남 4종(short_neat/buzz/sideswept/bob) 전부를 `CharacterSprite`로
+직접 렌더링해 확대 확인 — 전부 얼굴 중심 정렬, 옆머리가 턱까지 안 내려옴, 머리와 얼굴
+사이 빈 공간 없음을 확인했다. 실제 `/home` 화면(해녀 두부/해남 북극곰이 나란히 서는
+카드)에서도 재확인.
+
+**수정 파일**: `lib/domain/characterFullBody.ts`(`HEAD_BALD_SIZE`,
+`HEAD_MARGIN_TOP_BALD_BY_KIND`, `headMarginTopFor()` 시그니처 변경, 해녀 헤어 20종
+`topFrac` 재계산), `components/character/CharacterSprite.tsx`(계산 순서 재배치).
+공통 렌더러 하나만 고쳤으므로 홈/선실/꾸미기/갑판/낚시터 등 이 컴포넌트를 쓰는 모든
+화면에 동일하게 적용된다(개별 화면 보정 없음).
+
+### 2. 채팅 낙관적 전송
+
+`components/deck/DeckScreen.tsx`의 `handleSend()`가 `await supabase.insert(...)`가 끝날
+때까지 입력창을 안 비우고 메시지도 안 보여줬다 — 실시간 구독(`postgres_changes` INSERT
+이벤트)이 돌아와야만 메시지가 나타나는 구조라, 왕복 시간만큼 그대로 지연이 느껴졌다.
+
+- 클라이언트에서 `crypto.randomUUID()`로 임시 id를 만들어 그 id로 즉시 `messages`
+  상태에 낙관적으로 추가(`status:"sending"`) + 입력창 즉시 비움, DB insert는 그 id를
+  그대로 넘겨서(`chat_messages.id`가 uuid 컬럼이라 클라이언트가 지정 가능) 백그라운드로
+  실행.
+- 실시간 구독 핸들러가 같은 id의 INSERT 이벤트를 받으면(내가 보낸 메시지가 되돌아온
+  경우) 새로 추가하지 않고 해당 메시지의 `status`만 지운다 — 중복 렌더링 없음.
+- 실패 시 그 메시지에만 `status:"failed"`를 표시하고 재전송 버튼 제공.
+- 메시지 목록 자동 스크롤은 기존에 이미 있었음(변경 없음).
+- 확인한 것: 전송 시 전체 채팅 기록 재조회 없음, 실시간 구독은 `[self.ready, self.userId]`
+  변경시에만 재등록(렌더마다 중복 등록 아님), 닉네임은 메시지 행에 스냅샷으로 저장돼
+  있어 매번 조회 안 함, insert 호출은 1건뿐(순차 체인 없음) — 전부 이미 정상이었음.
+
+### 3. 전체 클릭 반응 속도
+
+- `app/(game)/loading.tsx`(직전 커밋에서 이미 추가) — 화면 이동 시 서버 데이터를 기다리는
+  동안 즉시 스피너를 보여줘 "누르면 반응이 없다"는 느낌을 없앰.
+- `components/home/VoyageInfoCard.tsx`: 데모 모드 출항하기 버튼에 실제 서버 호출이 없는데도
+  `setTimeout(..., 400)`으로 인위적 지연이 걸려 있던 것 제거.
+- `lib/game/homeData.ts`: `profile`/`membership` 조회가 서로 독립적인데 순차 `await`로
+  실행되던 것을 `Promise.all`로 병렬화.
+- `lib/game/cabinData.ts`: `characters`/`space_items`/`guestbook_entries` 3개 조회도 동일하게
+  병렬화.
+- **DB 인덱스 추가(`supabase/migrations/0022_household_users_user_index.sql`)**:
+  `household_users`/`character_managers`는 기본키가 각각 `(household_id, user_id)`/
+  `(character_id, user_id)` 복합키인데, "내 household/캐릭터 찾기" 조회는 `user_id`만으로
+  필터링한다 — 거의 모든 화면 진입 시 실행되는 조회인데 인덱스를 못 타고 있었다. 두 테이블에
+  `user_id` 단독 인덱스를 추가.
+- 버튼 눌림 효과(`active:scale-[0.97]`)는 기존 `Button` 컴포넌트에 이미 있었음(수정 불필요).
+- **측정하지 못한 것**: 실제 로그인 세션이 없어 클릭→화면 표시까지의 밀리초 단위 실측(전/후
+  비교)은 이 세션에서는 하지 못했다. 코드 근거(불필요한 순차 대기 제거, 인위적 지연 제거,
+  인덱스 추가)로 개선을 설명할 뿐 정직하게 실측치는 없음을 밝힌다.
+
+### 4. 새싹 만들기 모달 잘림
+
+`components/cabin/AddChildButton.tsx`의 모달이 `max-h-[85vh]`를 쓰고 있었다 — 모바일
+브라우저 주소창이 떠 있을 때는 `100vh`(그리고 그 85%)가 실제 보이는 높이보다 커서, 주소창이
+안 접힌 상태로 열리면 하단(완료 버튼 등)이 화면 밖으로 밀려 잘릴 수 있었다.
+
+- `max-h-[90dvh]`(동적 뷰포트 높이)로 교체, 모달을 `flex flex-col`로 나눠 제목/닫기는
+  `shrink-0`로 항상 상단 고정, 본문만 `overflow-y-auto`로 스크롤.
+- 하단에 `pb-[max(12px,env(safe-area-inset-bottom))]` 추가(아이폰 하단 안전영역).
+- 온보딩 전체화면 버전(`app/onboarding/children/page.tsx`)은애초에 모달이 아니라 페이지
+  자체가 자연스럽게 스크롤되는 구조(고정 높이 없음)라 이 버그와 무관 — 확인만 하고 수정
+  안 함.
+- **검증**: `360×740`/`390×844`/`430×932` 세 크기 전부에서 모달을 열어 캡처 — 제목부터
+  "+ 새싹 추가" 버튼까지 화면 한 번에 다 보이거나(360에서도 전부 보임), 스크롤로 끝까지
+  접근 가능함을 확인.
+
+### 5. 새싹 만들기 버튼 위치
+
+기존엔 선실 캐릭터 열 안에 다른 캐릭터와 같은 자리의 "+" 아바타 슬롯으로 끼워 넣어서 눈에 잘
+안 띄었다. `components/cabin/AddChildButton.tsx`의 트리거 버튼을 아바타 슬롯 스타일에서
+"방꾸미기"와 같은 pill 버튼 스타일로 바꾸고, `components/cabin/CabinRoom.tsx`에서 렌더
+위치를 캐릭터 열(방 일러스트 안)에서 상단 헤더(방꾸미기 버튼 바로 옆)로 옮겼다. 두 버튼 다
+`flex-1`로 같은 행에서 동일한 너비를 공유하도록 해서 좁은 화면에서도 같이 축소된다.
+"새쌍"이라는 오타는 저장소 전체를 검색했지만 찾지 못함(이미 다 "새싹"으로 돼 있었음 —
+확인만 하고 수정할 곳 없었음).
+
+**검증**: `isOwner:true` 목업으로 임시 미리보기를 만들어 `360×740`에서 캡처 — 방꾸미기·
+새싹 만들기 두 버튼이 나란히, 같은 높이로, 겹치거나 잘리지 않고 표시됨을 확인. 방문객
+(`isOwner:false`, 실제 데모 데이터 기준)에서는 두 버튼 다 안 보임(기존 권한 로직 그대로
+유지 — 코드 변경 없이 기존 `data.isOwner` 조건 재사용).
+
+### 6. 옷가게 상품 누락 + 헤어 탭
+
+**조사 결과**: `supabase/migrations/0009_clothing_store.sql`(최초 옷가게 상품 등록)이
+`supabase/seed.sql`에 있는 item_catalog 기본 행(해녀 옷 4종/해남 항해사 옷 3종/해남
+기관사 옷 2종/새싹 옷 3종/해녀 헤어 5종/기본 모자 2종/기본 소품 1종)이 이미 DB에 있다는
+걸 전제로 짜여 있었다. 그런데 `seed.sql`은 `supabase db reset`(로컬 개발 전용) 때만
+실행되는 파일이라 **운영 DB에는 자동 적용되지 않는다** — 그 뒤에 나온 자기 완결적
+마이그레이션들(0010 새싹 의상 63종/0016 모자 21종/0018 손소품 7종/0019 새싹 의상 18종/
+0020 목소품+새싹소품 6종, 전부 item_catalog+store_products를 마이그레이션 안에서 함께
+처리)은 문제없이 반영됐겠지만, 그 목록에 "기본 지급" 계열 해녀/해남 상의·원피스·헤어는
+빠져 있었다. 그래서 해녀·해남 캐릭터로 옷가게에 들어가면 상의·원피스 탭이 비어 보였을
+가능성이 높다(새싹 캐릭터는 0010/0019만으로도 81벌이 있어 비어 보이지 않았을 것).
+헤어는 애초에 `category in ('outfit','hat','accessory')` 필터 자체에 없어서(0009 코드
+주석에 "이번엔 포함 안 함"이라고 명시) 탭 자체가 없었다.
+
+`lib/game/clothingStoreData.ts`의 `getClothingStoreData()` 전체를 감싸는
+`catch { return EMPTY }`도 발견 — 쿼리 하나라도 실패하면 원인 로그 없이 그냥 "상품 없음"
+화면이 뜨는 구조였다. `console.error`를 추가해 최소한 서버 로그에는 남게 함.
+
+**수정**:
+- `lib/domain/clothingStoreCategories.ts`: `ClothingTabKey`에 `"hair"` 추가,
+  `CLOTHING_TABS`에 헤어 탭 삽입(원피스와 모자 사이), `clothingTabFor()`에 `category ===
+  "hair"` 분기 추가.
+- `lib/game/clothingStoreData.ts`: `ClothingProduct.category`에 `"hair"` 포함.
+- `lib/domain/itemAppearance.ts`: 해남 헤어 4스타일(부서 무관이라 haenam_deck/
+  haenam_engine 두 subcategory로 등록) + 새싹 헤어 3종의 `ITEM_APPEARANCE_PATCH` 추가 —
+  둘 다 지금까지 옷가게에 등록된 적이 없었음(해녀 헤어 5종만 기존에 있었음).
+  **`/api/character/equip`와 착용 미리보기는 이미 `category → slot` 매핑에 `hair`가
+  있었고 `ITEM_APPEARANCE_PATCH`도 이미 해녀 헤어에 대해 동작하고 있어서, 카탈로그/탭만
+  연결하면 나머지는 그대로 재사용됐다(새 기능 코드 없음, 실제로 목업 데이터로 "올림머리"
+  클릭 → 피팅룸 미리보기가 즉시 그 헤어로 바뀌는 것까지 확인).**
+- `supabase/migrations/0023_clothing_store_hair_and_baseline.sql`(신규, 멱등):
+  seed.sql의 기본 상의/원피스/모자/소품/해녀헤어 행을 `on conflict (sku) do nothing`으로
+  보강 + 새 해남 헤어 8종(부서별 4×2) + 새싹 헤어 3종 item_catalog 삽입 + 전부
+  `store_products`에 `not exists` 체크로 등록.
+
+**정직하게 확인한 한계 — 하의/신발 탭**: 이 두 탭은 여전히 채우지 못했다. 실제 캐릭터
+렌더러(`CharacterSprite`)에는 하의나 신발만 따로 갈아입는 레이어가 애초에 없다 —
+`outfit_full`/`dress_full` 에셋 자체가 상의+하의(+신발)가 한 장으로 합쳐진 "전신 의상"
+스프라이트라서, 상의를 사면 하의·신발도 자동으로 같이 바뀐다(하의만/신발만 갈아입는 기능
+자체가 존재하지 않음). 새로운 그림을 만들거나 가짜 상품으로 채우지 말라는 지시에 따라
+이 두 탭은 비운 채로 뒀다 — 진짜로 채우려면 캐릭터 렌더링 시스템에 하의/신발 전용 레이어를
+새로 설계해야 하는데, 이는 이번 "상점 DB 연결" 범위를 넘는 별도의 큰 작업이다.
+
+**검증**: 실제 컴포넌트(`ClothingStoreScreen`)에 목업 상품 데이터(해녀 상의/원피스/헤어
+3종/모자/소품)를 넣어 렌더링 — 전체 탭에서 모든 카테고리 상품이 실제 아이콘과 함께
+보임(헤어만 아이콘 자산이 없어 이니셜 박스 폴백 — 기존에도 쓰이던 정상 폴백), 헤어 탭
+클릭 시 헤어 상품만 필터링됨, "올림머리" 상품 클릭 시 피팅룸 미리보기가 즉시 그 헤어스타일로
+바뀜(1번에서 고친 정렬도 여기서 그대로 확인됨)을 스크린샷으로 확인.
+
+### 검증 종합
+
+`tsc`(next build 포함)/`vitest run`(247개, `clothingTabFor`에 hair 케이스 테스트 추가)/
+`next build` 전부 통과. `/home`·`/cabin`은 실제(비로그인 데모) 화면으로, 나머지는 실제
+컴포넌트에 목업 데이터를 주입해 렌더링하는 방식으로 검증했다 — 이 환경에는 로그인 세션이
+없어 실제 프로덕션 DB 상태·실제 사용자 클릭 타이밍은 확인하지 못했다는 한계를 정직하게
+남긴다.
+
+### Supabase에서 실행해야 할 것
+
+새 마이그레이션 2개를 순서대로 적용:
+1. `supabase/migrations/0022_household_users_user_index.sql`
+2. `supabase/migrations/0023_clothing_store_hair_and_baseline.sql`
+
+둘 다 `create index if not exists` / `on conflict do nothing` / `not exists` 체크로 멱등 —
+여러 번 실행해도 안전하고, 기존 사용자 데이터·소유 아이템·착용 상태는 전혀 건드리지 않는다.

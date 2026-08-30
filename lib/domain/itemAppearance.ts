@@ -80,6 +80,23 @@ export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>>
   child_acc_umbrella: { handAssetKey: "hand_umbrella" },
   child_acc_doll: { handAssetKey: "hand_doll" },
   child_acc_sunglasses: { hatAssetKey: "hat_sunglasses" },
+  // 해남 헤어 4종 — 해녀 헤어(haenyeo_hair_*)는 이미 있었는데 해남 쪽은 옷가게에 등록된 적이
+  // 없었다(옷가게 헤어 탭 자체가 없었음). 부서(항해사/기관사)에 따라 옷은 다르지만 헤어스타일
+  // 자체는 부서와 무관(HAIR_STYLE_INDEX.haenam 기준)하므로, 두 부서 캐릭터 모두 살 수 있게
+  // subcategory만 다른 동일 스타일을 haenam_deck/haenam_engine 두 벌로 등록한다.
+  haenam_deck_hair_short_neat: { hairStyle: "short_neat" },
+  haenam_deck_hair_buzz: { hairStyle: "buzz" },
+  haenam_deck_hair_sideswept: { hairStyle: "sideswept" },
+  haenam_deck_hair_bob: { hairStyle: "bob" },
+  haenam_engine_hair_short_neat: { hairStyle: "short_neat" },
+  haenam_engine_hair_buzz: { hairStyle: "buzz" },
+  haenam_engine_hair_sideswept: { hairStyle: "sideswept" },
+  haenam_engine_hair_bob: { hairStyle: "bob" },
+  // 새싹 헤어 3종 — CHILD_HAIR_STYLES(단발/트윈테일/포니테일)와 동일(올림머리는 실제 그림
+  // 자산이 없어 애초에 선택지에서 빠져 있음, docs/PROGRESS.md 참고).
+  child_hair_bob: { hairStyle: "bob" },
+  child_hair_twin: { hairStyle: "twin" },
+  child_hair_pony: { hairStyle: "pony" },
 };
 
 export const CATEGORY_TO_SLOT: Record<string, EquipSlot> = {
