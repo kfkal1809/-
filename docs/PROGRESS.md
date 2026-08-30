@@ -3035,3 +3035,135 @@ Playwright로 360×740, 390×844, 430×932 세 크기 모두 `/home` 렌더링 �
 `tsc`/`vitest run`(247개)/`next build` 모두 통과. 수정 전/후 스크린샷을 나란히 비교해 로고
 확대·항해정보 리본 그림화·9개 장소 아이콘 전부 교체·하단바 아이콘 전부 교체가 육안으로
 분명히 드러나는 것을 확인했다.
+
+## 옷가게 의류 시스템 전면 개편 — 상의/하의/원피스/신발 분리형 폐지, 한 벌 의상 단일 탭
+
+"상의·하의·원피스·신발 분리형이 아닌 한 벌 의상 교체 방식으로 전면 개편해달라"는 요청.
+실제 조사 결과, CharacterSprite 렌더러는 애초부터 "한 벌 의상 전신 교체" 구조였다 —
+`outfitAssetKey`/`fullPortraitKey`가 항상 목 아래 전신(신발까지)을 통째로 갈아 끼우고,
+상의·하의·신발을 따로 갈아입는 레이어는 존재한 적이 없다(지난 라운드 조사에서도 확인).
+그래서 이번 작업의 실제 범위는 (a) 옷가게 UI가 여전히 상의/하의/원피스/세트의상/신발로
+나뉘어 있던 것을 "의상" 한 탭으로 합치고, (b) 이미 정규화까지 끝났지만 상품으로 등록된 적
+없던 자산과 이번에 새로 발견한 자산을 실제로 판매 가능하게 만드는 것이었다.
+
+### 1) 3개 원본 시안 재확인 + 신규 발견
+
+- `design-assets/해녀 의상.png`(단일 파일, 20벌) — 전부 이미 `outfit_full/haenyeo_outfit_01~20.png`로
+  정규화돼 있었음(지난 라운드). 20개 중 4개(overalls/dress/sweatshirt/pajama)만 상품 등록,
+  16개는 정규화까지 끝나고도 미등록 상태였다.
+- `design-assets/기관사 항해사 해남이 의상 (1~4).png` — **파일이 4장이라 전수 확인**한 결과,
+  (1)(3)(4)는 전부 같은 20벌 컨셉(기관사 10 + 항해사 10)의 다른 생성 버전(라벨 문구까지 거의
+  동일)이라 이미 `outfit_full/haenam_deck_outfit_01~10.png` +
+  `haenam_engine_outfit_01~10.png`로 정규화돼 있었다(5개만 등록, 15개 미등록). **(2)는 완전히
+  다른 신규 20벌 세트**(세이프티 작업복/헤드폰 후드/스노클링/선장 정복/노란 우비/하와이안
+  셔츠/돌고래 파자마 등, 라벨도 다르고 그림도 다름) — 이건 지금까지 한 번도 처리된 적이
+  없어서, 이번에 처음으로 그리드 좌표를 알파채널 밀도로 실측해 24벌 전부 개별 크롭했다.
+- `design-assets/캐릭터 의상 (1~10).png` — (1)은 해녀 원피스 9벌(`dress_full/haenyeo_dress_01~09`,
+  1개만 등록·8개 미등록), (2)~(10)은 새싹 8체형별 원피스 변형 81벌로 전부 이미
+  `itemAppearanceVariants.ts`(체형별 variant SKU 시스템) + 마이그레이션 0010/0019로 완전히
+  등록돼 있었다 — 새로 할 일 없음, 재확인만.
+- 덤: `outfit_full/child_outfit_01~10.png`(3개 시안 어디에도 안 속하는 별도 새싹 의상 시트)도
+  3벌만 등록돼 있어 나머지 7벌을 같이 정리.
+
+### 2) 신규 24벌 크롭(시트 2) — 정밀 그리드 좌표 실측
+
+`design-assets/기관사 항해사 해남이 의상 (2).png`(1536×1024, 4열×2세트×3행=24칸)를
+알파채널 밀도(`(alpha>10).sum(axis=0/1)`)로 스캔해 칸 사이 여백을 찾았는데, 행별로 여백
+위치가 조금씩 달라(손에 든 소품이 옆 칸으로 살짝 넘어가는 경우가 있어서) 전역 고정 그리드로
+한 번에 자르면 소품이 잘리거나 옆 칸 그림이 섞였다(1차 시도에서 실제로 발견 — 소품이 잘린
+캐릭터를 육안으로 확인). 행마다 별도로 최소 밀도 지점을 다시 찾아 잘랐더니(2차) 24벌 전부
+깨끗하게 분리됐다 — before/after를 나란히 대조한 contact sheet로 확인.
+
+크롭한 24장을 `public/images/character/haenam/outfit/haenam_deck_outfit_11~22.png`,
+`haenam_engine_outfit_11~22.png`(기존 01~10 다음 번호로 이어서)에 넣고
+`scripts/asset-tools/normalize_outfits.py`를 재실행 — 같은 파이프라인(목선 좌표 자동 고정,
+가장 큰 연결요소만 남기기, 420×512 캔버스 정규화)을 그대로 타서 `outfit_full/`에 24장이
+추가됐다. 새 그림을 그리거나 재해석하지 않았고, 원본 색상·소품(쌍안경/카메라/캐리어/돌고래
+인형 등) 그대로 유지.
+
+### 3) 실제로 발견하고 고친 버그 — 의상 전환 시 이전 렌더링 경로가 안 지워짐
+
+`character_equipment` upsert 자체는 슬롯당 1개라 정상 교체되지만, `appearance_json`은
+`{...prev, ...patch}`로 병합되는데 기존 패치들이 `outfitAssetKey`만 쓰고 `fullPortraitKey`
+키 자체를 안 넣어둔 경우가 많았다 — `CharacterSprite`는 `fullPortraitKey`가 있으면 무조건
+그쪽을 먼저 그리므로, 원피스(`fullPortraitKey` 사용)를 입은 뒤 오버롤(`outfitAssetKey`만 있는
+패치)로 갈아입어도 이전 원피스의 `fullPortraitKey`가 안 지워져 계속 원피스가 렌더링되는
+실제 버그였다. 지금까지 원피스가 딱 1종(`haenyeo_outfit_dress`)뿐이라 잘 안 드러났는데,
+이번에 원피스를 9종으로 늘리면서 훨씬 자주 부딪힐 문제라 미리 고쳤다: `ITEM_APPEARANCE_PATCH`의
+모든 옷 패치가 `outfitAssetKey`/`fullPortraitKey` 두 필드를 항상 같이 명시(쓰는 쪽은 실제 키,
+안 쓰는 쪽은 `null`)하도록 기존 12개 + 신규 70개 항목 전부 수정. 재발 방지용으로
+`lib/domain/itemAppearance.test.ts`를 새로 만들어 모든 옷 패치 항목에 대해 두 필드가 항상
+같이 존재하는지 자동 검증(164개 항목 검사).
+
+### 4) 옷가게 상품 등록 — 신규 마이그레이션 0024, 총 70개
+
+`docs/PROGRESS.md`에 다 넣기엔 길어서 표는 커밋 메시지와 최종 사용자 보고에 정리했다.
+요약: 해녀 16(오버롤류) + 해녀 원피스 8 + 해남 항해사 19(기존 7 미등록분 + 신규 12) + 해남
+기관사 20(기존 8 미등록분 + 신규 12) + 새싹 7 = 70개. 가격은 기존 등록 상품(6~10)과 비슷한
+범위(9~16, 특수한 것만 rare 등급으로 살짝 높게)로 책정. `0024_outfit_full_wardrobe_expansion.sql`은
+`item_catalog`에 `on conflict (sku) do nothing`으로 삽입 후, `store_products`에도 방금 넣은
+SKU만 콕 집어 `not exists` 가드로 연결 — 기존 상의/하의/원피스/신발 분리 판매 데이터·마이그레이션은
+전혀 건드리지 않았다(순수 추가만).
+
+### 5) 옷가게 카테고리 단순화
+
+`lib/domain/clothingStoreCategories.ts`: 탭 키를 `all/top/bottom/dress/set/hair/hat/shoes/accessory`(9개)에서
+`all/outfit/hair/hat/accessory`(5개)로 줄이고, `clothingTabFor()`를 `category`를 그대로
+반환하는 1줄 함수로 단순화(더 이상 sku/outfitKind로 원피스 여부를 가를 필요가 없음 — 전부
+"의상" 한 탭). DB `item_catalog.category='outfit'`은 기존 스키마 그대로 유지(요청사항대로
+호환값 유지, 화면에만 "의상"으로 표시).
+
+옷가게 상품 카드(`ClothingProductCard.tsx`, `ClothingStoreDetail.tsx`)도 개편 — 지금까지
+`outfit` 카테고리 상품 12개 중 3개(새싹 3벌)만 `public/images/items/`에 전용 아이콘이 있고
+나머지 9개는 텍스트 placeholder 박스로 떴었다(기존부터 있던 문제). `lib/game/clothingStoreData.ts`에
+`clothingImageSrc()`를 추가해 `outfit` 카테고리는 `outfit_full`/`dress_full`의 실제 전신
+그림을 그대로 카드 이미지로 쓰도록 바꿔서, 신규 70개는 물론 기존 9개까지 전부 placeholder
+없이 실제 그림(소품·신발 포함 전체 모습)이 뜨게 됐다. `object-fit: contain`, 원형/사각형
+마스크 없음.
+
+### 6) 피부색(손·팔) 처리 — 조사 결과 보고
+
+한 벌 의상 그림에 손·팔이 포함된 경우(장갑을 안 낀 손 등) 실측: 예를 들어
+`haenam_engine_outfit_11`의 손 부분 평균 색은 `#F9E1CE`로, 실제 피부톤 스와치 3종
+(`#ffe9d9`/`#ffe3cf`/`#ffd9bc`) 중 기본값(`#ffe3cf`)과 거의 일치했다. 이 게임의 피부톤
+커스터마이징 폭 자체가 좁아서(3종 전부 옅은 톤, 어두운 톤 옵션 자체가 없음) 사용자가 다른
+스와치를 골라도 손·얼굴 색 차이는 미세하다. 다만 진짜 정합성을 맞추려면(의상 그림의 손 영역만
+피부 마스크로 분리해 얼굴과 동일하게 틴트) 70개 전체 이미지에 알파 기반 피부 영역 분리 +
+마스크 생성 작업이 추가로 필요한데, 이번 라운드 범위를 넘어서 진행하지 않았다 — 얼굴 피부색
+커스터마이징 기능 자체가 옷 색을 바꾸는 게 아니라 별도 마스크 오버레이 방식이라, 의상 원본
+색이 변하는 문제는 없다(요청사항 "의상 원래 색상이 변하면 안 됨"은 애초에 지켜짐, 손 색만
+얼굴과 살짝 다를 수 있다는 것).
+
+### 7) 전수 검수
+
+`app/(dev)/qa-wear/outfits/page.tsx`(신규, 다른 qa-wear 페이지와 같은 프로덕션 비노출 관례로
+영구 유지) — `outfit_full`/`dress_full` 디렉터리를 실제로 읽어(`fs.readdirSync`) 존재하는
+164개 자산 전부를 체형별로 그룹핑해 렌더링. haenyeo_outfit 20, haenam_deck_outfit 22,
+haenam_engine_outfit 22, child_outfit 10, haenyeo_dress 9, child dress variants 81 —
+전부 실제 브라우저 스크린샷으로 확인: 얼굴/목 연결, 헤어 위치, 어깨·몸 중심, 발바닥 위치,
+캐릭터 키가 의상을 바꿔도 전부 고정, 소품(쌍안경/공구함/캐리어/돌고래인형 등) 잘림 없음,
+투명 배경 유지, 옆 의상 혼입 없음을 확인했다.
+
+옷가게 UI는 실 Supabase 세션이 이 샌드박스에 없어서(`/stores/clothing` 접속 시 "로그인 후
+이용할 수 있어요" 정상 폴백만 확인 가능) `app/(dev)/clothing-store-preview`(임시, 커밋 전
+삭제)로 목데이터를 주입해 컴포넌트 레벨 검수: 탭이 "전체/의상/헤어/모자/악세사리" 5개로
+정확히 줄어든 것, "의상" 탭 클릭 시 헤어/모자/악세사리가 필터링되는 것, 상품 카드 클릭 시
+캐릭터 미리보기가 즉시 바뀌는 것, 하단 상세 패널에 "보유량/가격/착용하기" 버튼이 정확히
+뜨는 것을 실제 클릭까지 해서 확인. 이미지 404 0건, 콘솔 에러 0건.
+
+**확인 못한 것(정직하게 기록)**: 실제 Supabase 프로젝트 접속이 이 샌드박스에 없어(URL/Key
+미설정) 구매 시 실제 달러 차감, 인벤토리 저장, 착용 API 호출, 새로고침 후 유지, 홈/선실/갑판/
+낚시터 반영은 라이브로 검증하지 못했다 — 코드 경로(`/api/store/purchase`,
+`/api/character/equip`)는 기존 로직을 그대로 재사용하고 새로 건드리지 않았으므로 기존
+동작(이전 라운드들에서 이미 검증됨)과 동일하게 작동해야 하지만, 이번 라운드에서 직접 라이브
+확인은 못 했다는 점을 명시한다.
+
+`tsc`/`vitest run`(409개, 신규 itemAppearance.test.ts 164개 포함)/`next build` 모두 통과.
+
+### 8) Supabase에서 실행할 마이그레이션
+
+`supabase/migrations/0024_outfit_full_wardrobe_expansion.sql` — `item_catalog` insert(on
+conflict do nothing) + `store_products` insert(not exists 가드) 순서로 한 파일 안에 이미
+포함, 멱등이라 여러 번 실행해도 안전. 기존 마이그레이션·seed.sql은 전혀 수정하지 않았고,
+기존 상의/하의/원피스/신발 분리 판매 데이터·사용자 소유 아이템·착용 데이터도 전혀 건드리지
+않았다(순수 추가 insert만).

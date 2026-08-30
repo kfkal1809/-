@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { itemIconSrc } from "@/lib/domain/itemIcons";
 import type { ClothingProduct } from "@/lib/game/clothingStoreData";
 
 export function ClothingProductCard({
@@ -11,7 +10,7 @@ export function ClothingProductCard({
   previewed: boolean;
   onClick: () => void;
 }) {
-  const src = itemIconSrc(product.sku);
+  const src = product.imageSrc;
   const owned = product.ownedInventoryItemIds.length > 0;
 
   return (
@@ -33,9 +32,9 @@ export function ClothingProductCard({
           </svg>
         </span>
       )}
-      <div className="flex h-14 w-full items-center justify-center">
+      <div className="flex h-20 w-full items-center justify-center">
         {src ? (
-          <Image src={src} alt="" width={80} height={80} unoptimized style={{ maxHeight: "100%", width: "auto", objectFit: "contain" }} />
+          <Image src={src} alt="" width={130} height={158} unoptimized style={{ maxHeight: "100%", width: "auto", objectFit: "contain" }} />
         ) : (
           <div className="flex h-full w-full items-center justify-center rounded-xl bg-[var(--color-sky)] text-[10px] font-bold text-[var(--color-navy)]">
             {product.name.slice(0, 2)}

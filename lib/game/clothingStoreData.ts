@@ -1,10 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getWalletBalance } from "@/lib/game/wallet";
 import { compatKeyFor, clothingTabFor, type CompatKey, type ClothingTabKey } from "@/lib/domain/clothingStoreCategories";
-import { bodyPresetKeyFor, isCompatibleWithBody, resolveAppearancePatch } from "@/lib/domain/itemAppearanceVariants";
+import { bodyPresetKeyFor, isCompatibleWithBody, resolveAppearancePatch, type BodyPresetKey } from "@/lib/domain/itemAppearanceVariants";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 import { haenyeoPreset } from "@/lib/domain/characterPresets";
+import { itemIconSrc } from "@/lib/domain/itemIcons";
 
 export interface ClothingCharacterOption {
   id: string;
@@ -27,6 +28,21 @@ export interface ClothingProduct {
   ownedInventoryItemIds: string[];
   isNew: boolean;
   isEquipped: boolean;
+  imageSrc: string | null;
+}
+
+// 옷가게 카드에 쓸 상품 이미지 경로. category='outfit'은 outfit_full/dress_full의 실제 전신
+// 스프라이트를 그대로 쓴다(소품·신발까지 전부 보이는 원본 그림 — 별도로 잘라낸 아이콘을
+// 새로 만들지 않는다). hair/hat/accessory는 기존 public/images/items/<sku>.png 아이콘 방식을
+// 그대로 유지한다.
+function clothingImageSrc(sku: string, category: string, bodyPresetKey: BodyPresetKey): string | null {
+  if (category === "outfit") {
+    const patch = resolveAppearancePatch(sku, bodyPresetKey);
+    if (patch?.fullPortraitKey) return `/images/character/dress_full/${patch.fullPortraitKey}.png`;
+    if (patch?.outfitAssetKey) return `/images/character/outfit_full/${patch.outfitAssetKey}.png`;
+    return null;
+  }
+  return itemIconSrc(sku);
 }
 
 export interface ClothingStoreData {
@@ -160,21 +176,18 @@ export async function getClothingStoreData(requestedCharacterId?: string): Promi
         if (!isCompatibleWithBody(catalog.sku, bodyPresetKey)) return null;
         const metadata = catalog.metadata_json as { new?: boolean } | null;
         const category = catalog.category as "outfit" | "hair" | "hat" | "accessory";
-        // 체형별 variant 상품(child_dress_s*)은 sku 자체가 파이프라인 산출물 이름(dress_full
-        // 폴더 관례)이라 실제로는 멜빵바지/후드티 등도 "dress"를 포함한다 — sku 문자열 대신
-        // 실제 옷 종류(patch.outfit)로 원피스/상의 탭을 정확히 가른다.
-        const outfitKind = category === "outfit" ? resolveAppearancePatch(catalog.sku, bodyPresetKey)?.outfit : undefined;
         return {
           catalogItemId: catalog.id,
           sku: catalog.sku,
           name: catalog.name,
           description: catalog.description,
           category,
-          tab: clothingTabFor(category, catalog.sku, outfitKind),
+          tab: clothingTabFor(category),
           price: Number(catalog.buy_price),
           ownedInventoryItemIds: ownedInvIdsByCatalogId.get(catalog.id) ?? [],
           isNew: metadata?.new === true,
           isEquipped: equippedCatalogIds.has(catalog.id),
+          imageSrc: clothingImageSrc(catalog.sku, category, bodyPresetKey),
         } satisfies ClothingProduct;
       })
       .filter((p): p is ClothingProduct => !!p);

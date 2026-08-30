@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { itemIconSrc } from "@/lib/domain/itemIcons";
 import type { ClothingProduct } from "@/lib/game/clothingStoreData";
 
 const FALLBACK_DESCRIPTION = "캐릭터를 꾸며줄 아이템이에요.";
@@ -25,14 +24,14 @@ export function ClothingStoreDetail({
     );
   }
 
-  const src = itemIconSrc(product.sku);
+  const src = product.imageSrc;
   const owned = product.ownedInventoryItemIds.length > 0;
   const canAfford = balance >= product.price;
 
   return (
     <div className="flex items-center gap-3 rounded-[24px] border-2 border-white bg-white p-3 shadow-[0_6px_20px_rgba(36,54,90,0.08)]">
-      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-sky)]">
-        {src && <Image src={src} alt="" width={48} height={48} unoptimized style={{ maxHeight: "80%", width: "auto", objectFit: "contain" }} />}
+      <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-sky)]">
+        {src && <Image src={src} alt="" width={130} height={158} unoptimized style={{ maxHeight: "90%", width: "auto", objectFit: "contain" }} />}
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-extrabold text-[var(--color-navy)]">{product.name}</p>
