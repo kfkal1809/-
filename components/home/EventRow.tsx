@@ -1,9 +1,13 @@
+import Image from "next/image";
 import Link from "next/link";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
 
 // 목표 시안처럼 흐릿한 안내 문구 pill이 아니라, 크림색 바탕에 굵은 테두리와 그림자를 준
-// "게시판/팻말"형 가로 배너로 — 저장소에 전용 이벤트 배너 PNG는 없어(design-assets 전수
-// 검색 결과 캘린더/이벤트 그림 자산 없음) 캘린더+별 아이콘은 기존 인라인 SVG를 확대해 재사용한다.
+// "게시판/팻말"형 가로 배너로 — 저장소에 전용 이벤트 배너 PNG는 없다(design-assets 전수
+// 검색 결과 캘린더/이벤트 전용 그림 자산 없음). 대신 아이콘은 CSS/SVG 대체가 아니라 저장소의
+// 실제 그림 public/images/icons/book.png를 쓴다 — 디자이너 원본 참고 시트
+// (public/images/misc/icon-sheet-source.png)가 이 파일을 "선실 방명록·공지" 용도로
+// 명시해뒀고, 이벤트/공지 배너라는 용도가 그와 정확히 일치해 임의로 고른 대체가 아니다.
 export function EventRow({ title, eventId }: { title: string | null; eventId: string | null }) {
   if (!title || !eventId) {
     return (
@@ -20,14 +24,16 @@ export function EventRow({ title, eventId }: { title: string | null; eventId: st
     >
       <span className="flex min-w-0 items-center gap-2.5">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-[0_2px_8px_rgba(36,54,90,0.12)]">
-          <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden className="shrink-0 text-[var(--color-tab-active)]">
-            <rect x="3" y="5" width="18" height="16" rx="3" fill="none" stroke="currentColor" strokeWidth="1.7" />
-            <path d="M3 9h18 M8 3v4 M16 3v4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-            <path
-              d="M12 12.5l1.1 2.2 2.4.35-1.75 1.7.4 2.35L12 18l-2.15 1.1.4-2.35-1.75-1.7 2.4-.35z"
-              fill="var(--color-gold)"
-            />
-          </svg>
+          <Image
+            src="/images/icons/book.png"
+            alt=""
+            aria-hidden
+            width={178}
+            height={96}
+            unoptimized
+            className="w-6"
+            style={{ height: "auto" }}
+          />
         </span>
         <span className="flex min-w-0 flex-col gap-0.5">
           <span className="w-max rounded-full bg-[var(--color-gold)] px-2 py-0.5 text-[11px] font-extrabold text-white">

@@ -5,12 +5,20 @@ import { GameIcon } from "@/components/icons/GameIcon";
 
 // 목표 시안(design-assets/게임 UI 및 메뉴 화면.png = public/images/misc/home-mockup.png)처럼
 // 등대/배/구름/갈매기가 하나의 하늘+바다 장면 위에 얹혀 있고, 그 아래 "나의 항해 정보" 카드의
-// 바다로 자연스럽게 이어지도록 헤더 전체를 그라디언트 하늘바다 배경 하나로 통일한다.
+// 바다로 자연스럽게 이어지도록 헤더 전체를 하늘바다 배경 하나로 통일한다. 저장소에 통짜
+// 하늘바다 배경 원화는 없어서(design-assets 전수 검색 결과 없음), 낚시터 배경(피셔 있음/
+// 등대·배·갈매기가 이미 박혀 있는 합성 원화라 그대로 못 씀)에서 아무 것도 안 그려진 순수
+// 하늘→바다 그라디언트 구간만(public/images/backgrounds/fishing.jpg의 x:340-460,
+// y:0-42%) 잘라내 sky-sea-texture.png로 저장해 배경 텍스처로 재사용한다 — CSS 단색
+// 그라디언트 대신 실제 수채화 질감이 살아있는 그림.
 // 로고는 기존(190px) 대비 2배 이상(390px) 확대 — 헤더 폭에 맞춰 좌우로는 92%까지만 늘어나게
 // 해서 좁은 화면에서도 잘리지 않는다.
 export function HomeHeader({ balance }: { balance: number }) {
   return (
-    <header className="relative overflow-hidden bg-gradient-to-b from-[#8fd2f7] via-[#bfe6ff] to-[#eaf6ff] px-4 pb-6 pt-4">
+    <header
+      className="relative overflow-hidden px-4 pb-6 pt-4"
+      style={{ backgroundImage: "url(/images/home/sky-sea-texture.png)", backgroundSize: "100% 100%", backgroundRepeat: "no-repeat" }}
+    >
       <Image
         src="/images/home/cloud-1.png"
         alt=""
@@ -69,6 +77,20 @@ export function HomeHeader({ balance }: { balance: number }) {
         height={238}
         unoptimized
         className="pointer-events-none absolute left-[10%] top-[38%] w-2.5"
+        style={{ height: "auto" }}
+      />
+      {/* 배 — 시안처럼 하늘바다 장면 하단에 작게 배치. 등대는 다시 넣지 않는다: logo-wordmark.png
+          자체에 이미 등대 일러스트가 그려져 있어서(로고 좌측), 별도 등대 그림을 또 넣으면
+          같은 화면에 등대가 두 개 겹쳐 보인다 — 지난 라운드에 사용자가 "이 부분 그림들은
+          삭제해달라"고 한 것도 정확히 이 중복 때문이었다. */}
+      <Image
+        src="/images/home/ship.png"
+        alt=""
+        aria-hidden
+        width={1404}
+        height={1047}
+        unoptimized
+        className="pointer-events-none absolute bottom-3 right-[8%] w-16"
         style={{ height: "auto" }}
       />
 

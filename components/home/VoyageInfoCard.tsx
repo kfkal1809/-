@@ -186,8 +186,12 @@ export function VoyageInfoCard({
           </div>
         </Link>
 
-        <div className="relative mx-4 mt-5 flex items-stretch justify-between gap-2 rounded-2xl bg-white/85 p-4">
-          <div className="flex flex-1 flex-col items-center gap-0.5 text-center">
+        {/* 시안은 승선/하선을 흰색 단색 한 판이 아니라 좌(코랄톤)/우(블루톤) 두 판으로
+            색을 나눠 붙여둔다 — rounded-2xl에 overflow-hidden을 주고 내부를 반반 나눠
+            각자 옅은 배경색을 칠하는 방식으로 재현(이미지 마스크가 아니라 색 배경이라
+            "그림을 강제로 자르지 말 것" 제약과는 무관). */}
+        <div className="relative mx-4 mt-5 flex items-stretch justify-between gap-0 overflow-hidden rounded-2xl shadow-[0_2px_8px_rgba(36,54,90,0.08)]">
+          <div className="flex flex-1 flex-col items-center gap-0.5 bg-[#ffe3e6] py-3 text-center">
             <span className="flex items-center gap-1 text-[12px] font-bold text-[var(--color-navy-soft)]">
               <Image src="/images/home/deco-heart.png" alt="" aria-hidden width={623} height={490} unoptimized className="w-3" style={{ height: "auto" }} />
               승선
@@ -196,8 +200,7 @@ export function VoyageInfoCard({
               {voyage.boardedDays !== null ? `D+${voyage.boardedDays}` : "정보 없음"}
             </p>
           </div>
-          <div className="w-px bg-[var(--color-navy)]/10" />
-          <div className="flex flex-1 flex-col items-center gap-0.5 text-center">
+          <div className="flex flex-1 flex-col items-center gap-0.5 bg-[#e3f0ff] py-3 text-center">
             <span className="flex items-center gap-1 text-[12px] font-bold text-[var(--color-navy-soft)]">
               <GameIcon name="anchor" size={14} /> 하선
             </span>
