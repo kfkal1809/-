@@ -19,12 +19,18 @@ export function CabinRoom({ data }: { data: CabinData }) {
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-extrabold text-[var(--color-navy)]">{data.cabinName}</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="min-w-0 flex-1 truncate text-lg font-extrabold text-[var(--color-navy)]">{data.cabinName}</h1>
         {data.isOwner && (
-          <Link href="/cabin/edit" className="rounded-full bg-[var(--color-navy)] px-4 py-2 text-[13px] font-bold text-white">
-            방꾸미기
-          </Link>
+          <div className="flex shrink-0 gap-2">
+            <Link
+              href="/cabin/edit"
+              className="min-w-0 flex-1 whitespace-nowrap rounded-full bg-[var(--color-navy)] px-4 py-2 text-center text-[13px] font-bold text-white"
+            >
+              방꾸미기
+            </Link>
+            <AddChildButton canAdd={childCount < 3} />
+          </div>
         )}
       </div>
 
@@ -82,7 +88,6 @@ export function CabinRoom({ data }: { data: CabinData }) {
               </Link>
             )
           )}
-          {data.isOwner && <AddChildButton canAdd={childCount < 3} />}
         </div>
       </div>
 
