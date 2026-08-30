@@ -54,12 +54,11 @@ export async function getHomeData(): Promise<HomeData> {
 
     if (!user) return DEMO_HOME_DATA;
 
-    const { data: profile } = await supabase.from("profiles").select("nickname").eq("id", user.id).maybeSingle();
-    const { data: membership } = await supabase
-      .from("household_users")
-      .select("household_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    // profile/membership 둘 다 user.id만 있으면 되는 독립 쿼리라 순차 실행할 이유가 없다.
+    const [{ data: profile }, { data: membership }] = await Promise.all([
+      supabase.from("profiles").select("nickname").eq("id", user.id).maybeSingle(),
+      supabase.from("household_users").select("household_id").eq("user_id", user.id).maybeSingle(),
+    ]);
 
     if (!membership) return { ...DEMO_HOME_DATA, nickname: profile?.nickname ?? DEMO_HOME_DATA.nickname };
 

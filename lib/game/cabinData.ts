@@ -102,24 +102,26 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
     // 예전엔 .neq("kind", "child")로 새싹을 선실 화면에서 아예 뺐다 — 온보딩에서 새싹을
     // 같이 만들어도 선실엔 안 보이는 버그였다. child_gender/child_stage까지 같이 읽어와야
     // CharacterSprite가 연령대별 그림/키(heightScaleFor)를 고를 수 있다.
-    const { data: characters } = await supabase
-      .from("characters")
-      .select("id, kind, nickname, department, appearance_json, child_gender, child_stage")
-      .eq("household_id", householdId)
-      .order("kind");
-
-    const { data: placed } = await supabase
-      .from("space_items")
-      .select("id, x, y, scale, rotation, flip_x, z_index, metadata, item_catalog(sku, name)")
-      .eq("space_id", space.id);
-
-    const { data: guestbookRows } = await supabase
-      .from("guestbook_entries")
-      .select("id, body, created_at, profiles(nickname)")
-      .eq("cabin_space_id", space.id)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .limit(5);
+    // characters/placed/guestbookRows 셋 다 householdId·space.id만 있으면 되는 독립
+    // 쿼리라 순차 실행할 이유가 없다.
+    const [{ data: characters }, { data: placed }, { data: guestbookRows }] = await Promise.all([
+      supabase
+        .from("characters")
+        .select("id, kind, nickname, department, appearance_json, child_gender, child_stage")
+        .eq("household_id", householdId)
+        .order("kind"),
+      supabase
+        .from("space_items")
+        .select("id, x, y, scale, rotation, flip_x, z_index, metadata, item_catalog(sku, name)")
+        .eq("space_id", space.id),
+      supabase
+        .from("guestbook_entries")
+        .select("id, body, created_at, profiles(nickname)")
+        .eq("cabin_space_id", space.id)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false })
+        .limit(5),
+    ]);
 
     return {
       isDemo: false,

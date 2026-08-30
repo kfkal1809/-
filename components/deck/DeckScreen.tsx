@@ -25,9 +25,13 @@ function extractTrailingMention(value: string): string | null {
   return match ? match[1] : null;
 }
 
+// 낙관적 전송용 로컬 상태만 추가한 타입 — DB에는 저장되지 않고 이 화면 안에서만 쓴다.
+// "sending": 서버 응답 기다리는 중, "failed": 저장 실패(재전송 버튼 표시).
+type LocalMessage = DeckChatMessage & { status?: "sending" | "failed" };
+
 export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialMessages: DeckChatMessage[] }) {
   const [presence, setPresence] = useState<PresenceMeta[]>([]);
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState<LocalMessage[]>(initialMessages);
   const [input, setInput] = useState("");
   const [activeCharacter, setActiveCharacter] = useState<PresenceMeta | null>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -63,21 +67,29 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
           mentions: string[] | null;
           created_at: string;
         };
-        setMessages((prev) =>
-          prev.some((m) => m.id === row.id)
-            ? prev
-            : [
-                ...prev,
-                {
-                  id: row.id,
-                  userId: row.user_id,
-                  nickname: row.nickname_snapshot,
-                  body: row.body,
-                  mentions: row.mentions ?? [],
-                  createdAt: row.created_at,
-                },
-              ]
-        );
+        setMessages((prev) => {
+          // 낙관적으로 이미 화면에 떠 있는 내 메시지(같은 id로 미리 넣어둔 것)가 실시간
+          // 구독으로 다시 들어온 경우 — 새로 추가하지 않고 "전송 중" 상태만 지워서 중복
+          // 렌더링을 막는다.
+          const existingIdx = prev.findIndex((m) => m.id === row.id);
+          if (existingIdx !== -1) {
+            if (!prev[existingIdx].status) return prev;
+            const next = [...prev];
+            next[existingIdx] = { ...next[existingIdx], status: undefined };
+            return next;
+          }
+          return [
+            ...prev,
+            {
+              id: row.id,
+              userId: row.user_id,
+              nickname: row.nickname_snapshot,
+              body: row.body,
+              mentions: row.mentions ?? [],
+              createdAt: row.created_at,
+            },
+          ];
+        });
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
@@ -105,20 +117,40 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages.length]);
 
-  async function handleSend() {
+  // 전송 버튼을 누르면 서버 응답을 기다리지 않고 즉시 입력창을 비우고 채팅창에 메시지를
+  // 보여준다(낙관적 UI). id를 클라이언트에서 미리 만들어(chat_messages.id는 uuid 컬럼이라
+  // insert 시 직접 지정 가능) 저장에 성공하면 실시간 구독으로 돌아오는 같은 id의 INSERT
+  // 이벤트가 자연스럽게 "전송 중" 표시만 지우고(위 useEffect), 실패하면 그 메시지에만
+  // "재전송" 상태를 표시한다.
+  async function sendMessage(tempId: string, body: string, mentions: string[]) {
+    if (!self.userId) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("chat_messages")
+      .insert({ id: tempId, user_id: self.userId, nickname_snapshot: self.nickname, body, mentions });
+    if (error) {
+      setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m)));
+    }
+  }
+
+  function handleSend() {
     const body = input.trim();
     if (!body || !self.userId) return;
 
     const mentions = onlineOthers.filter((p) => body.includes(`@${p.nickname}`)).map((p) => p.nickname);
+    const tempId = crypto.randomUUID();
 
-    const supabase = createClient();
-    await supabase.from("chat_messages").insert({
-      user_id: self.userId,
-      nickname_snapshot: self.nickname,
-      body,
-      mentions,
-    });
     setInput("");
+    setMessages((prev) => [
+      ...prev,
+      { id: tempId, userId: self.userId!, nickname: self.nickname, body, mentions, createdAt: new Date().toISOString(), status: "sending" },
+    ]);
+    void sendMessage(tempId, body, mentions);
+  }
+
+  function retrySend(m: LocalMessage) {
+    setMessages((prev) => prev.map((msg) => (msg.id === m.id ? { ...msg, status: "sending" } : msg)));
+    void sendMessage(m.id, m.body, m.mentions);
   }
 
   function pickMention(nickname: string) {
@@ -190,9 +222,22 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
           ) : (
             <ul className="flex flex-col gap-1.5">
               {messages.map((m) => (
-                <li key={m.id} className="text-[13px]">
-                  <span className="font-bold text-[var(--color-navy)]">{m.nickname}</span>{" "}
-                  <span className="text-[var(--color-navy)]">{m.body}</span>
+                <li key={m.id} className="flex items-center gap-1.5 text-[13px]">
+                  <span className={`flex-1 ${m.status ? "opacity-60" : ""}`}>
+                    <span className="font-bold text-[var(--color-navy)]">{m.nickname}</span>{" "}
+                    <span className="text-[var(--color-navy)]">{m.body}</span>
+                  </span>
+                  {m.status === "sending" && (
+                    <span className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-[var(--color-navy-soft)]/30 border-t-[var(--color-navy-soft)]" />
+                  )}
+                  {m.status === "failed" && (
+                    <button
+                      onClick={() => retrySend(m)}
+                      className="shrink-0 rounded-full bg-[var(--color-danger)]/10 px-2 py-0.5 text-[11px] font-bold text-[var(--color-danger)]"
+                    >
+                      재전송
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
