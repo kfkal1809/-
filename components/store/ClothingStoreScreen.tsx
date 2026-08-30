@@ -10,7 +10,7 @@ import { ClothingProductCard } from "@/components/store/ClothingProductCard";
 import { ClothingStoreDetail } from "@/components/store/ClothingStoreDetail";
 import { playSfx } from "@/lib/audio/audioManager";
 import { bodyPresetKeyFor, resolveAppearancePatch } from "@/lib/domain/itemAppearanceVariants";
-import type { ClothingTabKey } from "@/lib/domain/clothingStoreCategories";
+import { CLOTHING_TABS, type ClothingTabKey } from "@/lib/domain/clothingStoreCategories";
 import type { ClothingStoreData, ClothingProduct } from "@/lib/game/clothingStoreData";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 
@@ -40,6 +40,13 @@ export function ClothingStoreScreen({ data }: { data: ClothingStoreData }) {
   }
 
   const filtered = useMemo(() => (tab === "all" ? products : products.filter((p) => p.tab === tab)), [products, tab]);
+  // 상품이 0개인 탭(현재는 상의/하의/신발 — 독립 레이어 에셋이 없어 항상 비어 있음)은
+  // 목록에서 아예 뺀다. "전체"는 상품이 있는 한 항상 남긴다.
+  const availableTabs = useMemo(() => {
+    const counts = new Map<ClothingTabKey, number>();
+    for (const p of products) counts.set(p.tab, (counts.get(p.tab) ?? 0) + 1);
+    return CLOTHING_TABS.filter((t) => t.key === "all" || (counts.get(t.key) ?? 0) > 0);
+  }, [products]);
   const selected = products.find((p) => p.catalogItemId === selectedProductId) ?? null;
   const bodyPresetKey = useMemo(
     () => bodyPresetKeyFor(data.selectedKind, data.selectedChildGender, data.selectedChildStage),
@@ -149,7 +156,7 @@ export function ClothingStoreScreen({ data }: { data: ClothingStoreData }) {
         onSwitchCharacter={switchCharacter}
       />
 
-      <ClothingTabs active={tab} onChange={setTab} />
+      <ClothingTabs tabs={availableTabs} active={tab} onChange={setTab} />
 
       {filtered.length === 0 ? (
         <p className="py-8 text-center text-[13px] text-[var(--color-navy-soft)]">이 카테고리엔 아직 상품이 없어요.</p>
