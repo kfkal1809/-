@@ -79,7 +79,7 @@ values
   ('child_outfit_stripe_set', '스트라이프 세트', '스트라이프 세트', 'outfit', 'child', 'common', 8, 2, false, '해기사 의상 팩', true),
   ('child_outfit_yellow_raincoat', '옐로우 우비', '옐로우 우비', 'outfit', 'child', 'rare', 10, 2, false, '해기사 의상 팩', true),
   ('child_outfit_blue_pajama', '블루 파자마', '블루 파자마', 'outfit', 'child', 'common', 8, 2, false, '해기사 의상 팩', true),
-  ('child_outfit_winter_coat_scarf', '겨울 코트룩', '겨울 코트룩', 'outfit', 'child', 'rare', 10, 2, false, '해기사 의상 팩', true);
+  ('child_outfit_winter_coat_scarf', '겨울 코트룩', '겨울 코트룩', 'outfit', 'child', 'rare', 10, 2, false, '해기사 의상 팩', true)
 on conflict (sku) do nothing;
 
 -- 옷가게(store_products)에 연결 — 0009_clothing_store.sql과 동일한 패턴(카테고리+서브카테고리
