@@ -31,19 +31,24 @@ export function OutfitsQaGrid({ outfitFull, dressFull }: { outfitFull: string[];
   const deckOutfits = outfitFull.filter((k) => k.startsWith("haenam_deck_outfit_"));
   const engineOutfits = outfitFull.filter((k) => k.startsWith("haenam_engine_outfit_"));
   const childOutfits = outfitFull.filter((k) => k.startsWith("child_outfit_"));
-  const haenyeoDresses = dressFull.filter((k) => k.startsWith("haenyeo_dress_"));
-  const childDresses = dressFull.filter((k) => k.startsWith("child_"));
+  // dress_full(얼굴까지 포함된 완성 전신 원본)은 더 이상 직접 렌더링하지 않는다 — 목 아래만
+  // 남기고 outfitAssetKey 규격으로 재변환한(scripts/asset-tools/convert_dress_full_to_outfit.py)
+  // 버전이 outfit_full에 같은 파일명으로 이미 들어있으므로, 그쪽을 outfitAssetKey로 그려서
+  // "MASTER 체형 + 헤어 + 의상"이 다른 outfit_full 의상과 완전히 같은 공식으로 합성되는지
+  // 검수한다.
+  const haenyeoDresses = outfitFull.filter((k) => k.startsWith("haenyeo_dress_"));
+  const childDresses = outfitFull.filter((k) => k.startsWith("child_") && k.includes("_dress_"));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, padding: 20, background: "white" }}>
       <h1 style={{ fontFamily: "monospace" }}>
-        옷가게 &quot;의상&quot; 전수 검수 — outfit_full {outfitFull.length}개 + dress_full {dressFull.length}개
+        옷가게 &quot;의상&quot; 전수 검수 — outfit_full {outfitFull.length}개 (dress_full 원본 {dressFull.length}개에서 변환됨)
       </h1>
 
       <Section title={`haenyeo_outfit (${haenyeoOutfits.length})`}>
         {haenyeoOutfits.map((k) => (
           <Cell key={k} label={k}>
-            <CharacterSprite appearance={haenyeoPreset({ outfitAssetKey: k, fullPortraitKey: null })} kind="haenyeo" size={SIZE} />
+            <CharacterSprite appearance={haenyeoPreset({ outfitAssetKey: k })} kind="haenyeo" size={SIZE} />
           </Cell>
         ))}
       </Section>
@@ -51,7 +56,7 @@ export function OutfitsQaGrid({ outfitFull, dressFull }: { outfitFull: string[];
       <Section title={`haenam_deck_outfit (${deckOutfits.length})`}>
         {deckOutfits.map((k) => (
           <Cell key={k} label={k}>
-            <CharacterSprite appearance={haenamDeckPreset({ outfitAssetKey: k, fullPortraitKey: null })} kind="haenam" size={SIZE} />
+            <CharacterSprite appearance={haenamDeckPreset({ outfitAssetKey: k })} kind="haenam" size={SIZE} />
           </Cell>
         ))}
       </Section>
@@ -59,7 +64,7 @@ export function OutfitsQaGrid({ outfitFull, dressFull }: { outfitFull: string[];
       <Section title={`haenam_engine_outfit (${engineOutfits.length})`}>
         {engineOutfits.map((k) => (
           <Cell key={k} label={k}>
-            <CharacterSprite appearance={haenamEnginePreset({ outfitAssetKey: k, fullPortraitKey: null })} kind="haenam" size={SIZE} />
+            <CharacterSprite appearance={haenamEnginePreset({ outfitAssetKey: k })} kind="haenam" size={SIZE} />
           </Cell>
         ))}
       </Section>
@@ -68,7 +73,7 @@ export function OutfitsQaGrid({ outfitFull, dressFull }: { outfitFull: string[];
         {childOutfits.map((k) => (
           <Cell key={k} label={k}>
             <CharacterSprite
-              appearance={childPreset({ outfitAssetKey: k, fullPortraitKey: null })}
+              appearance={childPreset({ outfitAssetKey: k })}
               kind="child"
               childGender="male"
               childStage="toddler"
@@ -78,21 +83,21 @@ export function OutfitsQaGrid({ outfitFull, dressFull }: { outfitFull: string[];
         ))}
       </Section>
 
-      <Section title={`haenyeo_dress (${haenyeoDresses.length})`}>
+      <Section title={`haenyeo_dress → outfitAssetKey 변환본 (${haenyeoDresses.length})`}>
         {haenyeoDresses.map((k) => (
           <Cell key={k} label={k}>
-            <CharacterSprite appearance={haenyeoPreset({ fullPortraitKey: k, outfitAssetKey: null })} kind="haenyeo" size={SIZE} />
+            <CharacterSprite appearance={haenyeoPreset({ outfitAssetKey: k })} kind="haenyeo" size={SIZE} />
           </Cell>
         ))}
       </Section>
 
-      <Section title={`child dress variants (${childDresses.length}, 파일명에서 체형 역파싱)`}>
+      <Section title={`child dress → outfitAssetKey 변환본 (${childDresses.length}, 파일명에서 체형 역파싱)`}>
         {childDresses.map((k) => {
           const { kind, childGender, childStage } = parseDressKey(k);
           return (
             <Cell key={k} label={k}>
               <CharacterSprite
-                appearance={childPreset({ fullPortraitKey: k, outfitAssetKey: null })}
+                appearance={childPreset({ outfitAssetKey: k })}
                 kind={kind}
                 childGender={childGender}
                 childStage={childStage}

@@ -14,9 +14,9 @@ export const HEAD_OVERLAP = 10;
 
 // 머리 이미지는 목선(NECK_Y)보다 위로 올라가는 만큼 OUTFIT_CANVAS 상단을 벗어난다. 이 여유를
 // 안 두면 렌더링 컨테이너 높이(size)가 실제 화면에 그려지는 키(머리~발끝)보다 작아져서, size가
-// 같아도 outfitAssetKey 캐릭터가 fullPortraitKey/기존 단일 이미지 캐릭터보다 눈에 띄게 커
-// 보이는 버그가 생긴다 — 그래서 컨테이너 높이 계산에 이 마진을 항상 포함시켜 "size = 머리~
-// 발끝 실제 높이"가 모든 렌더링 방식에서 똑같이 성립하도록 한다.
+// 같아도 outfitAssetKey 캐릭터가 기존 단일 이미지 캐릭터보다 눈에 띄게 커 보이는 버그가
+// 생긴다 — 그래서 컨테이너 높이 계산에 이 마진을 항상 포함시켜 "size = 머리~발끝 실제
+// 높이"가 모든 렌더링 방식에서 똑같이 성립하도록 한다.
 //
 // 예전엔 이 값이 모든 kind에 공통인 고정값(90)이었다. 그런데 HEAD_SIZE를 보면 해녀 머리
 // (346x425, 세로로 긴 올림머리 포함 크롭)와 해남 머리(384x354, 가로로 넓은 크롭)는 종횡비가
@@ -168,14 +168,14 @@ export function hatSrc(key: string): string {
 // 캡틴모자/안전모/손소품 3종만 실제 확인했고, 나머지 21종은 같은 공식으로 어림값만 잡았다 —
 // 실제로 보면서 미세조정 필요할 수 있음(정직하게 기록).
 export const HAT_PLACEMENT: Record<string, { widthFrac: number; bottomFrac: number; offsetXFrac?: number }> = {
-  hat_captain: { widthFrac: 1.08, bottomFrac: 0.34 },
-  hat_hardhat: { widthFrac: 0.96, bottomFrac: 0.4 },
-  hat_sailor_cap: { widthFrac: 1.02, bottomFrac: 0.34 },
+  hat_captain: { widthFrac: 1.08, bottomFrac: 0.44 },
+  hat_hardhat: { widthFrac: 0.96, bottomFrac: 0.5 },
+  hat_sailor_cap: { widthFrac: 1.02, bottomFrac: 0.44 },
   hat_sailor_bow: { widthFrac: 1.0, bottomFrac: 0.34 },
-  hat_bucket: { widthFrac: 1.05, bottomFrac: 0.36 },
+  hat_bucket: { widthFrac: 1.05, bottomFrac: 0.46 },
   hat_straw: { widthFrac: 1.15, bottomFrac: 0.32 },
-  hat_aviator_white: { widthFrac: 0.95, bottomFrac: 0.42 },
-  hat_aviator_blue: { widthFrac: 0.95, bottomFrac: 0.42 },
+  hat_aviator_white: { widthFrac: 0.95, bottomFrac: 0.52 },
+  hat_aviator_blue: { widthFrac: 0.95, bottomFrac: 0.52 },
   hat_goggles_brown: { widthFrac: 0.85, bottomFrac: 0.58 },
   hat_goggles_red: { widthFrac: 0.8, bottomFrac: 0.58 },
   hat_wrench_headband_gray: { widthFrac: 0.85, bottomFrac: 0.3 },
@@ -285,13 +285,6 @@ export function outfitFullSrc(assetKey: string): string {
   return `/images/character/outfit_full/${assetKey}.png`;
 }
 
-// "드레스 오버레이" 방식(scripts/asset-tools/normalize_dress_overlays.py) — 목 아래 전신
-// 인형이 아니라 상의/원피스만 그려진 의상 세트를, 기본 체형 원본(팔다리 포함) 위에 어깨폭
-// 기준으로 얹고 신발을 발 위치에 따로 앵커링해 만든 "완성된 전신 이미지". outfit_full의
-// 420x512 캔버스와 달리 각 kind의 기본 체형 원본과 동일한 실측 픽셀 크기를 그대로 쓴다.
-export function dressFullSrc(assetKey: string): string {
-  return `/images/character/dress_full/${assetKey}.png`;
-}
 // scripts/asset-tools 로 생성 — 해녀/해남/새싹 민머리 베이스 + 헤어스타일 오버레이 배치값.
 // widthFrac/leftFrac/topFrac은 headRenderW/headRenderH(렌더된 머리 폭/높이) 기준 비율.
 // 해녀 헤어 20종의 topFrac은 예전엔 전부 -0.1379로 동일했다(실측이 아니라 헤어마다 그대로

@@ -3167,3 +3167,86 @@ conflict do nothing) + `store_products` insert(not exists 가드) 순서로 한 
 포함, 멱등이라 여러 번 실행해도 안전. 기존 마이그레이션·seed.sql은 전혀 수정하지 않았고,
 기존 상의/하의/원피스/신발 분리 판매 데이터·사용자 소유 아이템·착용 데이터도 전혀 건드리지
 않았다(순수 추가 insert만).
+
+## 캐릭터 체형 불일치 근본 수정 — fullPortraitKey 경로 완전 제거
+
+### 문제
+
+사용자가 실제 스크린샷으로 지적: 같은 해녀 캐릭터인데 어떤 의상을 입었는지에 따라 화면마다
+머리 크기·키·다리 길이가 달라 보였다. 원인 후보로 지목된 `CharacterSprite.tsx`에는
+`kind`(플레이어 캐릭터) 렌더링 경로가 두 개 혼재하고 있었다:
+
+- **outfitAssetKey 경로**: 머리(`base/head/<key>.png`, `HEAD_SIZE`)와 몸통(`outfit_full/<key>.png`,
+  420×512 캔버스, `NECK_Y=140` 앵커)을 따로 그린 뒤 목선에서 합성.
+- **fullPortraitKey 경로**: `dress_full/<key>.png`(얼굴까지 포함된 완성 전신 PNG)를 통째로
+  `PORTRAIT_SIZE`+`heightScaleFor()` 공식 하나로 스케일링.
+
+**먼저 목록부터 뽑았다(요청하신 순서대로)**: `lib/domain/itemAppearance.ts`의 outfit 카테고리
+패치 82개 중 fullPortraitKey를 쓰는 건 9개(해녀 원피스, `haenyeo_dress_01~09`)뿐이었고,
+`lib/domain/itemAppearanceVariants.ts`의 `OUTFIT_VARIANT_MANIFEST`(새싹 체형별 원피스) 81개는
+전부 fullPortraitKey였다 — 나머지 outfitAssetKey 쪽(해녀 기본 20종 + 해남 항해사/기관사
+44종 + 새싹 범용 13종)은 이미 정상 경로였다.
+
+### 근본 원인 확인
+
+`scripts/asset-tools/normalize_dress_overlays.py`의 `compose_all()`을 추적한 결과, `dress_full`
+이미지는 실제로 `base/<kind>.png`(마스터 기본 체형) 원본을 `copy()`한 캔버스 위에 원피스만
+얹어 만든 것이었다 — **몸이 다른 그림이 아니라, 같은 마스터 체형 위에 옷만 다르게 얹은 것**.
+즉 문제는 자산이 아니라 `CharacterSprite`의 두 렌더링 공식이 한 번도 서로 맞춰진 적 없이
+따로 발전했다는 것이었다(`proportion-compare-raw.png`로 실제 렌더 결과 비교해 시각적으로도
+확인).
+
+### 수정
+
+1. **`scripts/asset-tools/convert_dress_full_to_outfit.py`(신규)** — `dress_full` 90개
+   전부(해녀 9 + 새싹 81)를 목선(`base/<kind>.png`에서 계산한 `neck_y`, 기존 파이프라인과
+   동일한 알파 폭-프로파일 휴리스틱)에서 잘라 얼굴을 제거하고, `normalize_outfits.py`와
+   완전히 같은 정규화 함수(최대 연결요소만 남기기 → bbox trim → `TARGET_H=350`/`MAX_W=380`
+   스케일 → `OUTFIT_CANVAS(420×512)`에 `NECK_Y=140` 기준 배치)를 통과시켜
+   `outfit_full/<같은 파일명>.png`로 저장했다. **그림을 새로 그리거나 재해석하지 않고, 이미
+   승인된 합성 이미지를 "목 아래만" 잘라 기존 공식에 그대로 태운 것** — 90개 전부 성공(스킵
+   0건), neck-anchor 정렬을 대조 이미지로 확인(기존 outfitAssetKey 자산과 캔버스 내 NECK_Y
+   위치가 정확히 일치).
+2. **`components/character/CharacterSprite.tsx`** — `kind && a.fullPortraitKey` 분기를
+   완전히 삭제. 플레이어 캐릭터는 이제 `outfitAssetKey` 경로 하나로만 렌더링된다(목표 구조:
+   MASTER 기본 체형 → 헤어 → 의상 → 모자/액세서리). 미사용이 된 `dressFullSrc` import 제거.
+3. **`lib/domain/characterPresets.ts`** — `CharacterAppearance` 타입에서 `fullPortraitKey`
+   필드 자체를 제거했다(NPC 프리셋도 실제 값으로 쓴 적이 없어 완전히 죽은 필드였음 —
+   "플레이어 캐릭터에서는 아예 없애" 요청을 필드 삭제로 구조적으로 강제).
+4. **`lib/domain/itemAppearance.ts` / `itemAppearanceVariants.ts`** — 해녀 원피스 9개 +
+   새싹 원피스 81개 패치를 전부 `outfitAssetKey: "<변환된 동일 파일명>"`으로 교체(문자열
+   값은 그대로, 필드만 이동). `fullPortraitKey: null` 82곳도 필드 자체가 없어졌으니 함께
+   제거.
+5. **기존 사용자 데이터 정규화** — `supabase/migrations/0025_normalize_full_portrait_key.sql`
+   (신규, 멱등). 이미 원피스를 착용해 `characters.appearance_json`에 `fullPortraitKey`가
+   저장된 캐릭터는 코드가 더 이상 이 필드를 읽지 않으므로 그대로 두면 옷이 사라지고 기본
+   체형만 보인다 — 값이 있으면 `outfitAssetKey`로 옮기고(파일명이 그대로 재사용되므로 값은
+   안 바뀜), 남은 `fullPortraitKey` 키는 전부 제거한다. 두 UPDATE 다 재실행해도 안전.
+6. **`app/(dev)/qa-wear/outfits/OutfitsQaGrid.tsx`** — "haenyeo_dress"/"child dress" 검수
+   섹션을 `dress_full`(더 이상 직접 렌더링 안 함) 대신 변환된 `outfit_full` 자산을
+   `outfitAssetKey`로 그리도록 갱신.
+7. **해남 모자 위치 수정** — 같은 김에 지적받은 "해남 모자가 너무 위에 떠 있는" 문제도 확인.
+   `qa-wear/hats` 스크린샷으로 실측한 결과 해남이 실제로 쓰는 모자 6종
+   (`hat_captain`/`hat_hardhat`/`hat_sailor_cap`/`hat_bucket`/`hat_aviator_white`/
+   `hat_aviator_blue`)만 머리와 눈에 띄는 간격을 두고 떠 있었다(고글/렌치 헤어밴드류는
+   이미 정상). `HAT_PLACEMENT`의 `bottomFrac`을 해당 6개 키만 올려서(예: captain
+   0.34→0.44) 재조정 — 이 6개는 실제 게임에서 haenam 전용 SKU만 쓰는 값이라 haenyeo
+   쪽에는 영향 없음(QA 그리드에서 두 체형 모두에 대조 렌더링해 재확인).
+
+### 검증
+
+`app/(dev)/qa-wear/proportion-check`(임시 페이지, 검증 후 삭제) — 4개 실화면이 실제로 쓰는
+`CharacterSprite` 호출부를 그대로 재현(커스터마이즈 size=170 / 홈 158 / 선실 92 / 갑판 80,
+전부 CSS 보정 없이 size prop만 다름을 grep으로 먼저 확인). 같은 해녀 + `haenyeo_dress_01`
+(예전엔 fullPortraitKey를 타던 케이스)을 4개 size로 렌더링한 뒤 전부 400px 높이로 확대
+비교 — 머리 크기·앞머리 위치·드레스 기장·다리 길이·신발 위치가 4개 전부 픽셀 단위로
+일치했다(겹쳐 그린 difference 블렌드에서도 실질적 윤곽선 이중 노출 없음, 렌더 해상도差
+안티에일리어싱 수준의 미세한 차이만 있음).
+
+`npx tsc --noEmit`(0 errors) / `npx vitest run`(327개 전부 통과, `itemAppearance.test.ts`는
+fullPortraitKey 재도입 방지용 회귀 가드로 재작성, `itemAppearanceVariants.test.ts`의
+`fullPortraitKey` 단언 2건도 `outfitAssetKey`로 갱신) / `npx next build`(에러 없음, 모든
+route 정상 생성) 전부 통과.
+
+**Supabase에서 실행할 마이그레이션**: `supabase/migrations/0025_normalize_full_portrait_key.sql`
+— 새 파일이며 기존 마이그레이션·seed.sql은 건드리지 않았다.

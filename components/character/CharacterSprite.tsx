@@ -30,7 +30,6 @@ import {
   HAIR_ASSET_PLACEMENT,
   headSrc,
   outfitFullSrc,
-  dressFullSrc,
   hatSrc,
   handAccessorySrc,
   neckAccessorySrc,
@@ -320,31 +319,12 @@ function Accessory({ style, cx, y }: { style: string; cx: number; y: number }) {
 }
 
 export function CharacterSprite({ appearance: a, size = 140, className, flip, kind, childGender, childStage }: CharacterSpriteProps) {
-  if (kind && a.fullPortraitKey) {
-    // 상의/원피스만 그려진 의상(팔다리 없음)을 기본 체형 원본 위에 얹어 미리 합성해둔 완성된
-    // 전신 이미지 — dressFullSrc 자체가 이미 얼굴/팔다리/신발까지 다 포함된 한 장이라 별도
-    // 헤어 레이어가 필요 없다(lib/domain/characterFullBody.ts 참고).
-    const dims = PORTRAIT_SIZE[characterPortraitKeyFor({ kind, childGender, childStage })];
-    const kindScale = heightScaleFor(kind, childStage);
-    const height = size;
-    const width = Math.round(height * (dims.w / dims.h));
-    const innerHeight = height * kindScale;
-    const innerWidth = width * kindScale;
-    return (
-      <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
-        <Image
-          src={dressFullSrc(a.fullPortraitKey)}
-          alt=""
-          aria-hidden
-          width={dims.w}
-          height={dims.h}
-          unoptimized
-          style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}
-        />
-      </div>
-    );
-  }
-
+  // 플레이어 캐릭터(kind 있음)는 MASTER 기본 체형(base/<kind>.png) → 헤어 → 의상 →
+  // 모자/액세서리 순으로 항상 outfitAssetKey 경로 하나로만 그린다. fullPortraitKey(완성 전신
+  // PNG를 통째로 얹어 MASTER 체형을 우회하던 옛 경로)는 의상마다 머리 크기·키·다리 길이가
+  // 달라지는 원인이었다(같은 dress_full이 사실 base/<kind>.png + 의상 합성이라 몸은 같은데,
+  // 이 경로만 다른 스케일 공식을 썼다) — scripts/asset-tools/convert_dress_full_to_outfit.py로
+  // 모든 dress_full을 outfitAssetKey 규격으로 재변환해 이 경로 자체를 없앴다.
   if (kind && a.outfitAssetKey) {
     // 목 아래(의상+체형)를 하나의 정규화된 전신 스프라이트로, 목 위(얼굴+헤어)는 모든 의상에
     // 대해 같은 위치에 고정 배치 — 개별 의상마다 팔다리가 이중으로 그려지던 문제를 근본적으로
@@ -369,7 +349,7 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
     // 골라 써야 한다.
     const headDims = useBaldHead ? HEAD_BALD_SIZE[headKey] : HEAD_SIZE[headKey];
     // 머리가 목선 위로 올라가는 만큼(headMarginTop) 항상 포함한 "전체 캔버스" 기준으로
-    // scale을 잡아야, size가 다른 렌더링 방식(fullPortraitKey 등)과 똑같이 "머리~발끝 실제
+    // scale을 잡아야, size가 아래 kind-없는 벡터 폴백 렌더링과 똑같이 "머리~발끝 실제
     // 높이"를 의미하게 된다 — 안 그러면 머리가 컨테이너 밖으로 넘쳐서 size가 같아도
     // outfitAssetKey 캐릭터만 유독 커 보이는 버그가 생긴다. kind마다 머리 종횡비가 달라
     // 필요한 여유가 다르므로(해녀 91 vs 해남 33) headMarginTopFor()로 kind별 값을 쓴다 —

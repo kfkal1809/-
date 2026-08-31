@@ -6,9 +6,9 @@ import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types"
 import type { ClothingCharacterOption } from "@/lib/game/clothingStoreData";
 
 // 피팅룸 — 기존 CharacterSprite를 그대로 재사용한다(별도 렌더러를 새로 만들지 않음).
-// size를 고정해두면 CharacterSprite 자체가 outfitAssetKey/fullPortraitKey/구버전 렌더링
-// 방식 모두에서 "머리~발끝 실제 높이"를 동일하게 계산해주므로, 의상을 계속 바꿔도
-// 캐릭터 키가 점프하지 않는다(HEAD_MARGIN_TOP 보정이 이미 CharacterSprite 내부에 있음).
+// size를 고정해두면 CharacterSprite 자체가 outfitAssetKey/구버전 렌더링 방식 모두에서
+// "머리~발끝 실제 높이"를 동일하게 계산해주므로, 의상을 계속 바꿔도 캐릭터 키가 점프하지
+// 않는다(HEAD_MARGIN_TOP 보정이 이미 CharacterSprite 내부에 있음).
 export function ClothingFittingRoom({
   appearance,
   kind,

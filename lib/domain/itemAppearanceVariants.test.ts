@@ -96,7 +96,7 @@ describe("resolveAppearancePatch", () => {
   it("variant가 등록된 sku는 일치하는 체형에서만 patch를 반환한다", () => {
     const patch = resolveAppearancePatch("child_dress_s3_01", "child_toddler_male");
     expect(patch).not.toBeNull();
-    expect(patch?.fullPortraitKey).toBe("child_toddler_male_dress_s3_01");
+    expect(patch?.outfitAssetKey).toBe("child_toddler_male_dress_s3_01");
   });
 
   it("variant가 등록된 sku를 다른 체형으로 조회하면 null이다(다른 체형 그림으로 강제 대체 금지)", () => {
@@ -108,7 +108,7 @@ describe("resolveAppearancePatch", () => {
   it("기존(체형 제약 없는) 해녀/해남/범용 새싹 상품은 기존 ITEM_APPEARANCE_PATCH로 폴백한다(회귀 없음)", () => {
     const haenyeo = resolveAppearancePatch("haenyeo_outfit_dress", "haenyeo");
     expect(haenyeo).not.toBeNull();
-    expect(haenyeo?.fullPortraitKey).toBe("haenyeo_dress_02");
+    expect(haenyeo?.outfitAssetKey).toBe("haenyeo_dress_02");
 
     const genericChild = resolveAppearancePatch("child_outfit_hoodie", "child_kindergarten_female");
     expect(genericChild).not.toBeNull();
