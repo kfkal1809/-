@@ -1,3 +1,45 @@
+// 꽃다발/낚시 획득물 33종은 원본 좌표 크롭이 부정확해 사각형 배경·이웃 오브젝트 잔여가
+// 남아있던 걸 원본 시트에서 다시 정확히 오려내(scripts/asset-tools/cutout_fishing_bonppuri_items.py)
+// public/images/items_transparent/에 새로 저장했다. 원본 public/images/items/*.png는 덮어쓰지
+// 않고 그대로 두되, 본뿌리 상품 목록·낚시 결과/보상·가방·선실꾸미기(꽃다발 배치) 등 이 sku를
+// 쓰는 모든 화면이 itemIconSrc() 한 곳만 거치므로, 여기서 새 투명 배경 에셋으로 갈아끼우면
+// 화면마다 따로 손댈 필요 없이 한번에 전부 반영된다.
+const TRANSPARENT_CUTOUT_SKUS = new Set([
+  "fish_mackerel",
+  "fish_squid",
+  "fish_tuna",
+  "fish_octopus",
+  "fish_pufferfish",
+  "lost_old_phone",
+  "lost_glove",
+  "lost_notebook",
+  "lost_earphone",
+  "lost_leave_form",
+  "lost_photo",
+  "trash_boots",
+  "trash_tire",
+  "trash_can",
+  "trash_slipper",
+  "trash_sock",
+  "restore_radio",
+  "restore_camera",
+  "restore_frame",
+  "restore_ship_model",
+  "restore_mailbox",
+  "legend_flight_ticket",
+  "legend_soon_note",
+  "legend_compass",
+  "legend_golden_anchor",
+  "legend_shell_jewel",
+  "bonppuri_season_bouquet",
+  "bonppuri_peony_bouquet",
+  "bonppuri_mini_vase",
+  "bonppuri_peony_vase",
+  "bonppuri_wedding_bouquet",
+  "bonppuri_premium_bouquet",
+  "bonppuri_season_deco",
+]);
+
 // item_catalog.sku → public/images/items/<sku>.png 로 실제 일러스트가 있는 아이템만 등록.
 // 목록에 없는 sku는 인벤토리/낚시 결과에서 기존 희귀도 배지 플레이스홀더로 자연스럽게 대체된다.
 export const ITEM_ICON_SKUS = new Set([
@@ -313,5 +355,6 @@ export const ITEM_ICON_SKUS = new Set([
 
 export function itemIconSrc(sku: string | null | undefined): string | null {
   if (!sku || !ITEM_ICON_SKUS.has(sku)) return null;
+  if (TRANSPARENT_CUTOUT_SKUS.has(sku)) return `/images/items_transparent/${sku}.png`;
   return `/images/items/${sku}.png`;
 }
