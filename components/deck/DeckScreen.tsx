@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -28,6 +28,65 @@ function extractTrailingMention(value: string): string | null {
 // 낙관적 전송용 로컬 상태만 추가한 타입 — DB에는 저장되지 않고 이 화면 안에서만 쓴다.
 // "sending": 서버 응답 기다리는 중, "failed": 저장 실패(재전송 버튼 표시).
 type LocalMessage = DeckChatMessage & { status?: "sending" | "failed" };
+
+// 채팅 입력창(input state)이 DeckScreen 안에 같이 있어서, memo 없이는 한 글자 칠 때마다
+// 접속자 목록(CharacterSprite 여러 개)과 전체 메시지 목록이 매번 다시 계산됐다 — 타이핑이
+// 버벅이고 메시지가 늦게 올라오는 것처럼 느껴지던 원인. props(onlineOthers/messages)가
+// 실제로 안 바뀌면 다시 그리지 않도록 분리한다.
+const PresenceStrip = memo(function PresenceStrip({
+  onlineOthers,
+  onSelect,
+}: {
+  onlineOthers: PresenceMeta[];
+  onSelect: (p: PresenceMeta) => void;
+}) {
+  if (onlineOthers.length === 0) {
+    return (
+      <p className="absolute bottom-14 left-1/2 -translate-x-1/2 rounded-full bg-white/85 px-4 py-1.5 text-[13px] font-bold text-[var(--color-navy)]">
+        지금 갑판에는 아무도 없어요
+      </p>
+    );
+  }
+  return (
+    <div className="scrollbar-none absolute bottom-4 left-3 right-3 flex gap-3 overflow-x-auto">
+      {onlineOthers.map((p) => (
+        <button key={p.userId} onClick={() => onSelect(p)} className="flex shrink-0 flex-col items-center">
+          <CharacterSprite appearance={p.appearance} kind={p.kind} childGender={p.childGender} childStage={p.childStage} size={80} />
+          <p className="rounded-full bg-white/85 px-2 text-[11px] font-bold text-[var(--color-navy)]">{p.nickname}</p>
+        </button>
+      ))}
+    </div>
+  );
+});
+
+const MessageList = memo(function MessageList({ messages, onRetry }: { messages: LocalMessage[]; onRetry: (m: LocalMessage) => void }) {
+  if (messages.length === 0) {
+    return <p className="py-6 text-center text-[13px] text-[var(--color-navy-soft)]">아직 대화가 없어요. 먼저 말을 걸어볼까요?</p>;
+  }
+  return (
+    <ul className="flex flex-col gap-1.5">
+      {messages.map((m) => (
+        <li key={m.id} className="flex items-center gap-1.5 text-[13px]">
+          <span className={`flex-1 ${m.status ? "opacity-60" : ""}`}>
+            <span className="font-bold text-[var(--color-navy)]">{m.nickname}</span>{" "}
+            <span className="text-[var(--color-navy)]">{m.body}</span>
+          </span>
+          {m.status === "sending" && (
+            <span className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-[var(--color-navy-soft)]/30 border-t-[var(--color-navy-soft)]" />
+          )}
+          {m.status === "failed" && (
+            <button
+              onClick={() => onRetry(m)}
+              className="shrink-0 rounded-full bg-[var(--color-danger)]/10 px-2 py-0.5 text-[11px] font-bold text-[var(--color-danger)]"
+            >
+              재전송
+            </button>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+});
 
 export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialMessages: DeckChatMessage[] }) {
   const [presence, setPresence] = useState<PresenceMeta[]>([]);
@@ -122,7 +181,7 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
   // insert 시 직접 지정 가능) 저장에 성공하면 실시간 구독으로 돌아오는 같은 id의 INSERT
   // 이벤트가 자연스럽게 "전송 중" 표시만 지우고(위 useEffect), 실패하면 그 메시지에만
   // "재전송" 상태를 표시한다.
-  async function sendMessage(tempId: string, body: string, mentions: string[]) {
+  const sendMessage = useCallback(async (tempId: string, body: string, mentions: string[]) => {
     if (!self.userId) return;
     const supabase = createClient();
     const { error } = await supabase
@@ -131,7 +190,7 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
     if (error) {
       setMessages((prev) => prev.map((m) => (m.id === tempId ? { ...m, status: "failed" } : m)));
     }
-  }
+  }, [self.userId, self.nickname]);
 
   function handleSend() {
     const body = input.trim();
@@ -148,10 +207,13 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
     void sendMessage(tempId, body, mentions);
   }
 
-  function retrySend(m: LocalMessage) {
-    setMessages((prev) => prev.map((msg) => (msg.id === m.id ? { ...msg, status: "sending" } : msg)));
-    void sendMessage(m.id, m.body, m.mentions);
-  }
+  const retrySend = useCallback(
+    (m: LocalMessage) => {
+      setMessages((prev) => prev.map((msg) => (msg.id === m.id ? { ...msg, status: "sending" } : msg)));
+      void sendMessage(m.id, m.body, m.mentions);
+    },
+    [sendMessage]
+  );
 
   function pickMention(nickname: string) {
     setInput((prev) => prev.replace(/(?:^|\s)@([^\s@]*)$/, (m) => `${m.startsWith(" ") ? " " : ""}@${nickname} `));
@@ -166,20 +228,7 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
       <div className="relative mx-4 mt-3 h-44 shrink-0 overflow-hidden rounded-[24px] border-2 border-white shadow-[0_6px_20px_rgba(36,54,90,0.10)]">
         <Image src="/images/backgrounds/deck.jpg" alt="" fill unoptimized style={{ objectFit: "cover" }} />
 
-        {onlineOthers.length === 0 ? (
-          <p className="absolute bottom-14 left-1/2 -translate-x-1/2 rounded-full bg-white/85 px-4 py-1.5 text-[13px] font-bold text-[var(--color-navy)]">
-            지금 갑판에는 아무도 없어요
-          </p>
-        ) : (
-          <div className="scrollbar-none absolute bottom-4 left-3 right-3 flex gap-3 overflow-x-auto">
-            {onlineOthers.map((p) => (
-              <button key={p.userId} onClick={() => setActiveCharacter(p)} className="flex shrink-0 flex-col items-center">
-                <CharacterSprite appearance={p.appearance} kind={p.kind} childGender={p.childGender} childStage={p.childStage} size={80} />
-                <p className="rounded-full bg-white/85 px-2 text-[11px] font-bold text-[var(--color-navy)]">{p.nickname}</p>
-              </button>
-            ))}
-          </div>
-        )}
+        <PresenceStrip onlineOthers={onlineOthers} onSelect={setActiveCharacter} />
       </div>
 
       {activeCharacter && (
@@ -217,31 +266,7 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
 
       <div className="mt-3 flex flex-col overflow-hidden rounded-[24px] border-2 border-white bg-white/70 px-4 pt-3">
         <div ref={listRef} className="scrollbar-none h-64 overflow-y-auto pb-2">
-          {messages.length === 0 ? (
-            <p className="py-6 text-center text-[13px] text-[var(--color-navy-soft)]">아직 대화가 없어요. 먼저 말을 걸어볼까요?</p>
-          ) : (
-            <ul className="flex flex-col gap-1.5">
-              {messages.map((m) => (
-                <li key={m.id} className="flex items-center gap-1.5 text-[13px]">
-                  <span className={`flex-1 ${m.status ? "opacity-60" : ""}`}>
-                    <span className="font-bold text-[var(--color-navy)]">{m.nickname}</span>{" "}
-                    <span className="text-[var(--color-navy)]">{m.body}</span>
-                  </span>
-                  {m.status === "sending" && (
-                    <span className="h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-[var(--color-navy-soft)]/30 border-t-[var(--color-navy-soft)]" />
-                  )}
-                  {m.status === "failed" && (
-                    <button
-                      onClick={() => retrySend(m)}
-                      className="shrink-0 rounded-full bg-[var(--color-danger)]/10 px-2 py-0.5 text-[11px] font-bold text-[var(--color-danger)]"
-                    >
-                      재전송
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+          <MessageList messages={messages} onRetry={retrySend} />
         </div>
 
         <div className="relative shrink-0 border-t border-[var(--color-navy)]/10 py-2">

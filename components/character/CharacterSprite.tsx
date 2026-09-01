@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { memo } from "react";
 import type { CharacterAppearance, HairStyle, OutfitStyle } from "@/lib/domain/characterPresets";
 import type { ChildGender, ChildStage, CharacterKind } from "@/lib/domain/types";
 import {
@@ -318,7 +319,11 @@ function Accessory({ style, cx, y }: { style: string; cx: number; y: number }) {
   return null;
 }
 
-export function CharacterSprite({ appearance: a, size = 140, className, flip, kind, childGender, childStage }: CharacterSpriteProps) {
+// 화면마다 여러 개(갑판 광장 접속자 목록, 선실 등) 그려지는 데다 내부적으로 최대 7겹의
+// <Image>와 SVG 경로를 계산하는 무거운 컴포넌트라, memo 없이는 이 컴포넌트와 무관한 부모의
+// 리렌더(예: 채팅 입력창 타이핑으로 인한 state 변경)만으로도 매번 다시 계산됐다 — 타이핑이
+// 버벅이던 원인 중 하나. appearance/kind 등 props가 실제로 안 바뀌면 다시 그리지 않는다.
+export const CharacterSprite = memo(function CharacterSprite({ appearance: a, size = 140, className, flip, kind, childGender, childStage }: CharacterSpriteProps) {
   // 플레이어 캐릭터(kind 있음)는 MASTER 기본 체형(base/<kind>.png) → 헤어 → 의상 →
   // 모자/액세서리 순으로 항상 outfitAssetKey 경로 하나로만 그린다. fullPortraitKey(완성 전신
   // PNG를 통째로 얹어 MASTER 체형을 우회하던 옛 경로)는 의상마다 머리 크기·키·다리 길이가
@@ -633,4 +638,4 @@ export function CharacterSprite({ appearance: a, size = 140, className, flip, ki
       <Hat style={a.hat} cx={cx} top={headCy - headR} accent={a.outfitAccent} color={a.outfitColor} />
     </svg>
   );
-}
+});

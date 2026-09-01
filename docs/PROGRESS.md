@@ -3250,3 +3250,30 @@ route 정상 생성) 전부 통과.
 
 **Supabase에서 실행할 마이그레이션**: `supabase/migrations/0025_normalize_full_portrait_key.sql`
 — 새 파일이며 기존 마이그레이션·seed.sql은 건드리지 않았다.
+
+## 버튼 클릭/채팅 타이핑 반응속도 저하 수정
+
+### 문제
+
+"버튼 클릭하면 모든 화면이 반응이 느리고, 채팅 치면 올라가는 것도 느리다"는 신고. 조사 결과
+전역 내비게이션(하단 탭 `next/link` prefetch, `loading.tsx`, 뒤로가기 버튼)은 이미 비차단
+방식이라 문제가 없었고, 실제 원인은 `components/deck/DeckScreen.tsx`였다: 채팅 입력창의
+`input` state가 접속자 목록(`CharacterSprite` 여러 개 렌더링)·전체 메시지 목록과 같은
+컴포넌트 안에 있어서, 한 글자 칠 때마다 이 무거운 하위 트리 전체가 다시 계산되고 있었다.
+`CharacterSprite`(636줄, 최대 7겹 `<Image>`+SVG 경로 계산) 자체도 `memo` 없이 매 부모
+렌더마다 무조건 다시 실행되는 구조라, 홈/선실/갑판처럼 여러 캐릭터를 동시에 그리는 화면
+전반에서 관련 없는 state 변화만으로도 불필요하게 다시 그려지고 있었다.
+
+### 수정
+
+- `components/character/CharacterSprite.tsx` — `React.memo`로 감쌌다. props(appearance/kind
+  등)가 실제로 안 바뀌면 다시 계산하지 않는다.
+- `components/deck/DeckScreen.tsx` — 접속자 목록(`PresenceStrip`)과 메시지 목록
+  (`MessageList`)을 각각 `memo`로 분리된 하위 컴포넌트로 뺐다. `retrySend`/`sendMessage`는
+  `useCallback`으로 참조를 고정해 memo가 실제로 적용되도록 했다. 이제 `input` 타이핑은
+  `DeckScreen` 자체만 리렌더하고, 접속자 스프라이트·메시지 목록은 데이터가 실제로 바뀔 때만
+  다시 그려진다.
+
+`tsc`/`eslint`/`vitest run`(327개)/`next build` 전부 통과. 실 로그인 세션이 없어(`/deck`은
+비로그인 데모 폴백이 없음) 라이브 브라우저로 타이핑 체감 속도까지는 확인 못 했다 — React
+렌더링 구조상(참조 안정성 확보 + memo) 확실히 리렌더 범위가 줄어드는 것은 정적으로 확인됨.
