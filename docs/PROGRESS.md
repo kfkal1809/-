@@ -3277,3 +3277,84 @@ route 정상 생성) 전부 통과.
 `tsc`/`eslint`/`vitest run`(327개)/`next build` 전부 통과. 실 로그인 세션이 없어(`/deck`은
 비로그인 데모 폴백이 없음) 라이브 브라우저로 타이핑 체감 속도까지는 확인 못 했다 — React
 렌더링 구조상(참조 안정성 확보 + memo) 확실히 리렌더 범위가 줄어드는 것은 정적으로 확인됨.
+
+## 해녀 헤어 20종 전수 정렬 수정
+
+### 문제
+
+체형·얼굴·의상은 정상이지만 해녀 헤어가 얼굴 규격과 안 맞았다: 헤어 중심과 얼굴 중심이
+다르고, 정수리 위로 대머리가 드러나 보이거나(헤어가 실제보다 작게/낮게 배치), 반대로 원피스
+계열 2종은 헤어가 얼굴을 통째로 덮어버렸다. 원인은 `lib/domain/characterFullBody.ts`의
+`HAIR_ASSET_PLACEMENT`에 해녀 20종 전부 각자 다른 `topFrac`이 손으로(실측 없이, 심지어
+한때는 20개가 전부 동일한 -0.1379였던 이력도 있음) 잡혀 있던 것 — 헤어 PNG마다 "앞머리가
+끝나는 지점"이 전혀 다른데 하나의 부정확한 값을 억지로 썼기 때문이었다.
+
+### 조사
+
+- 최종 해녀 얼굴: `public/images/character/base/head_bald/haenyeo.png`(340×290, 민머리
+  베이스 — `useBaldHead` 경로가 사실상 항상 쓰이므로 이게 실제 정렬 기준).
+- 게임에 등록된 해녀 헤어: `public/images/character/haenyeo/hair/haenyeo_hair_01~20.png`
+  (+ `masks/*_mask.png`) 20종 전부. 이 중 `HAIR_STYLE_INDEX.haenyeo`로 실제 UI에서 고를 수
+  있는 건 5종(wave=03/pony=09/bob=06/twin=11/bun=10)뿐이지만, 나머지 15종도 이미
+  `HAIR_ASSET_PLACEMENT`에 등록된 자산이라 20종 전부 조사·수정했다.
+- 렌더러: `components/character/CharacterSprite.tsx`의 `outfitAssetKey` 분기, 헤어 관련
+  상수·경로 함수는 `lib/domain/characterFullBody.ts`.
+- 20개 전부 알파 채널 실측(파이썬): 캔버스 크기는 전부 폭 340(민머리 베이스와 동일), 높이는
+  301~454로 제각각. 알파 bbox 상단(`y0`)이 전부 0~15px(실측 20개 전원) — 즉 그림 자체가
+  이미 "캔버스 맨 위 = 정수리"로 그려져 있다는 걸 확인. 다만 2종(19, 20)은 중앙 세로 밴드를
+  스캔해도 전체 높이의 90%+ 구간까지 커버리지가 0으로 안 떨어짐 — 즉 얼굴이 비칠 "구멍"이
+  아예 없는 통짜 그림(반묶음 스타일을 뒤에서 본 형태로 그려짐)임을 확인.
+
+### 마스터 앵커 (base/head_bald/haenyeo.png 340×290 좌표계, 전부 실측)
+
+- `HEAD_TOP_Y = 1` (정수리 알파 시작 y)
+- `HEAD_CENTER_X = 169` (눈동자 중심 x 평균과 얼굴 실루엣 bbox 중심 x가 모두 169로 일치)
+- `EYE_LINE_Y = 195` (눈동자 중심 y, 연결 성분 분석으로 실측)
+- `FACE_BOTTOM_Y ≈ 287` (턱 끝)
+- `LEFT_EAR_X = 0`, `RIGHT_EAR_X = 339` (귀 폭 기준 — 원본 파일 자체가 귀 폭에 딱 맞게 크롭됨)
+
+### 수정
+
+1. **`scripts/asset-tools/normalize_haenyeo_hair.py`(신규)** — 해녀 헤어 20종을
+   `base/head_bald/haenyeo.png`와 같은 좌표계의 공유 마스터 캔버스(380×600, 머리 원점이
+   캔버스의 (20,140))에 재배치해 `public/images/character/haenyeo/hair_normalized/`(+
+   `masks/`)에 저장했다. 원본(`haenyeo/hair/`)은 전혀 건드리지 않았다. 그림을 새로 그리거나
+   AI로 재생성하지 않고, 각 PNG를 "알파 bbox 상단을 정수리(HEAD_TOP_Y)에, bbox 중심 x를
+   HEAD_CENTER_X에" 맞춰 순수 이동만 했다(비율 확대·축소 없음 — 이미 헤어와 얼굴이 같은
+   축척으로 그려져 있었음). 18종은 이 규칙 그대로, 얼굴 구멍이 없는 2종(19, 20)만 정수리
+   장식(리본/집게핀)이 머리 위로 보이도록 추가로 훨씬 크게 끌어올렸다(자세한 이유는 스크립트
+   docstring과 코드 주석에 기록).
+2. **`lib/domain/characterFullBody.ts`** — `HAIR_ASSET_PLACEMENT`의 해녀 20개 항목을 전부
+   동일한 `HAENYEO_HAIR_PLACEMENT` 상수 하나로 교체(정렬 오프셋이 이제 PNG 자체에 구워져
+   있으므로 헤어마다 다른 숫자가 필요 없어짐 — "헤어별 CSS 땜질 제거" 요구사항). `hairOverlaySrc`/
+   `hairOverlayMaskSrc`는 해녀 그룹일 때만 `hair_normalized/` 폴더를 보도록 분기(해남/새싹은
+   기존 `hair/` 폴더 그대로, 이번 작업 범위 아님). 얼굴 구멍이 없는 2종(`haenyeo_19`,
+   `haenyeo_20`)은 `HAENYEO_HAIR_BACK_LAYER_KEYS`로 명시적으로 표시 — "필요한 예외"를 CSS에
+   숨기지 않고 이름 붙은 상수 + 주석으로 기록했다.
+3. **`components/character/CharacterSprite.tsx`** — 헤어 오버레이(그림+색상 틴트)를
+   `hairOverlayLayer` 하나로 묶어, `isBackHair`(위 두 키)면 의상 다음·얼굴 이전에, 아니면
+   기존처럼 얼굴 다음(앞머리)에 그리도록 분기 — 요청하신 레이어 순서(뒷머리→몸/의상→얼굴→
+   앞머리→모자)를 그대로 구현. 헤어 자산이 아예 없는 조합(새싹 bun 등) 전용 fallback 틴트
+   div는 그대로 유지(로직 분리만 함, 동작 불변). QA 검증용 `hairAssetKeyOverride` prop을
+   추가(실제 화면 호출부는 아무도 안 씀, HAIR_STYLE_INDEX에 없는 나머지 15종도 강제 렌더링해
+   검수하기 위한 전용 통로).
+4. **`app/(dev)/qa-wear/hair/page.tsx`(신규, 영구 유지)** — 해녀 헤어 20종을 같은 얼굴·의상에
+   전부 적용해 얼굴 중심선(빨간 세로선)과 함께 렌더링하는 전수검수 페이지.
+
+### 검증
+
+- 파이썬으로 `CharacterSprite`의 렌더링 공식을 그대로 재현해 20종 전부 빠르게 반복 검증(대머리
+  갭/얼굴 뒤덮임 여부를 눈으로 확인하며 오프셋 산출) 후, **실제 브라우저**로
+  `/qa-wear/hair`(20종 전수, 얼굴 중심선 오버레이) 스크린샷 확인 — 전부 얼굴 중심과 헤어
+  중심 일치, 정수리 갭 없음, 귀·옆머리 위치 정상, 원피스 스타일(19/20)도 정수리 장식이 얼굴
+  위로 자연스럽게 보이며 눈·코·입을 가리지 않음.
+- 실제 화면 6곳(캐릭터 꾸미기 170 / 옷가게 미리보기 168 / 홈 158 / 낚시터 150 / 선실 92 /
+  갑판 80)이 쓰는 size prop 그대로 실제 선택 가능한 5개 헤어스타일(wave/pony/bob/twin/bun)을
+  렌더링 — 6화면 전부 머리 위치·비율이 동일했다(전 라운드에 이미 구조적으로 통합된
+  `CharacterSprite` 렌더 공식을 그대로 쓰므로 당연한 결과지만 실제로 재확인). 모바일
+  390×844/430×932에서 `/home`, `/cabin`(둘 다 비로그인 데모 폴백 있음) 실제 렌더링도 확인 —
+  헤어 잘림 없음. `/deck`·커스터마이즈 화면 등 로그인 필요한 화면은 이 샌드박스에 실 세션이
+  없어 직접 확인은 못 했으나, 전부 같은 `CharacterSprite`를 쓰므로 위 6-size 비교로 구조적
+  동일성은 이미 검증됨.
+- `tsc`/`eslint`/`vitest run`(327개)/`next build` 전부 통과. 몸·얼굴·의상·캐릭터 키·발
+  위치는 전혀 건드리지 않았음(diff가 헤어 관련 파일에만 한정됨을 커밋에서 확인 가능).

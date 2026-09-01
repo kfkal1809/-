@@ -287,37 +287,47 @@ export function outfitFullSrc(assetKey: string): string {
 
 // scripts/asset-tools 로 생성 — 해녀/해남/새싹 민머리 베이스 + 헤어스타일 오버레이 배치값.
 // widthFrac/leftFrac/topFrac은 headRenderW/headRenderH(렌더된 머리 폭/높이) 기준 비율.
-// 해녀 헤어 20종의 topFrac은 예전엔 전부 -0.1379로 동일했다(실측이 아니라 헤어마다 그대로
-// 복사된 값 — 해남/새싹 쪽 값은 스타일마다 다 달라서 실측된 티가 나는데 해녀만 유독 전부
-// 똑같았던 게 단서였다). 실제로는 각 헤어 PNG마다 "앞머리가 끝나고 얼굴이 드러나는 지점"이
-// 스타일마다 전혀 다른데 하나의 값을 억지로 썼으니, 앞머리가 짧은 스타일은 얼굴이 너무
-// 아래로 밀리고(이마가 안 보임) 올림머리처럼 화면 중앙에 큰 틈이 있는 스타일은 반대로 눈까지
-// 덮어버리는 문제가 났다(사용자가 스크린샷으로 제보한 올림머리 케이스가 후자).
-// scripts로 각 PNG의 알파 채널을 스캔해 "앞머리 덩어리가 끝나고 얼굴 구멍이 시작되는 y좌표"를
-// 찾고, head_bald/haenyeo.png(340x290)에서 실측한 눈썹 라인(y≈150)에 그 지점이 오도록
-// topFrac = (150 - hole_y) / 290 공식으로 재계산했다. 올림머리(haenyeo_10)로 먼저 실제
-// 브라우저 렌더링까지 확인(눈·귀·이마 전부 정상 위치) 후 나머지 19종에 동일 방법 적용.
+//
+// 해녀 20종(haenyeo_01~20)은 전부 같은 값 하나(HAENYEO_HAIR_PLACEMENT)를 쓴다 — 예전엔
+// 헤어마다 다른 topFrac을 하나씩 손으로 잡았는데(심지어 한때는 20개 전부 -0.1379로 똑같은
+// 값을 그냥 복사해 쓴 적도 있었다), 헤어 PNG마다 "앞머리가 끝나는 지점"이 제각각이라 개별
+// 보정값이 하나라도 어긋나면 헤어 중심과 얼굴 중심이 안 맞거나, 정수리 위로 대머리가 보이거나,
+// 심한 경우 원피스처럼 얼굴을 완전히 덮어버리는 문제가 반복됐다. 이제는 정렬 오프셋을 코드가
+// 아니라 PNG 자체에 구워 넣는다 — scripts/asset-tools/normalize_haenyeo_hair.py가 20종 전부를
+// base/head_bald/haenyeo.png(340x290)와 같은 좌표계의 공유 마스터 캔버스(380x600, 머리
+// 원점이 캔버스의 (20,140))에 재배치해 public/images/character/haenyeo/hair_normalized/에
+// 저장했다. 그 결과 20개 PNG는 전부 같은 크기·같은 좌표계라 런타임에서 헤어마다 다른 숫자를
+// 쓸 필요가 없어졌다 — 이 표에 남은 해녀 항목이 전부 동일한 값인 건 실수가 아니라 의도다.
+const HAENYEO_HAIR_PLACEMENT = { widthFrac: 380 / 340, leftFrac: -20 / 340, topFrac: -140 / 290, w: 380, h: 600 };
+// 뒷머리(behind-face) 예외 2종 — haenyeo_19/20은 다른 18장과 달리 정면에 얼굴이 비칠 "구멍"이
+// 전혀 없는 통짜 그림이다(중앙 세로 밴드 알파 스캔 결과 전체 높이의 90% 이상 구간에서 커버리지가
+// 0으로 안 떨어짐). 원본을 새로 그리거나 잘라내지 않고 그대로 쓰는 유일한 방법은 얼굴보다
+// 뒤에 그리는 것뿐이라(정수리 부근 리본/집게핀만 얼굴 위로 살짝 보이고 나머지는 옆·아래로
+// 자연스럽게 흘러내림), CharacterSprite.tsx에서 이 두 키만 얼굴보다 먼저(뒤에) 그리도록
+// 분기한다 — "헤어별 CSS 보정"이 아니라 이 2건에 한해 필요한 레이어 순서 예외임을 명시적으로
+// 기록해둔다(정렬 좌표 자체는 위 HAENYEO_HAIR_PLACEMENT와 동일한 공식을 그대로 쓴다).
+export const HAENYEO_HAIR_BACK_LAYER_KEYS = new Set(["haenyeo_19", "haenyeo_20"]);
 export const HAIR_ASSET_PLACEMENT: Record<string, { widthFrac: number; leftFrac: number; topFrac: number; w: number; h: number }> = {
-  haenyeo_01: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.1931, w: 340, h: 331 },
-  haenyeo_02: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0931, w: 340, h: 307 },
-  haenyeo_03: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0207, w: 340, h: 348 },
-  haenyeo_04: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0586, w: 340, h: 301 },
-  haenyeo_05: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0655, w: 340, h: 381 },
-  haenyeo_06: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0552, w: 340, h: 310 },
-  haenyeo_07: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0138, w: 340, h: 341 },
-  haenyeo_08: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0724, w: 340, h: 380 },
-  haenyeo_09: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.3862, w: 340, h: 330 },
-  haenyeo_10: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.379, w: 340, h: 423 },
-  haenyeo_11: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0586, w: 340, h: 354 },
-  haenyeo_12: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0207, w: 340, h: 340 },
-  haenyeo_13: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.1586, w: 340, h: 454 },
-  haenyeo_14: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0759, w: 340, h: 310 },
-  haenyeo_15: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0379, w: 340, h: 324 },
-  haenyeo_16: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0448, w: 340, h: 358 },
-  haenyeo_17: { widthFrac: 1.0, leftFrac: 0.0, topFrac: -0.0207, w: 340, h: 338 },
-  haenyeo_18: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.0931, w: 340, h: 329 },
-  haenyeo_19: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.3586, w: 340, h: 381 },
-  haenyeo_20: { widthFrac: 1.0, leftFrac: 0.0, topFrac: 0.3655, w: 340, h: 412 },
+  haenyeo_01: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_02: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_03: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_04: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_05: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_06: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_07: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_08: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_09: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_10: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_11: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_12: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_13: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_14: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_15: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_16: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_17: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_18: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_19: HAENYEO_HAIR_PLACEMENT,
+  haenyeo_20: HAENYEO_HAIR_PLACEMENT,
   haenam_01: { widthFrac: 0.9174, leftFrac: -0.0174, topFrac: -0.0079, w: 322, h: 228 },
   haenam_02: { widthFrac: 0.9573, leftFrac: -0.0064, topFrac: -0.0431, w: 336, h: 238 },
   haenam_03: { widthFrac: 0.9373, leftFrac: -0.0017, topFrac: -0.0126, w: 329, h: 241 },
@@ -417,11 +427,17 @@ export function baldSkinMaskSrc(key: CharacterPortraitKey): string {
 
 // 헤어스타일 오버레이 자산은 해녀/해남/새싹 3그룹 폴더로 나뉜다(kind가 그대로 그룹명). 새싹은
 // 연령대×성별 6종 헤드마다 그림 크기가 달라 하위 폴더(characterPortraitKeyFor 키)로 한 번 더 나눈다.
+// 해녀만 hair_normalized 하위 폴더를 쓴다 — scripts/asset-tools/normalize_haenyeo_hair.py로
+// 공유 마스터 캔버스에 재배치한 결과물이며, 원본(hair/)은 그대로 보존돼 있다. 해남/새싹은
+// 이번 작업 범위가 아니라 건드리지 않았다.
 export function hairOverlaySrc(portraitKey: CharacterPortraitKey, styleIndex: string): string {
   const group = portraitKey.kind;
   if (group === "child") {
     const headKey = characterPortraitKeyFor(portraitKey);
     return `/images/character/child/hair/${headKey}/child_hair_${styleIndex}.png`;
+  }
+  if (group === "haenyeo") {
+    return `/images/character/haenyeo/hair_normalized/haenyeo_hair_${styleIndex}.png`;
   }
   return `/images/character/${group}/hair/${group}_hair_${styleIndex}.png`;
 }
@@ -431,6 +447,9 @@ export function hairOverlayMaskSrc(portraitKey: CharacterPortraitKey, styleIndex
   if (group === "child") {
     const headKey = characterPortraitKeyFor(portraitKey);
     return `/images/character/child/hair/${headKey}/masks/child_hair_${styleIndex}_mask.png`;
+  }
+  if (group === "haenyeo") {
+    return `/images/character/haenyeo/hair_normalized/masks/haenyeo_hair_${styleIndex}_mask.png`;
   }
   return `/images/character/${group}/hair/masks/${group}_hair_${styleIndex}_mask.png`;
 }

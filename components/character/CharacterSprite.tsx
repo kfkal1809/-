@@ -29,6 +29,7 @@ import {
   NECK_PLACEMENT,
   NECK_ACCESSORY_ANCHOR,
   HAIR_ASSET_PLACEMENT,
+  HAENYEO_HAIR_BACK_LAYER_KEYS,
   headSrc,
   outfitFullSrc,
   hatSrc,
@@ -51,6 +52,9 @@ interface CharacterSpriteProps {
   kind?: CharacterKind;
   childGender?: ChildGender | null;
   childStage?: ChildStage | null;
+  // QA 전용(예: app/(dev)/qa-wear/hair) — hairStyle→HAIR_STYLE_INDEX 매핑에 없는 헤어 자산 키를
+  // 강제로 지정해서 렌더링을 확인할 때만 쓴다. 실제 게임 화면 호출부는 이 prop을 쓰지 않는다.
+  hairAssetKeyOverride?: string;
 }
 
 const NAVY = "#2a3552";
@@ -323,7 +327,16 @@ function Accessory({ style, cx, y }: { style: string; cx: number; y: number }) {
 // <Image>와 SVG 경로를 계산하는 무거운 컴포넌트라, memo 없이는 이 컴포넌트와 무관한 부모의
 // 리렌더(예: 채팅 입력창 타이핑으로 인한 state 변경)만으로도 매번 다시 계산됐다 — 타이핑이
 // 버벅이던 원인 중 하나. appearance/kind 등 props가 실제로 안 바뀌면 다시 그리지 않는다.
-export const CharacterSprite = memo(function CharacterSprite({ appearance: a, size = 140, className, flip, kind, childGender, childStage }: CharacterSpriteProps) {
+export const CharacterSprite = memo(function CharacterSprite({
+  appearance: a,
+  size = 140,
+  className,
+  flip,
+  kind,
+  childGender,
+  childStage,
+  hairAssetKeyOverride,
+}: CharacterSpriteProps) {
   // 플레이어 캐릭터(kind 있음)는 MASTER 기본 체형(base/<kind>.png) → 헤어 → 의상 →
   // 모자/액세서리 순으로 항상 outfitAssetKey 경로 하나로만 그린다. fullPortraitKey(완성 전신
   // PNG를 통째로 얹어 MASTER 체형을 우회하던 옛 경로)는 의상마다 머리 크기·키·다리 길이가
@@ -342,9 +355,12 @@ export const CharacterSprite = memo(function CharacterSprite({ appearance: a, si
     // 기존처럼 고정 헤어스타일이 그려진 head 그림 + hairColor 마스크로 폴백한다. 현재 UI에서
     // 고를 수 있는 모든 헤어스타일은 실제로는 전부 이 매핑을 가지고 있어서 useBaldHead는
     // 사실상 항상 true다 — headDims를 여기서 먼저 정해야 하는 이유(아래 참고).
-    const hairAssetKey = resolveHairAssetKey(portraitKey, a.hairStyle);
+    const hairAssetKey = hairAssetKeyOverride ?? resolveHairAssetKey(portraitKey, a.hairStyle);
     const hairPlacement = hairAssetKey ? HAIR_ASSET_PLACEMENT[hairAssetKey] : null;
     const useBaldHead = Boolean(hairAssetKey && hairPlacement);
+    // 얼굴이 비칠 구멍이 없는 통짜 뒷머리 그림 2종(HAENYEO_HAIR_BACK_LAYER_KEYS 주석 참고) —
+    // 이것만 얼굴보다 먼저(뒤에) 그린다. 나머지 18종은 기존처럼 얼굴 위(앞머리)에 그린다.
+    const isBackHair = Boolean(hairAssetKey && HAENYEO_HAIR_BACK_LAYER_KEYS.has(hairAssetKey));
 
     // 민머리 이미지(head_bald/*.png)와 고정 헤어스타일 이미지(head/*.png)는 종횡비가 전혀
     // 다르다(해녀 기준 0.85 vs 1.23) — 예전엔 이 구분 없이 항상 HEAD_SIZE(고정 헤어스타일
@@ -408,6 +424,42 @@ export const CharacterSprite = memo(function CharacterSprite({ appearance: a, si
     const neckLeft = neckPlacement ? neckAnchorPxX - neckRenderW * neckPlacement.anchorX : 0;
     const neckTop = neckPlacement ? neckAnchorPxY - neckRenderH * neckPlacement.anchorY : 0;
 
+    // 헤어 그림+색상 틴트 한 쌍 — isBackHair면 얼굴보다 먼저(뒤에), 아니면 기존처럼 얼굴 다음
+    // (앞머리)에 그린다. 자산이 없으면(useBaldHead=false) null — 그 경우 색상 틴트는 아래
+    // 고정 head.png용 fallback div가 대신 맡는다.
+    const hairOverlayLayer =
+      useBaldHead && hairAssetKey ? (
+        <>
+          <Image
+            src={hairOverlaySrc(portraitKey, hairAssetKey.slice(-2))}
+            alt=""
+            aria-hidden
+            width={hairPlacement!.w}
+            height={hairPlacement!.h}
+            unoptimized
+            style={{ position: "absolute", left: hairOverlayLeft, top: hairOverlayTop, width: hairOverlayRenderW, height: hairOverlayRenderH }}
+          />
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              left: hairOverlayLeft,
+              top: hairOverlayTop,
+              width: hairOverlayRenderW,
+              height: hairOverlayRenderH,
+              backgroundColor: a.hairColor,
+              WebkitMaskImage: `url(${hairOverlayMaskSrc(portraitKey, hairAssetKey.slice(-2))})`,
+              maskImage: `url(${hairOverlayMaskSrc(portraitKey, hairAssetKey.slice(-2))})`,
+              WebkitMaskSize: "100% 100%",
+              maskSize: "100% 100%",
+              WebkitMaskRepeat: "no-repeat",
+              maskRepeat: "no-repeat",
+              mixBlendMode: "multiply",
+            }}
+          />
+        </>
+      ) : null;
+
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
         <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}>
@@ -420,6 +472,7 @@ export const CharacterSprite = memo(function CharacterSprite({ appearance: a, si
             unoptimized
             style={{ position: "absolute", top: outfitTop, left: 0, width: innerWidth, height: OUTFIT_CANVAS_H * innerScale }}
           />
+          {isBackHair && hairOverlayLayer}
           <Image
             src={useBaldHead ? baldHeadSrc(portraitKey) : headSrc(portraitKey)}
             alt=""
@@ -449,35 +502,29 @@ export const CharacterSprite = memo(function CharacterSprite({ appearance: a, si
               mixBlendMode: "multiply",
             }}
           />
-          {useBaldHead && hairAssetKey && (
-            <Image
-              src={hairOverlaySrc(portraitKey, hairAssetKey.slice(-2))}
-              alt=""
+          {!isBackHair && hairOverlayLayer}
+          {!useBaldHead && (
+            // 헤어 그림 자산이 없는 조합(예: 새싹 bun) 전용 fallback — 고정 헤어스타일이
+            // 그려진 head.png 자체에서 머리카락 영역만 마스크로 골라 hairColor를 입힌다.
+            <div
               aria-hidden
-              width={hairPlacement!.w}
-              height={hairPlacement!.h}
-              unoptimized
-              style={{ position: "absolute", left: hairOverlayLeft, top: hairOverlayTop, width: hairOverlayRenderW, height: hairOverlayRenderH }}
+              style={{
+                position: "absolute",
+                left: headLeft,
+                top: headTop,
+                width: headRenderW,
+                height: headRenderH,
+                backgroundColor: a.hairColor,
+                WebkitMaskImage: `url(${characterHairMaskSrc(portraitKey)})`,
+                maskImage: `url(${characterHairMaskSrc(portraitKey)})`,
+                WebkitMaskSize: "100% 100%",
+                maskSize: "100% 100%",
+                WebkitMaskRepeat: "no-repeat",
+                maskRepeat: "no-repeat",
+                mixBlendMode: "multiply",
+              }}
             />
           )}
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              left: useBaldHead ? hairOverlayLeft : headLeft,
-              top: useBaldHead ? hairOverlayTop : headTop,
-              width: useBaldHead ? hairOverlayRenderW : headRenderW,
-              height: useBaldHead ? hairOverlayRenderH : headRenderH,
-              backgroundColor: a.hairColor,
-              WebkitMaskImage: `url(${useBaldHead && hairAssetKey ? hairOverlayMaskSrc(portraitKey, hairAssetKey.slice(-2)) : characterHairMaskSrc(portraitKey)})`,
-              maskImage: `url(${useBaldHead && hairAssetKey ? hairOverlayMaskSrc(portraitKey, hairAssetKey.slice(-2)) : characterHairMaskSrc(portraitKey)})`,
-              WebkitMaskSize: "100% 100%",
-              maskSize: "100% 100%",
-              WebkitMaskRepeat: "no-repeat",
-              maskRepeat: "no-repeat",
-              mixBlendMode: "multiply",
-            }}
-          />
           {a.hatAssetKey && hatDims && (
             <Image
               src={hatSrc(a.hatAssetKey)}
