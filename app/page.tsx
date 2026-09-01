@@ -1,83 +1,47 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CharacterSprite } from "@/components/character/CharacterSprite";
-import { haenyeoPreset, haenamDeckPreset, haenamEnginePreset } from "@/lib/domain/characterPresets";
-import { SHIP_NAME } from "@/lib/domain/constants";
 
+// 오프닝 화면 — 사용자가 준 실제 일러스트(design-assets/오프닝화면.png →
+// public/images/misc/opening-screen.png, 원본 그대로 복사만 함)를 그대로 배경으로 쓴다.
+// CSS/SVG로 하늘·구름·갈매기·캐릭터를 다시 그리던 예전 버전을 대체 — 일러스트 속 네 캐릭터·
+// 등대·배·갈매기 위치는 원본 그대로이고 여기서 새로 만들거나 옮기지 않는다.
 export default function OpeningPage() {
   return (
-    <div className="relative flex min-h-dvh w-full flex-col overflow-hidden bg-gradient-to-b from-[#bfe6ff] via-[#eaf6ff] to-[#fffaf0]">
-      {/* 갈매기 */}
-      <svg className="absolute left-[12%] top-[8%] opacity-80" width="34" height="18" viewBox="0 0 34 18">
-        <path d="M2 12 Q9 2 17 10 Q25 2 32 12" stroke="#24365a" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      </svg>
-      <svg className="absolute right-[18%] top-[14%] opacity-70" width="24" height="13" viewBox="0 0 34 18">
-        <path d="M2 12 Q9 2 17 10 Q25 2 32 12" stroke="#24365a" strokeWidth="2.4" fill="none" strokeLinecap="round" />
-      </svg>
+    <div className="relative mx-auto flex h-dvh w-full max-w-[460px] flex-col overflow-hidden bg-[var(--color-sky)]">
+      <Image
+        src="/images/misc/opening-screen.png"
+        alt=""
+        aria-hidden
+        fill
+        unoptimized
+        priority
+        style={{ objectFit: "cover", objectPosition: "center" }}
+      />
 
-      {/* 구름 */}
-      <div className="absolute left-[6%] top-[6%] h-10 w-20 rounded-full bg-white/80 blur-[1px]" />
-      <div className="absolute right-[8%] top-[10%] h-8 w-16 rounded-full bg-white/70 blur-[1px]" />
-
-      <main className="relative z-10 mx-auto flex w-full max-w-[460px] flex-1 flex-col items-center justify-center px-6 pb-10 text-center">
-        <p className="text-sm font-bold tracking-wide text-[var(--color-navy-soft)]">{SHIP_NAME}에 오신 것을 환영합니다</p>
+      {/* 상단 로고 — 하늘 여백 중앙. logo-glow.png는 "해기사와 연인들의"(1줄) + "항해일지"(크게)
+          정확히 이 문구로 이미 만들어져 있던 기존 자산(투명 배경, 네이비/코랄 톤)이라 그대로 쓴다. */}
+      <div className="relative z-10 flex justify-center pt-[max(30px,env(safe-area-inset-top))]">
         <Image
-          src="/images/misc/logo-wordmark.png"
+          src="/images/home-ui/logo-glow.png"
           alt="해기사와 연인들의 항해일지"
-          width={732}
-          height={346}
+          width={1536}
+          height={1024}
           unoptimized
           priority
-          className="mt-3 w-full max-w-[300px]"
+          className="w-[74%] max-w-[320px]"
           style={{ height: "auto" }}
         />
+      </div>
 
-        <div className="mt-8 flex items-end justify-center gap-1">
-          <div className="animate-floaty" style={{ animationDelay: "0s" }}>
-            <CharacterSprite appearance={haenyeoPreset()} kind="haenyeo" size={130} />
-          </div>
-          <div className="animate-floaty" style={{ animationDelay: "0.4s" }}>
-            <CharacterSprite appearance={haenamDeckPreset()} kind="haenam" size={140} />
-          </div>
-          <div className="animate-floaty" style={{ animationDelay: "0.2s" }}>
-            <CharacterSprite appearance={haenamEnginePreset()} kind="haenam" size={140} />
-          </div>
-          <div className="animate-floaty" style={{ animationDelay: "0.6s" }}>
-            <CharacterSprite
-              appearance={haenyeoPreset({ hairStyle: "pony", hairColor: "#463527", outfitColor: "#9cc9ef" })}
-              kind="haenyeo"
-              size={130}
-            />
-          </div>
-        </div>
-
-        <div className="mt-10 w-full">
-          <Link
-            href="/auth"
-            className="inline-flex w-full items-center justify-center rounded-full bg-[var(--color-coral)] px-6 py-4 text-base font-extrabold text-white shadow-[0_8px_20px_rgba(255,122,107,0.35)] transition active:scale-[0.97]"
-          >
-            해연결호 승선하기
-          </Link>
-        </div>
-      </main>
-
-      {/* 갑판 난간 + 바다 */}
-      <div className="relative z-10 mt-8">
-        <svg viewBox="0 0 460 40" className="w-full" preserveAspectRatio="none">
-          <rect x="0" y="18" width="460" height="4" fill="#24365a" opacity="0.5" />
-          {Array.from({ length: 12 }).map((_, i) => (
-            <rect key={i} x={20 + i * 38} y="6" width="4" height="18" fill="#24365a" opacity="0.5" />
-          ))}
-        </svg>
-        <div className="relative h-44 w-full bg-[#4fb6e6]">
-          <svg className="absolute inset-0 h-full w-full" viewBox="0 0 460 176" preserveAspectRatio="none">
-            <path d="M0 20 Q115 0 230 20 T460 20 V176 H0 Z" fill="#63c3ee" />
-            <path d="M0 46 Q115 26 230 46 T460 46 V176 H0 Z" fill="#4fb6e6" />
-          </svg>
-          <div className="absolute bottom-4 left-8 h-10 w-10 animate-bob rounded-full border-4 border-white/90">
-            <div className="absolute inset-1 rounded-full border-2 border-[#ff9a8b]" />
-          </div>
-        </div>
+      {/* 하단 승선하기 버튼 — 기존 /auth 진입 흐름 그대로 연결(로그인·초대코드·온보딩 로직 불변) */}
+      <div className="relative z-10 mt-auto flex justify-center px-6 pb-[max(30px,env(safe-area-inset-bottom))]">
+        <Link
+          href="/auth"
+          className="inline-flex items-center gap-2 rounded-full border-2 border-[var(--color-navy)] bg-[#fffaf0] px-9 py-4 text-lg font-extrabold text-[var(--color-navy)] shadow-[0_8px_20px_rgba(36,54,90,0.28)] transition active:scale-[0.97]"
+        >
+          <Image src="/images/home-ui/anchor.png" alt="" aria-hidden width={44} height={44} unoptimized className="h-6 w-6" />
+          승선하기
+        </Link>
       </div>
     </div>
   );
