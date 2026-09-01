@@ -143,26 +143,26 @@ export const RING_SETS = [
     key: "wave_ring",
     sku: "ring_wave",
     name: "파도 커플링",
-    price: 25,
+    price: 10,
     description: "잔잔한 파도처럼 오래도록 서로의 곁을 지켜주는 사랑을 담은 커플링.",
   },
   {
     key: "shell_ring",
     sku: "ring_shell",
     name: "진주조개 커플링",
-    price: 40,
+    price: 12,
     description: "조개 속 진주처럼 소중한 인연을 발견했다는 의미를 담은 커플링.",
   },
   {
     key: "lighthouse_ring",
     sku: "ring_lighthouse",
     name: "등대불빛 커플링",
-    price: 60,
+    price: 15,
     description: "먼 바다에서도 서로를 향해 길을 밝혀주는 변함없는 사랑의 커플링.",
   },
 ];
 
-export const MARRIAGE_DOCUMENT_PRICE = 30;
+export const MARRIAGE_DOCUMENT_PRICE = 20;
 
 export const WORK_REWARD_MIN = 2;
 export const WORK_REWARD_MAX = 4;
