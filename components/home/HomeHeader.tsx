@@ -15,6 +15,18 @@ export function HomeHeader({ balance }: { balance: number }) {
       className="relative overflow-hidden px-4 pb-8 pt-5"
       style={{ backgroundImage: "url(/images/home/sky-sea-texture.png)", backgroundSize: "100% 100%", backgroundRepeat: "no-repeat" }}
     >
+      {/* 물결 구분선 — DOM 순서상 맨 먼저(= 쌓임 순서상 가장 아래)에 둬야 아래쪽 등대·배
+          그림 위로 파도줄이 관통해서 그려지지 않는다(전에는 맨 마지막이라 z-index 없는
+          다른 absolute 요소들보다 위에 그려져 등대·배를 가로질렀다). */}
+      <Image
+        src="/images/home/wave-divider.png"
+        alt=""
+        aria-hidden
+        width={2048}
+        height={282}
+        unoptimized
+        className="pointer-events-none absolute -bottom-3 left-0 w-full opacity-90"
+      />
       <Image
         src="/images/home/cloud-1.png"
         alt=""
@@ -124,16 +136,6 @@ export function HomeHeader({ balance }: { balance: number }) {
           <GameIcon name="bell" size={22} withBadge={false} />
         </Link>
       </div>
-
-      <Image
-        src="/images/home/wave-divider.png"
-        alt=""
-        aria-hidden
-        width={2048}
-        height={282}
-        unoptimized
-        className="pointer-events-none absolute -bottom-3 left-0 w-full opacity-90"
-      />
     </header>
   );
 }
