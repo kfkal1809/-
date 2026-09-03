@@ -26,71 +26,83 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SHEETS = os.path.join(ROOT, "public", "images", "reference-sheets")
 OUT_DIR = os.path.join(ROOT, "public", "images", "items_transparent")
 
-# sku -> (sheet 파일, (x0, y0, x1, y1) 크롭 박스, 넉넉한 여백 포함 — flood-fill이 나머지 정리)
+# sku -> (sheet 파일, (x0, y0, x1, y1) 크롭 박스).
+# 1라운드 크롭은 옆 물건·배너·라벨을 피하는 데만 집중해 오브젝트 자체와 거의 붙어 있었다
+# (특히 아래쪽 라벨 박스/텍스트를 피하려고 y1을 너무 타이트하게 잡아, trim_to_content의
+# 여백(pad)이 더할 공간이 없어 지느러미·리본 끝·이어폰 줄 같은 부분이 실제로 잘려나감).
+# 이번 라운드는 각 행을 넓게 스캔해(배경색 대비 non-background 픽셀 카운트로 배너 끝·
+# 라벨 시작·옆 오브젝트 시작 지점을 실측) 오브젝트와 크롭 경계 사이에 실제 여백이 남도록
+# 다시 잡았다. sheet-13 본뿌리 열은 아이템 사이 정렬용 점선 가이드라인이 있었는데, 이번엔
+# 그 가이드라인이 걸리는 정확한 폭(두 개의 간격 사이 좁은 non-background 구간)을 찾아
+# 그 안쪽으로 경계를 잡아 애초에 크롭에 안 걸리게 했다(예전처럼 MANUAL_CLEAR_RECTS로
+# 사후 제거할 필요가 없어짐).
 CROPS = {
-    # sheet-17: 낚시하면 건져지는 것
-    "fish_mackerel": ("sheet-17.png", (30, 282, 300, 385)),
-    "fish_squid": ("sheet-17.png", (300, 258, 470, 385)),
-    "fish_tuna": ("sheet-17.png", (455, 258, 705, 385)),
-    "fish_octopus": ("sheet-17.png", (690, 258, 875, 385)),
-    "fish_pufferfish": ("sheet-17.png", (875, 258, 1065, 385)),
-    "lost_old_phone": ("sheet-17.png", (30, 503, 210, 615)),
-    "lost_glove": ("sheet-17.png", (225, 503, 385, 615)),
-    "lost_notebook": ("sheet-17.png", (395, 503, 585, 615)),
-    "lost_earphone": ("sheet-17.png", (585, 503, 725, 610)),
-    "lost_leave_form": ("sheet-17.png", (730, 503, 915, 615)),
-    "lost_photo": ("sheet-17.png", (910, 503, 1080, 610)),
-    "trash_boots": ("sheet-17.png", (100, 731, 270, 840)),
-    "trash_tire": ("sheet-17.png", (305, 731, 475, 840)),
-    "trash_can": ("sheet-17.png", (500, 731, 650, 843)),
-    "trash_slipper": ("sheet-17.png", (655, 731, 845, 843)),
-    "trash_sock": ("sheet-17.png", (840, 731, 985, 843)),
-    "restore_radio": ("sheet-17.png", (20, 943, 255, 1024)),
-    "restore_camera": ("sheet-17.png", (300, 943, 475, 1024)),
-    "restore_frame": ("sheet-17.png", (500, 943, 650, 1024)),
-    "restore_ship_model": ("sheet-17.png", (665, 943, 860, 1024)),
-    "restore_mailbox": ("sheet-17.png", (880, 943, 1055, 1024)),
-    "legend_flight_ticket": ("sheet-17.png", (15, 1150, 250, 1216)),
-    "legend_soon_note": ("sheet-17.png", (260, 1150, 475, 1216)),
-    "legend_compass": ("sheet-17.png", (490, 1150, 660, 1216)),
-    "legend_golden_anchor": ("sheet-17.png", (660, 1150, 835, 1216)),
-    "legend_shell_jewel": ("sheet-17.png", (840, 1150, 1060, 1216)),
+    # sheet-17: 낚시하면 건져지는 것 — 물고기
+    "fish_mackerel": ("sheet-17.png", (34, 272, 299, 391)),
+    "fish_squid": ("sheet-17.png", (299, 253, 456, 392)),
+    "fish_tuna": ("sheet-17.png", (456, 250, 701, 391)),
+    "fish_octopus": ("sheet-17.png", (701, 250, 880, 392)),
+    "fish_pufferfish": ("sheet-17.png", (880, 250, 1065, 392)),
+    # 해남이 분실물
+    "lost_old_phone": ("sheet-17.png", (35, 496, 205, 641)),
+    "lost_glove": ("sheet-17.png", (205, 474, 395, 641)),
+    "lost_notebook": ("sheet-17.png", (395, 470, 572, 641)),
+    "lost_earphone": ("sheet-17.png", (572, 470, 727, 641)),
+    "lost_leave_form": ("sheet-17.png", (727, 470, 913, 641)),
+    "lost_photo": ("sheet-17.png", (913, 470, 1078, 641)),
+    # 쓰레기
+    "trash_boots": ("sheet-17.png", (95, 725, 286, 836)),
+    "trash_tire": ("sheet-17.png", (286, 710, 497, 836)),
+    "trash_can": ("sheet-17.png", (497, 710, 650, 836)),
+    "trash_slipper": ("sheet-17.png", (650, 710, 841, 836)),
+    "trash_sock": ("sheet-17.png", (841, 710, 985, 836)),
+    # 복원 가능 아이템
+    "restore_radio": ("sheet-17.png", (32, 918, 291, 1032)),
+    "restore_camera": ("sheet-17.png", (291, 918, 482, 1032)),
+    "restore_frame": ("sheet-17.png", (482, 918, 657, 1032)),
+    "restore_ship_model": ("sheet-17.png", (657, 918, 877, 1032)),
+    "restore_mailbox": ("sheet-17.png", (877, 918, 1075, 1032)),
+    # 전설 아이템
+    "legend_flight_ticket": ("sheet-17.png", (32, 1136, 295, 1193)),
+    "legend_soon_note": ("sheet-17.png", (295, 1122, 482, 1193)),
+    "legend_compass": ("sheet-17.png", (482, 1122, 651, 1193)),
+    "legend_golden_anchor": ("sheet-17.png", (651, 1122, 833, 1193)),
+    "legend_shell_jewel": ("sheet-17.png", (833, 1122, 1075, 1193)),
     # sheet-13: 선실 장식 컬렉션 — 맨 위 "본뿌리 꽃장식" 7종
-    "bonppuri_season_bouquet": ("sheet-13.png", (30, 286, 190, 392)),
-    "bonppuri_peony_bouquet": ("sheet-13.png", (190, 286, 350, 392)),
-    "bonppuri_mini_vase": ("sheet-13.png", (355, 268, 495, 392)),
-    "bonppuri_peony_vase": ("sheet-13.png", (500, 268, 650, 392)),
-    "bonppuri_wedding_bouquet": ("sheet-13.png", (655, 268, 795, 392)),
-    "bonppuri_premium_bouquet": ("sheet-13.png", (800, 268, 940, 392)),
-    "bonppuri_season_deco": ("sheet-13.png", (945, 268, 1090, 392)),
+    "bonppuri_season_bouquet": ("sheet-13.png", (18, 286, 197, 440)),
+    "bonppuri_peony_bouquet": ("sheet-13.png", (200, 286, 366, 440)),
+    "bonppuri_mini_vase": ("sheet-13.png", (369, 268, 513, 440)),
+    "bonppuri_peony_vase": ("sheet-13.png", (515, 268, 654, 440)),
+    "bonppuri_wedding_bouquet": ("sheet-13.png", (657, 268, 790, 440)),
+    "bonppuri_premium_bouquet": ("sheet-13.png", (793, 268, 932, 440)),
+    "bonppuri_season_deco": ("sheet-13.png", (935, 268, 1100, 440)),
 }
 
 # 오브젝트가 옆 칸 헤더 배너/장식과 실제로 맞닿아 있어(사각형 크롭만으로는 분리 불가능)
 # 배경색 거리 기반 flood-fill로는 못 지우는 잔여 조각이 남는 케이스가 있다면, 크롭 좌표로
 # 해결이 안 돼 배경이 아닌 "이웃 장식 조각"임을 육안으로 직접 확인하고, 크롭 박스 기준
-# 상대좌표로 그 조각만 강제 투명화한다(오브젝트 본체는 전혀 건드리지 않음). 현재는 전부
-# 크롭 좌표 조정만으로 해결돼 실제로 쓰는 항목은 없다.
+# 상대좌표로 그 조각만 강제 투명화한다(오브젝트 본체는 전혀 건드리지 않음).
 # sku -> [(x0, y0, x1, y1), ...] (크롭 좌상단 기준 상대좌표)
 MANUAL_CLEAR_RECTS: dict[str, list[tuple[int, int, int, int]]] = {
-    # "쓰레기" 섹션 헤더 배너의 삐죽삐죽한 아래쪽 끝 일부가 장화 크롭 좌상단에 살짝 걸친다
-    # (배너 자체가 파란색이라 배경색 거리 기반 제거로는 못 지움 — 육안 확인 후 좌표 지정).
-    "trash_boots": [(0, 0, 90, 14)],
-    # "복원 가능 아이템" 섹션 왼쪽 테두리(핑크 점선)가 라디오 크롭 왼쪽 끝에 살짝 걸친다.
-    "restore_radio": [(0, 0, 14, 91)],
-    # "본뿌리 꽃장식" 섹션 헤더 배너 모서리에서 이어지는 살구색 곡선 장식선이 시즌 부케
-    # 크롭 왼쪽 끝을 세로로 관통한다(배경색과 다른 색이라 flood-fill로 못 지움). 부케
-    # 본체는 x=14부터 시작해(육안 확인) 전혀 겹치지 않으므로 왼쪽 8px 전체 폭을 지운다.
-    "bonppuri_season_bouquet": [(0, 0, 8, 106)],
-    # sheet-13 본뿌리 꽃장식 7종 사이사이에는 디자이너가 정렬용으로 남긴 옅은 하늘색
-    # 점선 세로 가이드라인이 있다(배경 크림색과 색 거리가 애매해 flood-fill로 완전히
-    # 안 지워지고 흐릿한 흰 잔상으로 남음). 각 아이템 본체와는 픽셀 단위로 뚜렷한
-    # 여백(투명 갭)이 있는 걸 육안으로 확인했으므로, 가이드라인이 걸친 폭만 지운다.
-    "bonppuri_peony_bouquet": [(0, 0, 12, 106)],
-    "bonppuri_mini_vase": [(0, 0, 16, 124)],
-    "bonppuri_peony_vase": [(0, 0, 20, 124)],
-    "bonppuri_wedding_bouquet": [(0, 0, 4, 124), (133, 0, 140, 124)],
-    "bonppuri_premium_bouquet": [(130, 0, 140, 124)],
-    "bonppuri_season_deco": [(133, 0, 145, 124)],
+    # "물고기" 섹션 배너의 오른쪽 아래 모서리가 고등어 크롭 왼쪽 위 구석에 대각선으로
+    # 걸린다(배너가 파란색이라 배경색 거리 기반 제거로는 못 지움 — 육안 확인 후 좌표
+    # 지정). 고등어 등지느러미는 x=114부터 시작해 전혀 겹치지 않는다.
+    "fish_mackerel": [(0, 0, 110, 12)],
+    # "복원 가능 아이템" 섹션 배너가 라디오 크롭 위쪽을 폭 넓게 가로지른다(배너가 붉은
+    # 계열이라 배경색 거리 기반 제거로는 못 지움 — 육안 확인 후 좌표 지정). 라디오 안테나는
+    # y=22 아래부터 시작해 겹치지 않는다.
+    "restore_radio": [(0, 0, 195, 22), (190, 0, 254, 16)],
+    # "쓰레기" 섹션 배너의 휴지통 아이콘이 장화 크롭 왼쪽 위 구석에 살짝 걸친다(장화
+    # 뒤축이 배너 바로 아래까지 닿아 있어 크롭 좌표만으로는 완전히 못 피함).
+    "trash_boots": [(0, 0, 175, 21)],
+    # "해남이 분실물" 섹션 배너 꼬리가 장갑/휴대폰 크롭 왼쪽 위 구석에 걸친다.
+    "lost_glove": [(0, 0, 90, 7)],
+    "lost_old_phone": [(0, 0, 100, 6)],
+    # sheet-13 본뿌리 꽃장식 아이템 사이 정렬용 옅은 하늘색 점선 가이드라인의 잔여
+    # 조각이 시즌 부케·장미 꽃다발 크롭 왼쪽 끝에 남는다(부케 본체와는 육안으로 확인한
+    # 뚜렷한 여백이 있어 겹치지 않음).
+    "bonppuri_season_bouquet": [(0, 0, 4, 142)],
+    "bonppuri_peony_bouquet": [(0, 0, 2, 142)],
 }
 
 
