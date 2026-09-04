@@ -30,6 +30,7 @@ import {
   NECK_ACCESSORY_ANCHOR,
   HAIR_ASSET_PLACEMENT,
   HAENYEO_HAIR_BACK_LAYER_KEYS,
+  CHILD_OUTFIT_BODY_SCALE_Y,
   headSrc,
   outfitFullSrc,
   hatSrc,
@@ -460,6 +461,12 @@ export const CharacterSprite = memo(function CharacterSprite({
         </>
       ) : null;
 
+    // 새싹 옷 91종은 목선(NECK_Y)은 전부 정렬돼 있지만 목선~발끝 체형 길이가 그림마다
+    // 최대 25%까지 달라(CHILD_OUTFIT_BODY_SCALE_Y 주석 참고), 옷을 바꿔 입을 때마다 키가
+    // 들쭉날쭉해 보이는 문제가 있었다. 그림을 다시 자르지 않고, 목선을 축(transformOrigin)으로
+    // 세로 방향으로만 scaleY를 걸어 "아기 멜빵바지" 기준 체형 길이로 통일한다.
+    const bodyScaleY = CHILD_OUTFIT_BODY_SCALE_Y[a.outfitAssetKey];
+
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
         <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}>
@@ -470,7 +477,15 @@ export const CharacterSprite = memo(function CharacterSprite({
             width={OUTFIT_CANVAS_W}
             height={OUTFIT_CANVAS_H}
             unoptimized
-            style={{ position: "absolute", top: outfitTop, left: 0, width: innerWidth, height: OUTFIT_CANVAS_H * innerScale }}
+            style={{
+              position: "absolute",
+              top: outfitTop,
+              left: 0,
+              width: innerWidth,
+              height: OUTFIT_CANVAS_H * innerScale,
+              transform: bodyScaleY ? `scaleY(${bodyScaleY})` : undefined,
+              transformOrigin: bodyScaleY ? `50% ${(NECK_Y / OUTFIT_CANVAS_H) * 100}%` : undefined,
+            }}
           />
           {isBackHair && hairOverlayLayer}
           <Image

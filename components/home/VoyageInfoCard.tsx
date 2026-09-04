@@ -128,16 +128,6 @@ export function VoyageInfoCard({
 
         <Link href="/voyage" className="relative block px-3">
           <Image
-            src="/images/home/railing.png"
-            alt=""
-            aria-hidden
-            width={2172}
-            height={664}
-            unoptimized
-            className="pointer-events-none absolute inset-x-4 bottom-7 h-7 w-[calc(100%-2rem)] opacity-95"
-            style={{ objectFit: "fill" }}
-          />
-          <Image
             src="/images/home-ui/lifebuoy.png"
             alt=""
             aria-hidden

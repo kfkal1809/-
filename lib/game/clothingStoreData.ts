@@ -6,6 +6,7 @@ import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 import { haenyeoPreset } from "@/lib/domain/characterPresets";
 import { itemIconSrc } from "@/lib/domain/itemIcons";
+import { hairCatalogPreviewSrc } from "@/lib/domain/characterFullBody";
 
 export interface ClothingCharacterOption {
   id: string;
@@ -34,11 +35,24 @@ export interface ClothingProduct {
 // 옷가게 카드에 쓸 상품 이미지 경로. category='outfit'은 outfit_full의 실제 전신 스프라이트를
 // 그대로 쓴다(소품·신발까지 전부 보이는 원본 그림 — 별도로 잘라낸 아이콘을 새로 만들지 않는다).
 // hair/hat/accessory는 기존 public/images/items/<sku>.png 아이콘 방식을 그대로 유지한다.
-function clothingImageSrc(sku: string, category: string, bodyPresetKey: BodyPresetKey): string | null {
+function clothingImageSrc(
+  sku: string,
+  category: string,
+  bodyPresetKey: BodyPresetKey,
+  kind: CharacterKind,
+  childGender: ChildGender | null,
+  childStage: ChildStage | null
+): string | null {
   if (category === "outfit") {
     const patch = resolveAppearancePatch(sku, bodyPresetKey);
     if (patch?.outfitAssetKey) return `/images/character/outfit_full/${patch.outfitAssetKey}.png`;
     return null;
+  }
+  // 헤어는 ITEM_ICON_SKUS 화이트리스트(사각형 아이콘 방식)에 애초에 등록된 적이 없어
+  // itemIconSrc가 항상 null이었다 — 실제 착용 시 쓰는 헤어 오버레이 PNG를 그대로
+  // 썸네일로 재사용한다(캐릭터별로 이미지가 다르므로 kind/childGender/childStage 필요).
+  if (category === "hair") {
+    return hairCatalogPreviewSrc(sku, { kind, childGender, childStage });
   }
   return itemIconSrc(sku);
 }
@@ -185,7 +199,7 @@ export async function getClothingStoreData(requestedCharacterId?: string): Promi
           ownedInventoryItemIds: ownedInvIdsByCatalogId.get(catalog.id) ?? [],
           isNew: metadata?.new === true,
           isEquipped: equippedCatalogIds.has(catalog.id),
-          imageSrc: clothingImageSrc(catalog.sku, category, bodyPresetKey),
+          imageSrc: clothingImageSrc(catalog.sku, category, bodyPresetKey, selected.kind, selected.childGender, selected.childStage),
         } satisfies ClothingProduct;
       })
       .filter((p): p is ClothingProduct => !!p);

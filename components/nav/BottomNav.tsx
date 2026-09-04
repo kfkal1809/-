@@ -39,7 +39,7 @@ export function BottomNav() {
             onClick={() => {
               if (!active) playSfx("ui-click");
             }}
-            className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1 text-[12px] font-bold"
+            className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-1 text-[12px] font-bold transition-transform active:scale-90"
           >
             <span
               className={`flex h-[54px] w-[54px] items-center justify-center rounded-full bg-white ${active ? "shadow-[0_2px_10px_rgba(15,33,54,0.3)] ring-2 ring-[var(--color-coral)]" : "shadow-[0_1px_4px_rgba(15,33,54,0.18)]"}`}

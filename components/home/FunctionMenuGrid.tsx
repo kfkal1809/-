@@ -47,7 +47,11 @@ export function FunctionMenuGrid() {
 function MenuItem({ item }: { item: (typeof HOME_MENU)[number] }) {
   const homeUiSrc = HOME_UI_ICON[item.key];
   return (
-    <Link href={item.href} onClick={() => playSfx("ui-click")} className="flex flex-col items-center gap-0.5">
+    <Link
+      href={item.href}
+      onClick={() => playSfx("ui-click")}
+      className="flex flex-col items-center gap-0.5 transition-transform active:scale-90"
+    >
       {homeUiSrc ? (
         <Image src={homeUiSrc} alt="" aria-hidden width={1254} height={1254} unoptimized className="w-[50px]" style={{ height: "auto" }} />
       ) : (

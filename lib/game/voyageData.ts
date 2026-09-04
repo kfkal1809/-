@@ -14,6 +14,7 @@ export interface VoyageDetail {
   nextBoardingAt: string | null;
   boardedDays: number | null;
   signoffDays: number | null;
+  totalBoardedDays: number;
 }
 
 export interface VoyagePageData {
@@ -37,9 +38,25 @@ const DEMO: VoyagePageData = {
       nextBoardingAt: null,
       boardedDays: 74,
       signoffDays: 27,
+      totalBoardedDays: 74,
     },
   ],
 };
+
+// 승선~하선 한 사이클이 끝나면 voyages 행이 active=false로 남고 다음 항해가 새 행으로
+// 쌓이는 구조라(0001_init.sql), "총 승선일수"는 이 haenam 캐릭터의 모든 항해 기록을
+// 합산해야 한다 — active 필터 없이 boarded_at이 있는 행 전부를 가져와 각 행의
+// (actual_signoff_at ?? 오늘) - boarded_at 일수를 더한다.
+function sumBoardedDays(rows: { boarded_at: string | null; actual_signoff_at: string | null }[]): number {
+  let total = 0;
+  for (const row of rows) {
+    if (!row.boarded_at) continue;
+    const start = new Date(row.boarded_at + "T00:00:00+09:00").getTime();
+    const end = row.actual_signoff_at ? new Date(row.actual_signoff_at + "T00:00:00+09:00").getTime() : Date.now();
+    total += Math.max(0, Math.floor((end - start) / 86400000));
+  }
+  return total;
+}
 
 export async function getVoyagePageData(): Promise<VoyagePageData> {
   try {
@@ -69,6 +86,11 @@ export async function getVoyagePageData(): Promise<VoyagePageData> {
         .eq("active", true)
         .maybeSingle();
 
+      const { data: allVoyages } = await supabase
+        .from("voyages")
+        .select("boarded_at, actual_signoff_at")
+        .eq("haenam_character_id", c.id);
+
       voyages.push({
         characterId: c.id,
         nickname: c.nickname,
@@ -80,6 +102,7 @@ export async function getVoyagePageData(): Promise<VoyagePageData> {
         nextBoardingAt: voyage?.next_boarding_at ?? null,
         boardedDays: voyage?.boarded_at ? daysSinceKstDate(voyage.boarded_at) : null,
         signoffDays: voyage?.expected_signoff_at ? -daysSinceKstDate(voyage.expected_signoff_at) : null,
+        totalBoardedDays: sumBoardedDays(allVoyages ?? []),
       });
     }
 
