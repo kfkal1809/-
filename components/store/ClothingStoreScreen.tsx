@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { GameIcon } from "@/components/icons/GameIcon";
 import { BackButton } from "@/components/store/BackButton";
@@ -47,6 +47,17 @@ export function ClothingStoreScreen({ data }: { data: ClothingStoreData }) {
     for (const p of products) counts.set(p.tab, (counts.get(p.tab) ?? 0) + 1);
     return CLOTHING_TABS.filter((t) => t.key === "all" || (counts.get(t.key) ?? 0) > 0);
   }, [products]);
+  // 좌우 화살표로 캐릭터를 바꾸면 router.push가 옷가게 데이터(상품 목록/보유/장착/잔액
+  // 4개 쿼리)를 서버에서 새로 받아오는데, 기본적으로 이 경로는 프리페치가 안 돼 있어
+  // 클릭할 때마다 그 왕복을 통째로 기다려야 했다(느리다는 리포트 원인). 가족 구성원 수가
+  // 몇 명 안 되므로, 마운트 시 다른 캐릭터들의 URL을 전부 미리 router.prefetch해두면
+  // 실제 클릭 시점엔 이미 캐시된 RSC 페이로드로 바로 전환된다.
+  useEffect(() => {
+    for (const c of data.characters) {
+      if (c.id !== data.selectedCharacterId) router.prefetch(`/stores/clothing?characterId=${c.id}`);
+    }
+  }, [data.characters, data.selectedCharacterId, router]);
+
   const selected = products.find((p) => p.catalogItemId === selectedProductId) ?? null;
   const bodyPresetKey = useMemo(
     () => bodyPresetKeyFor(data.selectedKind, data.selectedChildGender, data.selectedChildStage),

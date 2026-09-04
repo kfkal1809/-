@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getVoyagePageData } from "@/lib/game/voyageData";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { Card } from "@/components/ui/Card";
+import { CountryTimeDiff } from "@/components/voyage/CountryTimeDiff";
 
 export default async function VoyagePage() {
   const data = await getVoyagePageData();
@@ -30,6 +31,13 @@ export default async function VoyagePage() {
             <Stat label="승선" value={v.boardedDays !== null ? `D+${v.boardedDays}` : "-"} color="var(--color-coral)" />
             <Stat label="하선" value={v.signoffDays !== null ? `D-${v.signoffDays}` : "-"} color="var(--color-tab-active)" />
           </div>
+
+          <div className="rounded-2xl bg-[var(--color-cream)] py-2.5 text-center">
+            <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">총 승선일수</p>
+            <p className="text-[17px] font-extrabold text-[var(--color-navy)]">{v.totalBoardedDays}일</p>
+          </div>
+
+          <CountryTimeDiff />
 
           <dl className="grid grid-cols-2 gap-y-1 text-[13px] text-[var(--color-navy-soft)]">
             <dt>승선일</dt>

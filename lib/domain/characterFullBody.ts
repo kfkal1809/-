@@ -8,6 +8,108 @@ export const OUTFIT_CANVAS_W = 420;
 export const OUTFIT_CANVAS_H = 512;
 export const NECK_Y = 140;
 
+// 새싹 옷 91종의 목선(y=140)~발끝 실측 결과, 목선 위치는 전부 정확히 일치했지만
+// 발끝까지의 세로 길이(체형 자체가 그림에 같이 그려져 있어 사실상 "체형 크기")가
+// 279~349px로 최대 25%까지 제각각이었다 — 옷을 바꿔 입힐 때마다 같은 새싹인데도 키가
+// 늘었다 줄었다 하는 원인. "아기 멜빵바지"(기본 지급 아이템, child_outfit_02.png,
+// 목선~발끝 324px)를 기준(=1.0)으로 삼아, 그보다 짧거나 긴 그림을 목선을 축으로
+// 세로 방향으로만 다시 스케일한다(가로는 그대로 둬 좌우 비율은 안 바뀜) — 그림을
+// 새로 그리거나 다시 자르지 않고 CharacterSprite에서 CSS transform: scaleY로만 보정.
+// scripts/asset-tools/measure_child_outfit_scale.py로 91종 전부의 알파 채널 bbox를
+// 스캔해 계산했다(측정값과 기준값이 거의 같은 파일은 표에서 뺌).
+export const CHILD_OUTFIT_BODY_SCALE_Y: Record<string, number> = {
+  child_elementary_male_dress_s9_01: 0.9284,
+  child_elementary_male_dress_s9_02: 0.9284,
+  child_elementary_male_dress_s9_03: 0.9284,
+  child_elementary_male_dress_s9_04: 0.9284,
+  child_elementary_male_dress_s9_05: 0.9284,
+  child_elementary_male_dress_s9_06: 0.9284,
+  child_elementary_male_dress_s9_07: 0.9284,
+  child_elementary_male_dress_s9_08: 0.9284,
+  child_elementary_male_dress_s9_09: 0.9284,
+  child_outfit_01: 1.0693,
+  child_outfit_03: 1.0157,
+  child_outfit_04: 0.9558,
+  child_outfit_05: 0.9284,
+  child_outfit_06: 1.08,
+  child_outfit_07: 1.0983,
+  child_outfit_08: 1.1613,
+  child_outfit_09: 1.0588,
+  child_outfit_10: 1.0062,
+  child_toddler_female_dress_s10_01: 0.9284,
+  child_toddler_female_dress_s10_02: 0.9284,
+  child_toddler_female_dress_s10_04: 0.9446,
+  child_toddler_female_dress_s10_05: 0.9284,
+  child_toddler_female_dress_s10_07: 0.9284,
+  child_toddler_female_dress_s10_08: 0.9284,
+  child_toddler_female_dress_s10_09: 0.9284,
+  child_toddler_female_dress_s2_01: 1.0554,
+  child_toddler_female_dress_s2_02: 0.9284,
+  child_toddler_female_dress_s2_03: 0.9284,
+  child_toddler_female_dress_s2_04: 0.9284,
+  child_toddler_female_dress_s2_05: 0.9284,
+  child_toddler_female_dress_s2_06: 0.9284,
+  child_toddler_female_dress_s2_07: 0.9284,
+  child_toddler_female_dress_s2_08: 0.9284,
+  child_toddler_female_dress_s2_09: 0.9284,
+  child_toddler_female_dress_s6_01: 0.9446,
+  child_toddler_female_dress_s6_02: 0.9446,
+  child_toddler_female_dress_s6_03: 0.9446,
+  child_toddler_female_dress_s6_04: 0.9284,
+  child_toddler_female_dress_s6_05: 0.9284,
+  child_toddler_female_dress_s6_06: 0.9446,
+  child_toddler_female_dress_s6_07: 0.9284,
+  child_toddler_female_dress_s6_08: 0.9446,
+  child_toddler_female_dress_s6_09: 0.9446,
+  child_toddler_female_dress_s7_02: 0.9284,
+  child_toddler_female_dress_s7_03: 0.9284,
+  child_toddler_female_dress_s7_04: 0.9284,
+  child_toddler_female_dress_s7_05: 1.0157,
+  child_toddler_female_dress_s7_06: 0.9284,
+  child_toddler_female_dress_s7_08: 0.9284,
+  child_toddler_female_dress_s7_09: 0.9284,
+  child_toddler_male_dress_s10_03: 0.9284,
+  child_toddler_male_dress_s10_06: 0.9284,
+  child_toddler_male_dress_s3_01: 0.9284,
+  child_toddler_male_dress_s3_02: 0.9284,
+  child_toddler_male_dress_s3_03: 0.9284,
+  child_toddler_male_dress_s3_04: 0.9284,
+  child_toddler_male_dress_s3_05: 0.9284,
+  child_toddler_male_dress_s3_06: 0.9284,
+  child_toddler_male_dress_s3_07: 0.9284,
+  child_toddler_male_dress_s3_08: 0.9284,
+  child_toddler_male_dress_s3_09: 0.9284,
+  child_toddler_male_dress_s4_01: 0.9284,
+  child_toddler_male_dress_s4_02: 0.9284,
+  child_toddler_male_dress_s4_03: 0.9284,
+  child_toddler_male_dress_s4_04: 0.9284,
+  child_toddler_male_dress_s4_05: 0.9284,
+  child_toddler_male_dress_s4_06: 0.9284,
+  child_toddler_male_dress_s4_07: 0.9284,
+  child_toddler_male_dress_s4_08: 0.9284,
+  child_toddler_male_dress_s4_09: 0.9284,
+  child_toddler_male_dress_s5_01: 0.9284,
+  child_toddler_male_dress_s5_02: 0.9284,
+  child_toddler_male_dress_s5_03: 0.9284,
+  child_toddler_male_dress_s5_04: 0.9284,
+  child_toddler_male_dress_s5_05: 0.9284,
+  child_toddler_male_dress_s5_06: 0.9284,
+  child_toddler_male_dress_s5_07: 0.9284,
+  child_toddler_male_dress_s5_08: 0.9284,
+  child_toddler_male_dress_s5_09: 0.9284,
+  child_toddler_male_dress_s7_01: 0.9284,
+  child_toddler_male_dress_s7_07: 0.9284,
+  child_toddler_male_dress_s8_01: 0.9284,
+  child_toddler_male_dress_s8_02: 0.9284,
+  child_toddler_male_dress_s8_03: 0.9284,
+  child_toddler_male_dress_s8_04: 0.9284,
+  child_toddler_male_dress_s8_05: 0.9284,
+  child_toddler_male_dress_s8_06: 0.9284,
+  child_toddler_male_dress_s8_07: 0.9284,
+  child_toddler_male_dress_s8_08: 0.9284,
+  child_toddler_male_dress_s8_09: 0.9284,
+};
+
 // 얼굴/헤어(목 위)는 모든 의상에 대해 같은 위치에 고정 배치된다 — "공통 anchor".
 export const HEAD_WIDTH = 190;
 export const HEAD_OVERLAP = 10;
@@ -460,4 +562,17 @@ export function resolveHairAssetKey(portraitKey: CharacterPortraitKey, hairStyle
   const idx = HAIR_STYLE_INDEX[portraitKey.kind]?.[hairStyle];
   if (!idx) return null;
   return `${characterPortraitKeyFor(portraitKey)}_${idx}`;
+}
+
+// 옷가게 헤어 카탈로그 sku(예: "child_hair_bob", "haenyeo_hair_wave")는 마지막
+// "_hair_" 뒤에 HairStyle 값이 그대로 붙는 명명 규칙이라, 여기서 스타일명을 뽑아
+// hairOverlaySrc와 같은 실제 헤어 오버레이 PNG 경로를 돌려준다 — 옷가게 썸네일이
+// 실제 착용 시 보이는 그림과 정확히 같아진다(기존엔 sku가 ITEM_ICON_SKUS 화이트리스트에
+// 없어 항상 null → 이름 텍스트만 뜨는 플레이스홀더로 빠졌었다).
+export function hairCatalogPreviewSrc(sku: string, portraitKey: CharacterPortraitKey): string | null {
+  const style = sku.split("_hair_").pop();
+  if (!style) return null;
+  const idx = HAIR_STYLE_INDEX[portraitKey.kind]?.[style];
+  if (!idx) return null;
+  return hairOverlaySrc(portraitKey, idx);
 }

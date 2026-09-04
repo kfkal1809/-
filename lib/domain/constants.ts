@@ -168,8 +168,30 @@ export const WORK_REWARD_MIN = 2;
 export const WORK_REWARD_MAX = 4;
 
 // 가게 알바 (1.38 / 1.40) — MVP는 복잡한 미니게임 대신 3~5회 탭으로 대체한다.
-export const BONPPURI_WORK_TASKS = ["꽃에 물주기", "리본 묶기", "꽃 정리하기", "꽃다발 포장"];
-export const LIRI_WORK_TASKS = ["테이블 닦기", "반찬 나르기", "불판 정리", "주문 전달", "앞접시 놓기"];
+export const BONPPURI_WORK_TASKS = [
+  "꽃에 물주기",
+  "리본 묶기",
+  "꽃 정리하기",
+  "꽃다발 포장",
+  "꽃병 씻기",
+  "물 채우기",
+  "전화 받기",
+  "진상 손님 응대",
+  "계산하기",
+  "꽃 설명하기",
+  "화분 설명하기",
+  "화분 포장하기",
+];
+export const LIRI_WORK_TASKS = [
+  "테이블 닦기",
+  "반찬 나르기",
+  "불판 정리",
+  "주문 전달",
+  "앞접시 놓기",
+  "테이블 청소",
+  "서빙하기",
+  "곱창 굽기",
+];
 export const WORK_TAP_TARGET = 4;
 
 export const FISHING_DURATIONS = [4, 8] as const;
