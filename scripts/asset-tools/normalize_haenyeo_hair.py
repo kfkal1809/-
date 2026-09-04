@@ -65,6 +65,24 @@ CANVAS_ORIGIN_Y = 140
 
 BACK_HAIR_KEYS = set(BACK_HAIR_EXTRA_UP.keys())
 
+# 20장 원본 전부 정수리 부근에 "흩날리는 잔머리" 표현으로 알파가 0→255까지 아주 서서히
+# 올라가는 페더(feather) 구간이 있다(실측: 7~40px, 특히 웨이브/번 헤어가 심함). 배경이
+# 흰색/투명이던 예전엔 안 보였지만, 지금은 그 자리에 항상 진한 피부톤(#ffe3xx 등) 두피가
+# 깔려 있어서 이 페더 구간이 "머리와 두피 사이에 낀 살구색 테두리"로 고스란히 드러난다 —
+# "해녀 머리가 깨져 보인다"는 제보의 실체. 원본 그림을 다시 그리거나 자르지 않고, 아주
+# 옅은 알파(threshold 미만)만 투명 처리해 페더 폭을 자연스러운 안티에일리어싱 수준(2~5px)
+# 으로 좁힌다 — 원본 파일(haenyeo/hair/*)은 그대로 두고 이 스크립트가 생성하는
+# hair_normalized/ 출력에만 반영된다.
+ALPHA_FEATHER_THRESHOLD = 45
+
+
+def sharpen_alpha(im: Image.Image, threshold: int = ALPHA_FEATHER_THRESHOLD) -> Image.Image:
+    arr = np.array(im).astype(np.float32)
+    alpha = arr[:, :, 3]
+    scale = 255.0 / max(1, 255 - threshold)
+    arr[:, :, 3] = np.clip((alpha - threshold) * scale, 0, 255)
+    return Image.fromarray(arr.astype(np.uint8), "RGBA")
+
 
 def alpha_bbox(im: Image.Image):
     arr = np.array(im)
@@ -77,7 +95,7 @@ def normalize_one(idx: str):
     hair_path = os.path.join(HAIR_DIR, f"haenyeo_hair_{idx}.png")
     mask_path = os.path.join(MASK_DIR, f"haenyeo_hair_{idx}_mask.png")
 
-    hair = Image.open(hair_path).convert("RGBA")
+    hair = sharpen_alpha(Image.open(hair_path).convert("RGBA"))
     x0, x1, y0, _y1 = alpha_bbox(hair)
     bbox_cx = (x0 + x1) / 2
 
@@ -93,7 +111,7 @@ def normalize_one(idx: str):
     canvas.save(os.path.join(OUT_DIR, f"haenyeo_hair_{idx}.png"))
 
     if os.path.exists(mask_path):
-        mask = Image.open(mask_path).convert("RGBA")
+        mask = sharpen_alpha(Image.open(mask_path).convert("RGBA"))
         mask_canvas = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
         mask_canvas.alpha_composite(mask, (dest_x, dest_y))
         mask_canvas.save(os.path.join(OUT_MASK_DIR, f"haenyeo_hair_{idx}_mask.png"))
