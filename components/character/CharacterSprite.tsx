@@ -440,6 +440,10 @@ export const CharacterSprite = memo(function CharacterSprite({
             unoptimized
             style={{ position: "absolute", left: hairOverlayLeft, top: hairOverlayTop, width: hairOverlayRenderW, height: hairOverlayRenderH }}
           />
+          {/* multiply는 밑 hairOverlaySrc 그림 자체가 흰색일 때만 정확하다 — 실제로는
+              이미 짙은 갈색이 칠해져 있어서(피부톤과 같은 문제) hairColor를 또 곱하면
+              머리색이 거의 검은색에 가깝게 뭉개졌다. color 블렌드로 바꿔 그림의 명암(하이라이트/
+              그림자)은 그대로 두고 색상만 hairColor로 바꾼다. */}
           <div
             aria-hidden
             style={{
@@ -455,7 +459,7 @@ export const CharacterSprite = memo(function CharacterSprite({
               maskSize: "100% 100%",
               WebkitMaskRepeat: "no-repeat",
               maskRepeat: "no-repeat",
-              mixBlendMode: "multiply",
+              mixBlendMode: "color",
             }}
           />
         </>
@@ -497,8 +501,14 @@ export const CharacterSprite = memo(function CharacterSprite({
             unoptimized
             style={{ position: "absolute", left: headLeft, top: headTop, width: headRenderW, height: headRenderH }}
           />
-          {/* 피부톤은 얼굴 마스크 위에 mix-blend-mode:multiply로 입힌다 — outfitColor와 같은
-              방식(마스크 자체는 흰색+alpha, RGB는 항상 흰색). */}
+          {/* 피부톤은 얼굴 마스크 위에 mix-blend-mode로 입힌다. 예전엔 multiply를 썼는데,
+              그건 밑에 깔린 head_bald 그림 자체가 완전한 흰색일 때만 정확하다(옅은 살구색이
+              이미 칠해져 있으면 그 위에 skinTone을 또 곱해서 실측 기준 얼굴이 목/팔다리
+              (outfit_full에 이미 구워진 살빛)보다 눈에 띄게 어둡고 탁해졌다 — "체형 파일과
+              피부톤이 다르다"는 제보의 실체). head_bald 원본을 다시 칠하는 대신, 그림의
+              명암(밝기)은 그대로 두고 색상만 skinTone으로 바꿔주는 mix-blend-mode:color를
+              쓴다 — 기본값(스와치 기본 피부톤)일 때 원본 그림 색이 그대로 나오고, 다른
+              스와치를 골라도 음영은 유지된 채 색상만 바뀐다. */}
           <div
             aria-hidden
             style={{
@@ -514,7 +524,7 @@ export const CharacterSprite = memo(function CharacterSprite({
               maskSize: "100% 100%",
               WebkitMaskRepeat: "no-repeat",
               maskRepeat: "no-repeat",
-              mixBlendMode: "multiply",
+              mixBlendMode: "color",
             }}
           />
           {!isBackHair && hairOverlayLayer}
@@ -536,7 +546,7 @@ export const CharacterSprite = memo(function CharacterSprite({
                 maskSize: "100% 100%",
                 WebkitMaskRepeat: "no-repeat",
                 maskRepeat: "no-repeat",
-                mixBlendMode: "multiply",
+                mixBlendMode: "color",
               }}
             />
           )}
