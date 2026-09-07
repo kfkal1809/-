@@ -1,6 +1,8 @@
 export const SKIN_SWATCHES = ["#ffe9d9", "#ffe3cf", "#ffd9bc"];
 export const HAIR_SWATCHES = ["#3b2f28", "#5b4433", "#6b4a35", "#8a5a3c", "#a9754a"];
-export const HAENYEO_HAIR_STYLES = ["wave", "pony", "bob", "twin", "bun"] as const;
+// 2026-09-07: 20종 중 얼굴을 가리거나(01,02,04,08,09,10,13,14,15,18) 정면 앞머리가 없는(19,20)
+// 것을 빼고 검수를 통과한 8종만 선택 가능(HAENYEO_HAIR_VALID_KEYS, characterFullBody.ts 참고).
+export const HAENYEO_HAIR_STYLES = ["wave", "bob", "twin", "bun", "pony", "bangs", "braid", "layered"] as const;
 export const HAENAM_HAIR_STYLES = ["short_neat", "buzz", "sideswept", "bob"] as const;
 // "bun"은 새싹용 올림머리 그림 자산이 없어(HAIR_STYLE_INDEX.child 참고) 목록에서 뺐다 —
 // 골라도 실제로는 안 바뀌는 채로 남겨두면 "머리가 선택이랑 안 맞는다" 버그가 그대로다.

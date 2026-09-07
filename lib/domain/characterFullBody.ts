@@ -110,6 +110,12 @@ export const CHILD_OUTFIT_BODY_SCALE_Y: Record<string, number> = {
   child_toddler_male_dress_s8_09: 0.9284,
 };
 
+// 해녀 옷의 몸통 폭 불일치는 런타임 scaleX 보정으로 해결하지 않는다 — 그림을 옆으로
+// 찌그러뜨려서는 MASTER 체형과 같아질 수 없다는 지적에 따라 이 테이블(HAENYEO_OUTFIT_BODY_SCALE_X)은
+// 폐기했다. 대신 scripts/asset-tools/build_haenyeo_master_canvas.py가 각 outfit_full의
+// 피부(손/팔/다리)를 지우고 MASTER 몸 위에 옷만 겹치도록 파일 자체를 새로 굽는다
+// (public/images/character/master/haenyeo_outfit/*.png) — HaenyeoMasterSprite.tsx 참고.
+
 // 얼굴/헤어(목 위)는 모든 의상에 대해 같은 위치에 고정 배치된다 — "공통 anchor".
 export const HEAD_WIDTH = 190;
 export const HEAD_OVERLAP = 10;
@@ -192,10 +198,11 @@ export function headMarginTopFor(headKey: string, useBaldHead: boolean): number 
 // 그려져 있긴 해도 전체 캔버스 높이가 해남/해녀와 거의 같아서(PORTRAIT_SIZE 참고), 선실처럼
 // 어른과 나란히 서면 새싹이 어른만큼 커 보이는 체형 문제가 있었다. heightScaleFor()로
 // 연령대별로 더 작게 줄인다.
-export const HEIGHT_SCALE_BY_KIND: Record<string, number> = {
-  haenyeo: 0.94,
-  haenam: 1,
-};
+// 해녀는 이제 HaenyeoMasterSprite(별도 MASTER 캔버스 렌더러)를 쓰므로 이 표를 거치지
+// 않는다 — 예전에 있던 haenyeo: 0.94 항목은 해녀를 성인 해남보다 작게 그리는 원인 중
+// 하나였다("해녀가 새싹처럼 작아 보인다"는 제보). 두 성인 kind는 전역 배율 1이 맞고,
+// 실제 키 차이는 각자의 MASTER 원본 체형 차이만으로 남겨야 한다.
+export const HEIGHT_SCALE_BY_KIND: Record<string, number> = {};
 
 // 새싹 연령대별 키 보정 — 유아가 가장 작고 초등학생이 어른에 가장 가깝게, 3단계로 점차
 // 커지도록. bodyScale(구버전 벡터 폴백 전용 필드)과 별개로 실사 렌더링 경로(outfitAssetKey)
@@ -512,8 +519,13 @@ export const HAIR_ASSET_PLACEMENT: Record<string, { widthFrac: number; leftFrac:
 };
 // HairStyle(온보딩 선택지) → 그룹별 사용 가능한 스타일 번호. 값이 없으면(예: 새싹 bun) 그림 자산이
 // 없다는 뜻 — 숨기지 않고 민머리 베이스로 자연스럽게 폴백한다(docs/PROGRESS.md 기록).
+// 2026-09-07 사용자 지시: 해녀는 20종 중 얼굴을 심하게 가리거나(01,02,04,08,09,10,13,14,15,18)
+// 정면용 앞머리가 아예 없는(19,20) 것들을 빼고, 검수를 통과한 8종(03,05,06,07,11,12,16,17)만
+// 선택 가능해야 한다. 기존 이름(pony/bun)은 그 번호 자체가 빠졌으므로 실제로 존재하는 번호 중
+// 디자인이 그나마 가까운 것으로 다시 연결했다 — pony(포니테일)→17(사이드 포니), bun(올림머리)
+// →07(하프업 번). bangs/braid/layered는 새로 추가한 이름(05/12/16).
 export const HAIR_STYLE_INDEX: Record<"haenyeo" | "haenam" | "child", Partial<Record<string, string>>> = {
-  haenyeo: { wave: "03", pony: "09", bob: "06", twin: "11", bun: "10" },
+  haenyeo: { wave: "03", bob: "06", twin: "11", bun: "07", pony: "17", bangs: "05", braid: "12", layered: "16" },
   haenam: { short_neat: "01", buzz: "07", sideswept: "15", bob: "18" },
   child: { bob: "02", twin: "03", pony: "04" },
 };
@@ -575,4 +587,146 @@ export function hairCatalogPreviewSrc(sku: string, portraitKey: CharacterPortrai
   const idx = HAIR_STYLE_INDEX[portraitKey.kind]?.[style];
   if (!idx) return null;
   return hairOverlaySrc(portraitKey, idx);
+}
+
+// =========================================================
+// 해녀 MASTER 전신 캔버스 (scripts/asset-tools/build_haenyeo_master_canvas.py)
+// =========================================================
+// 런타임 topFrac/widthFrac/scaleX/scaleY 보정을 전부 없애기 위해, 해녀의 몸/얼굴/헤어/
+// 의상을 전부 같은 441x906 캔버스로 미리 구워 저장했다. 이 캔버스 안에서는 모든 레이어가
+// 이미 같은 좌표계라 CharacterSprite는 이 넷을 순서대로 겹쳐 그리기만 하면 된다 —
+// position:absolute, inset:0, width/height:100%. 개별 레이어 보정 없음.
+//
+// 캔버스 규격(441x906)과 키포인트는 scripts/asset-tools/build_master_keypoint_guides.py가
+// 실측해 만든 가이드 이미지(public/images/character/master/guides/haenyeo_template_guide.png,
+// 사용자에게 전달됨)와 정확히 같은 값이다 — 2026-09-06 사용자가 업로드한 새
+// haenyeo_outfit_06/08~20.png가 바로 이 가이드 좌표계에 맞춰 그려졌기 때문에, 이 상수를
+// 가이드와 다르게 두면 새 의상이 몸에서 어긋난다.
+export const HAENYEO_MASTER_CANVAS_W = 441;
+export const HAENYEO_MASTER_CANVAS_H = 906;
+// 목선/손목/발바닥 y좌표 — 검수 화면에서 가이드선으로만 쓰고, 렌더링에는 쓰지 않는다
+// (레이어 자체가 이미 이 좌표에 맞게 저장돼 있어서 런타임 계산이 필요 없다).
+export const HAENYEO_MASTER_NECK_Y = 503;
+export const HAENYEO_MASTER_WRIST_Y = 685;
+export const HAENYEO_MASTER_SOLE_Y = 876;
+export const HAENYEO_MASTER_CENTER_X = 219.5;
+
+const HAENYEO_MASTER_DIR = "/images/character/master";
+// 19/20번(얼굴 구멍이 없던 통짜 그림)만 뒷머리 조각이 별도로 있다 — 나머지 18종은
+// 원래부터 정면 그림 자체에 얼굴이 비치는 구멍이 뚫려 있어 뒷머리가 따로 필요 없다.
+export const HAENYEO_MASTER_HAIR_BACK_KEYS = new Set(["19", "20"]);
+
+// 2026-09-07 사용자 결정 — 눈 가림 정량 실측(눈 좌표 반경 16px 알파 커버리지) 결과에 따라
+// 확정한 선택 가능 8종. 나머지 12종(01,02,04,08,09,10,13,14,15,18 — 얼굴을 심하게 가림,
+// 19,20 — 정면 앞머리 없음)은 새 원화가 올라오기 전까지 선택 목록에서 뺀다. 렌더러 자체는
+// 남겨둔다(기존에 이미 이 스타일을 쓰는 캐릭터가 있을 수 있음 — 아래 haenyeoResolveHairIdx가
+// 화면에는 안전한 기본값(03)으로 대체해서 보여준다).
+export const HAENYEO_HAIR_VALID_KEYS = new Set(["03", "05", "06", "07", "11", "12", "16", "17"]);
+export const HAENYEO_HAIR_DEFAULT_KEY = "03";
+export const HAENYEO_HAIR_HIDDEN_FROM_PICKER = new Set(
+  Array.from({ length: 20 }, (_, i) => `${i + 1}`.padStart(2, "0")).filter(
+    (k) => !HAENYEO_HAIR_VALID_KEYS.has(k)
+  )
+);
+
+// 저장된 hairStyle이 가리키는 번호가 선택 목록에서 빠진 것이면(예전에 hair_style_index가
+// 가리키던 09/10처럼) 깨진 헤어를 그대로 보여주지 않고 정상 기본 헤어(03)로 표시한다 —
+// DB 값 자체를 바꾸지는 않는다(재접속해도 원래 선택은 남아 있고, 그 스타일 원화가 올라오면
+// 다시 정상적으로 보인다).
+export function haenyeoResolveHairIdx(idx: string | null): string | null {
+  if (idx === null) return null;
+  return HAENYEO_HAIR_VALID_KEYS.has(idx) ? idx : HAENYEO_HAIR_DEFAULT_KEY;
+}
+
+// 2026-09-07 사용자 지적 + 실측 확인: 08(상의 없이 장화만), 14(상의 없이 스커트만),
+// 17(베레모가 머리가 아니라 목/가슴 위치에 그려짐) — 전부 design-assets 원본 파일
+// 자체의 결함이다(내 파이프라인이 만든 게 아니라 업로드된 raw PNG를 그대로 열어서
+// 확인함). 재업로드 전까지 실제 존재하는 목록(AVAILABLE)에서도 별도로 걸러낸다.
+export const HAENYEO_OUTFIT_INVALID_KEYS = new Set(
+  ["08", "14", "17"].map((n) => `haenyeo_custom_outfit_${n}`)
+);
+
+// 헤어를 쓰지 않을 때(민머리)는 원본 MASTER 몸을, 헤어를 쓸 때는 그 헤어 전용으로 미리 구운
+// 변형(민머리 정수리 외곽선이 두피 위 얇은 링만큼 지워진 버전 — build_haenyeo_master_canvas.py의
+// build_hair_body_variants 참고)을 쓴다. 얼굴 오val·귀는 그 변형에서도 항상 그대로 보존된다.
+export function haenyeoMasterBodySrc(hairIdx?: string | null): string {
+  if (hairIdx && HAENYEO_HAIR_VALID_KEYS.has(hairIdx)) {
+    return `${HAENYEO_MASTER_DIR}/haenyeo_bald_body_hair_${hairIdx}.png`;
+  }
+  return `${HAENYEO_MASTER_DIR}/haenyeo_bald_body.png`;
+}
+
+export function haenyeoMasterSkinMaskSrc(): string {
+  return `${HAENYEO_MASTER_DIR}/haenyeo_bald_skin_mask.png`;
+}
+
+// 2026-09-06 사용자가 GitHub에 직접 업로드한 haenyeo_outfit_06/08~20.png(14종)만 실제
+// 에셋이 존재한다. 01~05, 07(6종)은 아직 업로드되지 않았다(사용자가 추후 업로드 예정) —
+// build_haenyeo_master_canvas.py도 이 6종은 만들지 않는다. 이 목록은 그 스크립트의 산출물과
+// 정확히 일치해야 한다(스크립트를 다시 돌려 새 번호가 추가되면 이 표도 같이 갱신).
+//
+// 2026-09-07 사용자 결정: haenyeo_outfit_06 등 기존 번호형 asset key는 이미 예전 SKU
+// (haenyeo_outfit_sweatshirt 등)가 물고 있어서, 새 원화를 그 이름으로 저장하면 기존 상품이
+// 자동으로 다른 그림을 입게 된다("기존 상품 이미지를 바꾸지 마라"는 지시 위반). 그래서
+// 파이프라인 산출물은 haenyeo_custom_outfit_NN.png로 저장하고, 이 목록도 그 이름을 쓴다 —
+// 기존 haenyeo_outfit_NN(번호만 있는) 키는 이제 어떤 목록에도 없으므로 항상 "없음"으로
+// 처리돼 대체 없이 생략된다(기존 SKU가 새 그림을 입는 사고 방지).
+export const HAENYEO_OUTFIT_AVAILABLE_KEYS = new Set(
+  ["06", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"].map(
+    (n) => `haenyeo_custom_outfit_${n}`
+  )
+);
+export const HAENYEO_OUTFIT_MISSING_KEYS = new Set(
+  ["01", "02", "03", "04", "05", "07"].map((n) => `haenyeo_custom_outfit_${n}`)
+);
+// 파일은 존재하지만(AVAILABLE) 원본 자체가 깨져 있어(HAENYEO_OUTFIT_INVALID_KEYS 참고) 정상
+// 상품으로 쓸 수 없는 것까지 제외한, 실제로 "검수 통과"한 목록. QA 그리드·옷가게 후보는
+// 전부 이 목록만 써야 한다.
+export const HAENYEO_OUTFIT_VALID_KEYS = new Set(
+  Array.from(HAENYEO_OUTFIT_AVAILABLE_KEYS).filter((k) => !HAENYEO_OUTFIT_INVALID_KEYS.has(k))
+);
+// 2026-09-06 사용자 지시: 없는 의상을 다른 번호로 대체하지 않는다(같은 옷이 여러 상품으로
+// 중복 노출되는 문제 때문에 폐기). 원본이 없거나(MISSING) 원본이 깨져 있으면(INVALID) 그
+// 캐릭터는 의상 레이어 없이(MASTER 몸 자체의 기본 이너웨어만) 렌더링하고, 정확히 무엇이
+// 문제인지만 개발 로그에 남긴다 — 호출부(HaenyeoMasterSprite)가 null을 받으면 <Image>를
+// 아예 렌더링하지 않는다.
+// design-assets에는 항상 haenyeo_outfit_NN.png(번호만)로 업로드된다 — 로그에는 실제
+// 업로드 파일명을 보여준다(custom_ 접두사는 상품/렌더링 키 전용, 업로드 파일명이 아님).
+function haenyeoOutfitSourceFileName(outfitAssetKey: string): string {
+  const num = outfitAssetKey.match(/(\d{2})$/)?.[1];
+  return num ? `haenyeo_outfit_${num}.png` : `${outfitAssetKey}.png`;
+}
+
+export function haenyeoMasterOutfitSrc(outfitAssetKey: string): string | null {
+  if (HAENYEO_OUTFIT_INVALID_KEYS.has(outfitAssetKey)) {
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[haenyeo] design-assets/${haenyeoOutfitSourceFileName(outfitAssetKey)} 원본 결함(불완전한 의상/좌표 이상) — 의상 레이어 생략, 재업로드 필요`
+      );
+    }
+    return null;
+  }
+  if (!HAENYEO_OUTFIT_AVAILABLE_KEYS.has(outfitAssetKey)) {
+    if (process.env.NODE_ENV !== "production") {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `[haenyeo] outfitAssetKey "${outfitAssetKey}" 에 연결된 MASTER 파이프라인 산출물 없음 — 의상 레이어 생략(다른 번호로 대체하지 않음)`
+      );
+    }
+    return null;
+  }
+  return `${HAENYEO_MASTER_DIR}/haenyeo_outfit/${outfitAssetKey}.png`;
+}
+
+export function haenyeoMasterHairFrontSrc(styleIndex: string): string {
+  return `${HAENYEO_MASTER_DIR}/haenyeo_hair_front/haenyeo_hair_${styleIndex}.png`;
+}
+
+export function haenyeoMasterHairFrontMaskSrc(styleIndex: string): string {
+  return `${HAENYEO_MASTER_DIR}/haenyeo_hair_front/masks/haenyeo_hair_${styleIndex}_mask.png`;
+}
+
+export function haenyeoMasterHairBackSrc(styleIndex: string): string {
+  return `${HAENYEO_MASTER_DIR}/haenyeo_hair_back/haenyeo_hair_${styleIndex}.png`;
 }

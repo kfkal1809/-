@@ -1,7 +1,18 @@
 // 캐릭터 프리셋 — 기획서 1.9/1.11 아트 디렉션 기준
 // 2.3~2.5등신, 아주 작은 점눈, 옅은 홍조, 맑은 파스텔. 해녀는 잠수복 대신 평범한 일상복.
 
-export type HairStyle = "wave" | "pony" | "bob" | "twin" | "bun" | "short_neat" | "buzz" | "sideswept";
+export type HairStyle =
+  | "wave"
+  | "pony"
+  | "bob"
+  | "twin"
+  | "bun"
+  | "short_neat"
+  | "buzz"
+  | "sideswept"
+  | "bangs"
+  | "braid"
+  | "layered";
 export type OutfitStyle =
   | "haenyeo_overalls"
   | "haenam_deck_uniform"

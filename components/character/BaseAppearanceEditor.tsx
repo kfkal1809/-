@@ -30,6 +30,9 @@ const HAIR_STYLE_LABEL: Record<string, string> = {
   short_neat: "단정",
   buzz: "짧은머리",
   sideswept: "사이드",
+  bangs: "앞머리단발",
+  braid: "땋은머리",
+  layered: "레이어드컷",
 };
 
 export function BaseAppearanceEditor({

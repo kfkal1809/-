@@ -123,6 +123,22 @@ export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>>
   haenyeo_outfit_denim_jacket_dress: { outfitAssetKey: "haenyeo_outfit_16" },
   haenyeo_outfit_apron: { outfitAssetKey: "haenyeo_outfit_18" },
   haenyeo_outfit_pink_coat: { outfitAssetKey: "haenyeo_outfit_20" },
+  // 0026 — 2026-09-07 신규 업로드 검수 통과 11종. 기존 haenyeo_outfit_* SKU와 번호가 겹치지만
+  // (예: 06) 디자인이 완전히 다른 별개의 옷이라 outfitAssetKey를 haenyeo_custom_outfit_NN으로
+  // 분리했다(build_haenyeo_master_canvas.py도 이 이름으로 산출물을 저장) — 기존 SKU가 이
+  // 새 그림을 자동으로 입는 사고를 막는다. 08/14/17(원본 결함), 01~05/07(미업로드)은 검수
+  // 미통과라 제외.
+  haenyeo_custom_outfit_06: { outfitAssetKey: "haenyeo_custom_outfit_06" },
+  haenyeo_custom_outfit_09: { outfitAssetKey: "haenyeo_custom_outfit_09" },
+  haenyeo_custom_outfit_10: { outfitAssetKey: "haenyeo_custom_outfit_10" },
+  haenyeo_custom_outfit_11: { outfitAssetKey: "haenyeo_custom_outfit_11" },
+  haenyeo_custom_outfit_12: { outfitAssetKey: "haenyeo_custom_outfit_12" },
+  haenyeo_custom_outfit_13: { outfitAssetKey: "haenyeo_custom_outfit_13" },
+  haenyeo_custom_outfit_15: { outfitAssetKey: "haenyeo_custom_outfit_15" },
+  haenyeo_custom_outfit_16: { outfitAssetKey: "haenyeo_custom_outfit_16" },
+  haenyeo_custom_outfit_18: { outfitAssetKey: "haenyeo_custom_outfit_18" },
+  haenyeo_custom_outfit_19: { outfitAssetKey: "haenyeo_custom_outfit_19" },
+  haenyeo_custom_outfit_20: { outfitAssetKey: "haenyeo_custom_outfit_20" },
   // 해녀 원피스(캐릭터 의상 (1).png 시트) — 원래는 얼굴까지 포함된 완성 전신 그림
   // (dress_full)이었지만, 목 위를 잘라내 outfitAssetKey 규격으로 재변환했다
   // (scripts/asset-tools/convert_dress_full_to_outfit.py).
