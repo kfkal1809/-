@@ -352,6 +352,211 @@ EAR_LEFT_X = CENTER_X - EAR_WIDTH_BASE / 2
 EAR_RIGHT_X = CENTER_X + EAR_WIDTH_BASE / 2
 
 
+# 2026-09-07 두 번째 지적: 몸 쪽에서 두상 외곽선을 지우는 위 방식(build_hair_body_variants)
+# 대신, 헤어 원화 자체를 다시 그리지 않고 "MASTER 두상 중심/이마선 기준 개별 계산한 균일
+# 확대+이동"으로 실제 441x906 PNG를 새로 구워달라는 요청. 스케일 중심(anchor)을 눈 바로
+# 위(ANCHOR_Y=400)에 고정해두면, 앵커보다 위에 있는 머리(정수리·옆머리 대부분)는 확대할수록
+# 바깥으로 더 밀려나 두상을 넓게 덮게 되고, 앵커에 가까운 앞머리 밑단(눈 바로 위)은 스케일을
+# 키워도 원래 위치에서 거의 움직이지 않아 눈을 침범하지 않는다 — "얼굴은 그대로 두고 헤어만
+# 키운다"를 하나의 앵커점으로 구현한 것.
+#
+# 각 스타일마다 만족해야 할 두 조건을 만족하는 가장 작은 스케일을 찾는다(직접 탐색):
+#   1) perimeter_band(두상 테두리 링, 정수리~귀 위 구간)의 97% 이상을 헤어가 덮을 것
+#   2) 양쪽 눈 좌표 원형 구역(반경 16px)의 5% 이하만 헤어가 덮을 것(=사실상 안 가림)
+# 이 두 조건을 동시에 만족하는 (scale, dx, dy) 중 이동량이 가장 작은 것을 채택한다.
+HAIR_NORM_ANCHOR_X = CENTER_X
+HAIR_NORM_ANCHOR_Y = 400.0
+HAIR_NORM_EYE_L = (175, 410)
+HAIR_NORM_EYE_R = (265, 410)
+HAIR_NORM_EYE_RADIUS = 16
+HAIR_NORM_PERIM_EROSION = 10
+HAIR_NORM_HEAD_ZONE_Y0 = 235
+HAIR_NORM_HEAD_ZONE_Y1 = 430  # 관자놀이~귀 위쪽까지만 — 그 아래(뺨/턱선)는 짧은 헤어가 원래
+# 덮지 않는 정상 범위라 강제로 요구하지 않는다(11/12번처럼 귀밑 길이 스타일에서 그 아래까지
+# 요구하면 실제로 덮을 수 없는 목표가 돼버려 탐색이 실패했었다).
+
+
+def _hair_norm_perimeter_band():
+    body = Image.open(os.path.join(OUT_DIR, "haenyeo_bald_body.png")).convert("RGBA")
+    opaque = np.array(body)[:, :, 3] > 20
+    eroded = ndimage.binary_erosion(opaque, iterations=HAIR_NORM_PERIM_EROSION)
+    band = opaque & ~eroded
+    zone = np.zeros_like(opaque)
+    zone[HAIR_NORM_HEAD_ZONE_Y0:HAIR_NORM_HEAD_ZONE_Y1, :] = True
+    band = band & zone
+    ear_protect = np.zeros_like(opaque)
+    for ex in (EAR_LEFT_X, EAR_RIGHT_X):
+        x0, x1 = max(0, round(ex - EAR_PROTECT_HALF_W)), min(CANVAS_W, round(ex + EAR_PROTECT_HALF_W))
+        ear_protect[EAR_PROTECT_Y0:EAR_PROTECT_Y1, x0:x1] = True
+    return band & ~ear_protect
+
+
+def _hair_norm_eye_coverage(alpha_bool, cx, cy, r=HAIR_NORM_EYE_RADIUS):
+    y0, y1 = max(0, cy - r), min(CANVAS_H, cy + r + 1)
+    x0, x1 = max(0, cx - r), min(CANVAS_W, cx + r + 1)
+    yy, xx = np.ogrid[y0:y1, x0:x1]
+    mask = (xx - cx) ** 2 + (yy - cy) ** 2 <= r * r
+    region = alpha_bool[y0:y1, x0:x1][mask]
+    return float(region.mean()) if region.size else 0.0
+
+
+def _hair_norm_transform_alpha(alpha_u8, s, dx, dy):
+    if s == 1.0:
+        scaled, new_w, new_h, paste_x, paste_y = alpha_u8, CANVAS_W, CANVAS_H, 0, 0
+    else:
+        new_w, new_h = max(1, round(CANVAS_W * s)), max(1, round(CANVAS_H * s))
+        scaled = np.array(Image.fromarray(alpha_u8).resize((new_w, new_h), Image.BILINEAR))
+        paste_x = round(HAIR_NORM_ANCHOR_X - HAIR_NORM_ANCHOR_X * s)
+        paste_y = round(HAIR_NORM_ANCHOR_Y - HAIR_NORM_ANCHOR_Y * s)
+    out = np.zeros((CANVAS_H, CANVAS_W), dtype=np.uint8)
+    px, py = paste_x + round(dx), paste_y + round(dy)
+    sx0, sy0 = max(0, -px), max(0, -py)
+    dx0, dy0 = max(0, px), max(0, py)
+    w = min(new_w - sx0, CANVAS_W - dx0)
+    h = min(new_h - sy0, CANVAS_H - dy0)
+    if w > 0 and h > 0:
+        out[dy0:dy0 + h, dx0:dx0 + w] = scaled[sy0:sy0 + h, sx0:sx0 + w]
+    return out
+
+
+def _hair_norm_search(alpha_u8, perimeter_band, perim_total):
+    best = None
+    for i in range(0, 41):  # scale 1.00 ~ 1.40, 0.01 단위
+        s = round(1.0 + 0.01 * i, 2)
+        found = None
+        for dy in range(-15, 16, 2):
+            for dx in range(-15, 16, 2):
+                t = _hair_norm_transform_alpha(alpha_u8, s, dx, dy)
+                tb = t > 40
+                perim_cov = (tb & perimeter_band).sum() / perim_total
+                if perim_cov < 0.97:
+                    continue
+                ec = max(
+                    _hair_norm_eye_coverage(tb, *HAIR_NORM_EYE_L),
+                    _hair_norm_eye_coverage(tb, *HAIR_NORM_EYE_R),
+                )
+                if ec > 0.05:
+                    continue
+                score = (abs(dx) + abs(dy), ec)
+                if found is None or score < found[0]:
+                    found = (score, (s, dx, dy, perim_cov, ec))
+        if found is not None:
+            best = found[1]
+            break
+    return best
+
+
+def _decontaminate_white_matte(arr: np.ndarray) -> np.ndarray:
+    """반투명 가장자리 픽셀에 남은 흰색 배경 오염을 제거한다(알파는 그대로 — 부드러운
+    안티앨리어싱 유지, 색상만 원래 머리카락 색으로 복원). 원본 PNG가 흰 캔버스 위에서
+    내보내진 것으로 실측 확인됨(예: alpha=27인 가장자리 픽셀의 RGB가 정확히 255,255,255)."""
+    out = arr.astype(np.float32).copy()
+    a = out[:, :, 3] / 255.0
+    partial = (a > 0) & (a < 1)
+    for c in range(3):
+        bg = 255.0
+        fg = (out[:, :, c] - (1 - a) * bg) / np.maximum(a, 1e-3)
+        out[:, :, c] = np.where(partial, np.clip(fg, 0, 255), out[:, :, c])
+    return out.astype(np.uint8)
+
+
+def _remove_isolated_specks(arr: np.ndarray, min_size: int = 300) -> np.ndarray:
+    """머리카락 본체와 붙어 있지 않은 작은 흰색/잡음 조각(원본 크롭 잔여물)을 지운다 —
+    실측 확인: hair_16 원본 정수리 위쪽에 본체와 완전히 분리된 흰 얼룩 5개(15~135px)가
+    이미 있었다(스케일 전부터 존재, 이번에 만든 문제 아님). 가장 큰 연결 성분(머리카락
+    본체)만 남기고 나머지는 투명 처리."""
+    alpha = arr[:, :, 3]
+    opaque = alpha > 20
+    labeled, num = ndimage.label(opaque)
+    if num <= 1:
+        return arr
+    sizes = ndimage.sum(opaque, labeled, range(1, num + 1))
+    main_label = int(np.argmax(sizes)) + 1
+    keep = labeled == main_label
+    out = arr.copy()
+    out[~keep & opaque, 3] = 0
+    return out
+
+
+def _premultiplied_resize(rgba_u8: np.ndarray, new_w: int, new_h: int) -> np.ndarray:
+    """색상을 알파로 미리 곱한(premultiplied) 상태로 리샘플한 뒤 다시 나눠 되돌린다 —
+    LANCZOS를 색상 채널에 직접 쓰면 완전 투명 픽셀의 임의 색상(흔히 흰 배경 잔여물)이
+    보이는 가장자리로 섞여 들어와 흰 테두리가 생긴다(실측 확인: 확대 후 정수리 둘레에
+    톱니 모양 흰 테두리 발생). 미리 곱한 색상은 투명한 곳이 항상 0이라 이 오염이 생기지
+    않는다."""
+    rgb = rgba_u8[:, :, :3].astype(np.float32)
+    a = rgba_u8[:, :, 3].astype(np.float32) / 255.0
+    premult = rgb * a[:, :, None]
+
+    premult_img = Image.fromarray(premult.astype(np.uint8), "RGB").resize((new_w, new_h), Image.LANCZOS)
+    alpha_img = Image.fromarray(rgba_u8[:, :, 3]).resize((new_w, new_h), Image.LANCZOS)
+
+    premult_r = np.array(premult_img).astype(np.float32)
+    alpha_r = np.array(alpha_img).astype(np.float32)
+    safe_a = np.maximum(alpha_r / 255.0, 1e-3)[:, :, None]
+    rgb_r = np.clip(premult_r / safe_a, 0, 255)
+
+    out = np.zeros((new_h, new_w, 4), dtype=np.uint8)
+    out[:, :, :3] = rgb_r.astype(np.uint8)
+    out[:, :, 3] = alpha_r.astype(np.uint8)
+    return out
+
+
+def _apply_hair_norm_transform(rgba_u8: np.ndarray, s: float, dx: int, dy: int) -> np.ndarray:
+    if s == 1.0:
+        scaled, new_w, new_h, paste_x, paste_y = rgba_u8, CANVAS_W, CANVAS_H, 0, 0
+    else:
+        new_w, new_h = max(1, round(CANVAS_W * s)), max(1, round(CANVAS_H * s))
+        scaled = _premultiplied_resize(rgba_u8, new_w, new_h)
+        paste_x = round(HAIR_NORM_ANCHOR_X - HAIR_NORM_ANCHOR_X * s)
+        paste_y = round(HAIR_NORM_ANCHOR_Y - HAIR_NORM_ANCHOR_Y * s)
+    out = np.zeros((CANVAS_H, CANVAS_W, 4), dtype=np.uint8)
+    px, py = paste_x + round(dx), paste_y + round(dy)
+    sx0, sy0 = max(0, -px), max(0, -py)
+    dx0, dy0 = max(0, px), max(0, py)
+    w = min(new_w - sx0, CANVAS_W - dx0)
+    h = min(new_h - sy0, CANVAS_H - dy0)
+    if w > 0 and h > 0:
+        out[dy0:dy0 + h, dx0:dx0 + w] = scaled[sy0:sy0 + h, sx0:sx0 + w]
+    return out
+
+
+def normalize_valid_hair_to_master_head():
+    perimeter_band = _hair_norm_perimeter_band()
+    perim_total = int(perimeter_band.sum())
+    hair_dir = os.path.join(OUT_DIR, "haenyeo_hair_front")
+    mask_dir = os.path.join(hair_dir, "masks")
+
+    report = []
+    for k in HAENYEO_HAIR_VALID_KEYS:
+        hair_path = os.path.join(hair_dir, f"haenyeo_hair_{k}.png")
+        mask_path = os.path.join(mask_dir, f"haenyeo_hair_{k}_mask.png")
+        hair_arr = _remove_isolated_specks(np.array(Image.open(hair_path).convert("RGBA")))
+        alpha_u8 = hair_arr[:, :, 3]
+
+        found = _hair_norm_search(alpha_u8, perimeter_band, perim_total)
+        if found is None:
+            print(f"  [보고] hair_{k}: 눈을 가리지 않으면서 두상을 덮는 조합을 찾지 못함 — 원화 자체의 한계로 보임")
+            report.append((k, None))
+            continue
+        s, dx, dy, perim_cov, ec = found
+
+        hair_clean = np.dstack([_decontaminate_white_matte(hair_arr)[:, :, :3], alpha_u8])
+        new_hair = _apply_hair_norm_transform(hair_clean, s, dx, dy)
+        Image.fromarray(new_hair, "RGBA").save(hair_path)
+
+        if os.path.exists(mask_path):
+            mask_arr = _remove_isolated_specks(np.array(Image.open(mask_path).convert("RGBA")))
+            mask_clean = np.dstack([_decontaminate_white_matte(mask_arr)[:, :, :3], mask_arr[:, :, 3]])
+            new_mask = _apply_hair_norm_transform(mask_clean, s, dx, dy)
+            Image.fromarray(new_mask, "RGBA").save(mask_path)
+
+        print(f"  hair_{k}: scale={s} dx={dx} dy={dy} 테두리커버={perim_cov:.3f} 눈침범={ec:.3f}")
+        report.append((k, (s, dx, dy, perim_cov, ec)))
+
+    return report
+
+
 def build_hair_body_variants():
     body = Image.open(os.path.join(OUT_DIR, "haenyeo_bald_body.png")).convert("RGBA")
     body_arr = np.array(body)
@@ -388,6 +593,7 @@ def main():
     build_bald_body()
     build_hair()
     build_outfits()
+    normalize_valid_hair_to_master_head()
     build_hair_body_variants()
 
 
