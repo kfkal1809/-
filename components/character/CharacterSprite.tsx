@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { memo } from "react";
+import { HaenyeoMasterSprite } from "@/components/character/HaenyeoMasterSprite";
 import type { CharacterAppearance, HairStyle, OutfitStyle } from "@/lib/domain/characterPresets";
 import type { ChildGender, ChildStage, CharacterKind } from "@/lib/domain/types";
 import {
@@ -56,6 +57,10 @@ interface CharacterSpriteProps {
   // QA 전용(예: app/(dev)/qa-wear/hair) — hairStyle→HAIR_STYLE_INDEX 매핑에 없는 헤어 자산 키를
   // 강제로 지정해서 렌더링을 확인할 때만 쓴다. 실제 게임 화면 호출부는 이 prop을 쓰지 않는다.
   hairAssetKeyOverride?: string;
+  // QA 전용 — MASTER 체형 대비 단계별(민머리만/민머리+헤어/전체) 비교 캡처를 뜨기 위한
+  // 디버그 스위치. "head"=의상·헤어 숨김, "head_hair"=의상만 숨김, 기본(undefined)=전체.
+  // 실제 게임 화면 호출부는 이 prop을 쓰지 않는다.
+  qaRenderStage?: "head" | "head_hair";
 }
 
 const NAVY = "#2a3552";
@@ -337,7 +342,26 @@ export const CharacterSprite = memo(function CharacterSprite({
   childGender,
   childStage,
   hairAssetKeyOverride,
+  qaRenderStage,
 }: CharacterSpriteProps) {
+  // 해녀는 별도의 MASTER 전신 캔버스 렌더러를 쓴다(HaenyeoMasterSprite.tsx) — 몸/얼굴/헤어/
+  // 의상을 전부 같은 440x900 캔버스로 미리 구워서, 여기서는 순서대로 겹치기만 하면 된다.
+  // topFrac/widthFrac/scaleX/scaleY 같은 레이어별 런타임 보정 표(HEAD_WIDTH, HAIR_ASSET_PLACEMENT,
+  // HAENYEO_OUTFIT_BODY_SCALE_X 등)를 옷을 추가할 때마다 계속 늘려가던 예전 방식을 대체한다
+  // (scripts/asset-tools/build_haenyeo_master_canvas.py 참고). 해남/새싹은 아직 예전 방식을
+  // 쓴다 — 이번 수정 범위가 해녀 한정이라 별도로 마이그레이션 전이다.
+  if (kind === "haenyeo") {
+    return (
+      <HaenyeoMasterSprite
+        appearance={a}
+        size={size}
+        className={className}
+        flip={flip}
+        hairAssetKeyOverride={hairAssetKeyOverride}
+      />
+    );
+  }
+
   // 플레이어 캐릭터(kind 있음)는 MASTER 기본 체형(base/<kind>.png) → 헤어 → 의상 →
   // 모자/액세서리 순으로 항상 outfitAssetKey 경로 하나로만 그린다. fullPortraitKey(완성 전신
   // PNG를 통째로 얹어 MASTER 체형을 우회하던 옛 경로)는 의상마다 머리 크기·키·다리 길이가
@@ -470,10 +494,13 @@ export const CharacterSprite = memo(function CharacterSprite({
     // 들쭉날쭉해 보이는 문제가 있었다. 그림을 다시 자르지 않고, 목선을 축(transformOrigin)으로
     // 세로 방향으로만 scaleY를 걸어 "아기 멜빵바지" 기준 체형 길이로 통일한다.
     const bodyScaleY = CHILD_OUTFIT_BODY_SCALE_Y[a.outfitAssetKey];
+    const bodyTransform = bodyScaleY ? `scaleY(${bodyScaleY})` : undefined;
+    const bodyTransformOrigin = bodyTransform ? `50% ${(NECK_Y / OUTFIT_CANVAS_H) * 100}%` : undefined;
 
     return (
       <div className={className} style={{ position: "relative", width, height, transform: flip ? "scaleX(-1)" : undefined }}>
         <div style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: innerWidth, height: innerHeight }}>
+          {!qaRenderStage && (
           <Image
             src={outfitFullSrc(a.outfitAssetKey)}
             alt=""
@@ -487,11 +514,12 @@ export const CharacterSprite = memo(function CharacterSprite({
               left: 0,
               width: innerWidth,
               height: OUTFIT_CANVAS_H * innerScale,
-              transform: bodyScaleY ? `scaleY(${bodyScaleY})` : undefined,
-              transformOrigin: bodyScaleY ? `50% ${(NECK_Y / OUTFIT_CANVAS_H) * 100}%` : undefined,
+              transform: bodyTransform,
+              transformOrigin: bodyTransformOrigin,
             }}
           />
-          {isBackHair && hairOverlayLayer}
+          )}
+          {qaRenderStage !== "head" && isBackHair && hairOverlayLayer}
           <Image
             src={useBaldHead ? baldHeadSrc(portraitKey) : headSrc(portraitKey)}
             alt=""
@@ -527,7 +555,7 @@ export const CharacterSprite = memo(function CharacterSprite({
               mixBlendMode: "color",
             }}
           />
-          {!isBackHair && hairOverlayLayer}
+          {qaRenderStage !== "head" && !isBackHair && hairOverlayLayer}
           {!useBaldHead && (
             // 헤어 그림 자산이 없는 조합(예: 새싹 bun) 전용 fallback — 고정 헤어스타일이
             // 그려진 head.png 자체에서 머리카락 영역만 마스크로 골라 hairColor를 입힌다.
