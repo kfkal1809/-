@@ -194,6 +194,32 @@ export const LIRI_WORK_TASKS = [
 ];
 export const WORK_TAP_TARGET = 4;
 
+export const DATE_TOPIC_CARD_REWARD_MIN = 2;
+export const DATE_TOPIC_CARD_REWARD_MAX = 4;
+
+// 데이트 콘텐츠 1 — 대화 주제 카드 뽑기. 하루 1회 커플(household 단위)이 함께 카드를 뽑아
+// 대화를 나누고 완료 보상을 받는다. 알바 태스크 목록과 동일하게 정적 배열로 관리한다.
+export const DATE_TOPIC_CARDS = [
+  "서로에게 고마운 점 하나씩 말하기",
+  "요즘 가장 기억에 남는 하루 이야기하기",
+  "다음에 같이 가고 싶은 곳 말하기",
+  "서로의 첫인상이 어땠는지 말하기",
+  "지금 제일 듣고 싶은 말 해주기",
+  "요즘 힘들었던 일 하나 털어놓기",
+  "서로의 장점 세 가지씩 말하기",
+  "같이 해보고 싶은 취미 이야기하기",
+  "제일 좋아하는 상대방 모습 말하기",
+  "오늘 있었던 소소한 행복 나누기",
+  "10년 후 우리 모습 상상해서 말하기",
+  "서로에게 배우고 싶은 점 말하기",
+  "요즘 꽂힌 노래나 영상 공유하기",
+  "상대방에게 받고 싶은 깜짝 선물 말하기",
+  "함께한 추억 중 제일 좋았던 순간 말하기",
+  "서로 애칭 새로 지어주기",
+  "오늘 하루 점수 매기고 이유 말하기",
+  "요즘 고민 하나씩 나누기",
+];
+
 export const FISHING_DURATIONS = [4, 8] as const;
 
 export const EMPTY_STATE_COPY = {

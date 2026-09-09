@@ -27,6 +27,7 @@ export default async function MenuPage() {
     { href: myCharacterId ? `/boarding-pass/${myCharacterId}` : "/voyage", label: "나의 승선확인증", icon: "book" as const },
     { href: "/voyage", label: "항해일지", icon: "anchor" as const },
     { href: "/wallet", label: "지갑", icon: "coin" as const },
+    { href: "/date", label: "데이트", icon: "heart" as const },
     { href: "/jewelry", label: "귀금속점", icon: "ring" as const },
     { href: "/marriage", label: "혼인신고", icon: "trophy" as const },
     { href: "/mailbox", label: "우편함", icon: "mailbox" as const },
