@@ -260,6 +260,26 @@ export const DATE_SPOT_LOCATIONS: DateSpotLocation[] = [
   { key: "hall-of-fame", label: "명예의 전당" },
 ];
 
+export const DATE_STAMP_CLEAR_BONUS = 5;
+
+export interface DateStampDef {
+  key: string;
+  label: string;
+}
+
+// 데이트 콘텐츠 4 — 데이트 스탬프판. 하루 동안 커플이 함께 한 데이트 액티비티 6종을
+// 체크리스트로 모아 보여준다(항해일지 통계 화면과 같은 스타일). 앞의 데이트 콘텐츠
+// 1~3(대화 주제 카드/선물/인증샷)과, 이미 있던 낚시/갑판/선내식당 일일미션 완료 여부를
+// 그대로 재사용해서 판정하므로 새로 추적해야 하는 상태가 없다.
+export const DATE_STAMP_DEFS: DateStampDef[] = [
+  { key: "topic_card", label: "대화 주제 카드" },
+  { key: "gift", label: "선물 보내기" },
+  { key: "photo", label: "인증샷 찍기" },
+  { key: "fishing", label: "함께 낚시하기" },
+  { key: "deck", label: "갑판 산책" },
+  { key: "mess", label: "선내식당 식사" },
+];
+
 export const FISHING_DURATIONS = [4, 8] as const;
 
 export const EMPTY_STATE_COPY = {
