@@ -27,7 +27,9 @@ export type IconName =
   | "mailbox"
   | "heart"
   | "gift"
-  | "camera";
+  | "camera"
+  | "diary"
+  | "fortune";
 
 const BADGE_COLORS: Record<IconName, string> = {
   home: "#cdeaff",
@@ -53,6 +55,8 @@ const BADGE_COLORS: Record<IconName, string> = {
   heart: "#ffe1ea",
   gift: "#cdeaff",
   camera: "#fff2cf",
+  diary: "#e6ecf7",
+  fortune: "#ffe1ea",
 };
 
 export function GameIcon({
