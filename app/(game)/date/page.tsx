@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { GameIcon } from "@/components/icons/GameIcon";
 
-const DATE_MENU = [{ href: "/date/topic-card", label: "대화 주제 카드", icon: "heart" as const }];
+const DATE_MENU = [
+  { href: "/date/topic-card", label: "대화 주제 카드", icon: "heart" as const },
+  { href: "/date/gift", label: "선물 보내기", icon: "gift" as const },
+];
 
 export default function DatePage() {
   return (

@@ -220,6 +220,25 @@ export const DATE_TOPIC_CARDS = [
   "요즘 고민 하나씩 나누기",
 ];
 
+export const DATE_GIFT_REWARD_MIN = 1;
+export const DATE_GIFT_REWARD_MAX = 3;
+
+// 데이트 콘텐츠 2 — 선물 보내기. 하루 1회, 로그인한 사용자 기준으로(파트너 각자 하루 1회)
+// 기존 우편함(mailbox_items/claim) 인프라를 그대로 재사용해 다정한 메시지 + 작은 선용금
+// 선물을 보낸다. 이 배열은 발신 시 함께 붙는 메시지 문구만 정적으로 관리한다.
+export const DATE_GIFT_MESSAGES = [
+  "오늘도 고생 많았어요. 작은 선물이에요!",
+  "그냥, 당신 생각나서 보내요.",
+  "매일매일 함께라서 행복해요.",
+  "당신이 있어서 오늘도 든든해요.",
+  "언제나 내 편이 되어줘서 고마워요.",
+  "오늘 하루도 반짝반짝 빛났어요, 당신.",
+  "작지만 마음을 가득 담아 보내요.",
+  "당신 웃는 모습이 제일 좋아요.",
+  "힘든 날엔 제가 있다는 거 잊지 마요.",
+  "우리, 오늘도 서로에게 최고예요.",
+];
+
 export const FISHING_DURATIONS = [4, 8] as const;
 
 export const EMPTY_STATE_COPY = {

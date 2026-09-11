@@ -14,6 +14,7 @@ const TYPE_LABEL: Record<string, string> = {
   fishing_sale: "낚시 판매",
   store_work: "가게 알바",
   date_topic_card: "대화 주제 카드",
+  mailbox_reward: "우편함 수령",
   restaurant_purchase: "선내식당 이용",
   store_purchase: "상점 구매",
   ring_purchase: "커플링 구매",
