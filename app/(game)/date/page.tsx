@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { GameIcon } from "@/components/icons/GameIcon";
+import { Card } from "@/components/ui/Card";
+import { getDateRecommendation } from "@/lib/game/dateRecommendationData";
 
 const DATE_MENU = [
   { href: "/date/topic-card", label: "대화 주제 카드", icon: "heart" as const },
@@ -10,11 +12,34 @@ const DATE_MENU = [
   { href: "/date/fortune", label: "오늘의 운세", icon: "fortune" as const },
 ];
 
-export default function DatePage() {
+export default async function DatePage() {
+  const recommendation = await getDateRecommendation();
+
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">
       <h1 className="text-lg font-extrabold text-[var(--color-navy)]">데이트</h1>
       <p className="text-[13px] text-[var(--color-navy-soft)]">둘만의 특별한 데이트 콘텐츠예요.</p>
+
+      {recommendation ? (
+        <Link href={recommendation.href}>
+          <Card tone="cream" className="flex items-center gap-3 !p-4">
+            <GameIcon name={recommendation.icon} size={44} withBadge />
+            <div className="flex-1">
+              <p className="text-[11px] font-bold text-[var(--color-coral)]">오늘의 추천 데이트</p>
+              <p className="text-[15px] font-extrabold text-[var(--color-navy)]">{recommendation.label}</p>
+              <p className="mt-0.5 text-[12px] text-[var(--color-navy-soft)]">{recommendation.description}</p>
+            </div>
+          </Card>
+        </Link>
+      ) : (
+        <Card tone="aqua" className="flex items-center gap-3 !p-4">
+          <GameIcon name="trophy" size={44} withBadge />
+          <div className="flex-1">
+            <p className="text-[15px] font-extrabold text-[var(--color-navy)]">오늘의 데이트 콘텐츠를 모두 완료했어요!</p>
+            <p className="mt-0.5 text-[12px] text-[var(--color-navy-soft)]">스탬프판에서 올클리어 보너스를 받아보세요.</p>
+          </div>
+        </Card>
+      )}
 
       <div className="grid grid-cols-2 gap-2.5">
         {DATE_MENU.map((m) => (
