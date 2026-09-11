@@ -59,7 +59,8 @@ export interface HomeMenuItem {
   icon: string;
 }
 
-// 3x3 홈 기능 메뉴 — 순서 고정 (A-5 / 1.14)
+// 홈 기능 메뉴 — FunctionMenuGrid가 5개씩 두 줄(5+5)로 배치한다. 기존 9개는 순서 고정(A-5 / 1.14),
+// "데이트"는 둘째 줄에 비어있던 1자리(기존 5+4)를 채우는 신규 추가다.
 export const HOME_MENU: HomeMenuItem[] = [
   { key: "deck", label: "갑판 광장", href: "/deck", icon: "deck" },
   { key: "duties", label: "선내업무", href: "/duties", icon: "clipboard" },
@@ -70,6 +71,7 @@ export const HOME_MENU: HomeMenuItem[] = [
   { key: "liri", label: "리리양곱창", href: "/stores/liri-gopchang", icon: "gopchang" },
   { key: "shipping", label: "(주)해녀해운", href: "/shipping", icon: "company" },
   { key: "hof", label: "명예의 전당", href: "/hall-of-fame", icon: "trophy" },
+  { key: "date", label: "데이트", href: "/date", icon: "heart" },
 ];
 
 export interface BottomTabItem {
