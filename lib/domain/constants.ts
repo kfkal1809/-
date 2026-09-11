@@ -239,6 +239,27 @@ export const DATE_GIFT_MESSAGES = [
   "우리, 오늘도 서로에게 최고예요.",
 ];
 
+export const DATE_PHOTO_REWARD_MIN = 2;
+export const DATE_PHOTO_REWARD_MAX = 4;
+
+export interface DateSpotLocation {
+  key: string;
+  label: string;
+}
+
+// 데이트 콘텐츠 3 — 데이트 스팟 인증샷. public/images/backgrounds/*.jpg(기존 화면 배경)를
+// 그대로 데이트 장소 후보로 재사용한다 — 새 배경을 그리지 않는다.
+export const DATE_SPOT_LOCATIONS: DateSpotLocation[] = [
+  { key: "deck", label: "갑판 광장" },
+  { key: "fishing", label: "낚시터" },
+  { key: "jewelry", label: "귀금속점" },
+  { key: "mess-room", label: "선내식당" },
+  { key: "bonppuri", label: "본뿌리" },
+  { key: "liri-gopchang", label: "리리양곱창" },
+  { key: "shipping-office", label: "(주)해녀해운" },
+  { key: "hall-of-fame", label: "명예의 전당" },
+];
+
 export const FISHING_DURATIONS = [4, 8] as const;
 
 export const EMPTY_STATE_COPY = {

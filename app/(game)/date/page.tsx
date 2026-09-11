@@ -4,6 +4,7 @@ import { GameIcon } from "@/components/icons/GameIcon";
 const DATE_MENU = [
   { href: "/date/topic-card", label: "대화 주제 카드", icon: "heart" as const },
   { href: "/date/gift", label: "선물 보내기", icon: "gift" as const },
+  { href: "/date/photo", label: "데이트 스팟 인증샷", icon: "camera" as const },
 ];
 
 export default function DatePage() {
