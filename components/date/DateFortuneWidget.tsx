@@ -59,7 +59,7 @@ export function DateFortuneWidget({ messages }: { messages: string[] }) {
           disabled={submitting}
           className="mt-1 rounded-full bg-[var(--color-coral)] px-6 py-2.5 text-[14px] font-bold text-white active:scale-95 disabled:opacity-60"
         >
-          {submitting ? "확인 중..." : "오늘의 운세 받기"}
+          {submitting ? "확인 중..." : "운이 좋아지는 선물받기"}
         </button>
         {error && <p className="text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
       </Card>

@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { kstDateString } from "@/lib/game/kst";
+import { getCharacterNicknames } from "@/lib/game/household";
 
 export interface DateDiaryEntry {
   id: string;
@@ -32,21 +33,23 @@ export async function getDateDiaryData(): Promise<DateDiaryData> {
 
     const { data } = await supabase
       .from("date_diary_entries")
-      .select("id, author_user_id, body, created_at, entry_date, profiles(nickname)")
+      .select("id, author_user_id, body, created_at, entry_date")
       .eq("household_id", householdId)
       .order("created_at", { ascending: false })
       .limit(30);
 
-    const entries = (data ?? []).map((row) => {
-      const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-      return {
-        id: row.id,
-        authorNickname: (profile as { nickname?: string } | null)?.nickname ?? "익명",
-        isMine: row.author_user_id === user.id,
-        body: row.body,
-        createdAt: row.created_at,
-      };
-    });
+    const nicknames = await getCharacterNicknames(
+      supabase,
+      Array.from(new Set((data ?? []).map((row) => row.author_user_id)))
+    );
+
+    const entries = (data ?? []).map((row) => ({
+      id: row.id,
+      authorNickname: nicknames[row.author_user_id] ?? "익명",
+      isMine: row.author_user_id === user.id,
+      body: row.body,
+      createdAt: row.created_at,
+    }));
 
     const writtenToday = (data ?? []).some((row) => row.author_user_id === user.id && row.entry_date === today);
 

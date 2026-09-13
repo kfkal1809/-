@@ -1,10 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppFrame } from "@/components/ui/AppFrame";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { createClient } from "@/lib/supabase/client";
+
+// /auth/callback에서 exchangeCodeForSession이 실패하면 ?error=auth_failed로 이 페이지에
+// 돌아온다 — 예전엔 이 값을 아예 읽지 않아서, 로그인 첫 시도가 조용히 실패해도 사용자
+// 눈엔 그냥 "처음 화면으로 돌아온" 것처럼만 보였다(왜 실패했는지 알 방법이 없어 재시도가
+// 필요하다는 것도 몰랐다). 최소한 실패했다는 걸 보여주고 다시 시도하도록 안내한다.
+function CallbackErrorNotice() {
+  const params = useSearchParams();
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const err = params.get("error");
+    if (!err) return;
+    setMessage(
+      err === "missing_code"
+        ? "카카오 로그인 정보를 받지 못했어요. 다시 시도해주세요."
+        : "로그인에 실패했어요. 다시 한 번 시도해주세요."
+    );
+  }, [params]);
+
+  if (!message) return null;
+  return <p className="mt-3 text-[13px] font-bold text-[var(--color-danger)]">{message}</p>;
+}
 
 export default function AuthPage() {
   const [loading, setLoading] = useState(false);
@@ -39,6 +62,9 @@ export default function AuthPage() {
         </Button>
 
         {error && <p className="mt-3 text-[13px] font-bold text-[var(--color-danger)]">{error}</p>}
+        <Suspense fallback={null}>
+          <CallbackErrorNotice />
+        </Suspense>
       </Card>
     </AppFrame>
   );

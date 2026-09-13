@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCharacterNicknames } from "@/lib/game/household";
 
 export interface MarriageMember {
   userId: string;
@@ -18,6 +19,9 @@ export interface MarriageData {
   marriedAt: string | null;
   members: MarriageMember[];
   mySigned: boolean;
+  haenyeoName: string | null;
+  haenamName: string | null;
+  relationStatus: "dating" | "engaged" | "married" | null;
 }
 
 const DEMO: MarriageData = {
@@ -32,6 +36,9 @@ const DEMO: MarriageData = {
   marriedAt: null,
   members: [],
   mySigned: false,
+  haenyeoName: null,
+  haenamName: null,
+  relationStatus: null,
 };
 
 export async function getMarriageData(): Promise<MarriageData> {
@@ -47,21 +54,23 @@ export async function getMarriageData(): Promise<MarriageData> {
 
     const householdId = membership.household_id as string;
 
-    const [{ data: household }, { data: wallet }, { data: ringItems }, { data: householdUsers }, { data: pendingEvent }] = await Promise.all([
-      supabase.from("households").select("game_marriage_status, game_married_at").eq("id", householdId).maybeSingle(),
-      supabase.from("wallets").select("cached_balance").eq("household_id", householdId).maybeSingle(),
-      supabase.from("inventory_items").select("catalog_item_id, item_catalog(name, subcategory)").eq("household_id", householdId),
-      supabase.from("household_users").select("user_id, profiles(nickname)").eq("household_id", householdId),
-      supabase
-        .from("couple_events")
-        .select("id, payload")
-        .eq("household_id", householdId)
-        .eq("type", "marriage_request")
-        .eq("status", "pending")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
+    const [{ data: household }, { data: wallet }, { data: ringItems }, { data: householdUsers }, { data: pendingEvent }, { data: characters }] =
+      await Promise.all([
+        supabase.from("households").select("game_marriage_status, game_married_at, relation_status").eq("id", householdId).maybeSingle(),
+        supabase.from("wallets").select("cached_balance").eq("household_id", householdId).maybeSingle(),
+        supabase.from("inventory_items").select("catalog_item_id, item_catalog(name, subcategory)").eq("household_id", householdId),
+        supabase.from("household_users").select("user_id").eq("household_id", householdId),
+        supabase
+          .from("couple_events")
+          .select("id, payload")
+          .eq("household_id", householdId)
+          .eq("type", "marriage_request")
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase.from("characters").select("kind, nickname").eq("household_id", householdId).in("kind", ["haenyeo", "haenam"]),
+      ]);
 
     const ringRow = (ringItems ?? [])
       .map((r) => (Array.isArray(r.item_catalog) ? r.item_catalog[0] : r.item_catalog))
@@ -69,10 +78,16 @@ export async function getMarriageData(): Promise<MarriageData> {
 
     const signedBy: string[] = (pendingEvent?.payload as { signed_by?: string[] } | null)?.signed_by ?? [];
 
-    const members: MarriageMember[] = (householdUsers ?? []).map((row) => {
-      const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
-      return { userId: row.user_id, nickname: profile?.nickname ?? "해연인", signed: signedBy.includes(row.user_id) };
-    });
+    const nicknames = await getCharacterNicknames(
+      supabase,
+      Array.from(new Set((householdUsers ?? []).map((row) => row.user_id)))
+    );
+
+    const members: MarriageMember[] = (householdUsers ?? []).map((row) => ({
+      userId: row.user_id,
+      nickname: nicknames[row.user_id] ?? "해연인",
+      signed: signedBy.includes(row.user_id),
+    }));
 
     return {
       isDemo: false,
@@ -86,6 +101,9 @@ export async function getMarriageData(): Promise<MarriageData> {
       marriedAt: household?.game_married_at ?? null,
       members,
       mySigned: signedBy.includes(user.id),
+      haenyeoName: characters?.find((c) => c.kind === "haenyeo")?.nickname ?? null,
+      haenamName: characters?.find((c) => c.kind === "haenam")?.nickname ?? null,
+      relationStatus: (household?.relation_status as MarriageData["relationStatus"]) ?? null,
     };
   } catch {
     return DEMO;

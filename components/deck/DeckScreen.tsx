@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
+import { GameIcon } from "@/components/icons/GameIcon";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
 import type { DeckSelf, DeckChatMessage } from "@/lib/game/deckData";
@@ -19,6 +20,15 @@ interface PresenceMeta {
   childStage: ChildStage | null;
   joinedAt: string;
 }
+
+// 갑판 광장에서 다른 장소로 바로 이동할 수 있는 바로가기 — 사용자가 직접 요청한 5곳.
+const DECK_SHORTCUTS = [
+  { href: "/stores/liri-gopchang", label: "리리양곱창", icon: "gopchang" as const },
+  { href: "/fishing", label: "낚시터", icon: "fishing" as const },
+  { href: "/stores/bonppuri", label: "본뿌리", icon: "flower" as const },
+  { href: "/mess-room", label: "선내식당", icon: "chef" as const },
+  { href: "/shipping", label: "(주)해녀해운", icon: "company" as const },
+];
 
 function extractTrailingMention(value: string): string | null {
   const match = value.match(/(?:^|\s)@([^\s@]*)$/);
@@ -223,6 +233,19 @@ export function DeckScreen({ self, initialMessages }: { self: DeckSelf; initialM
     <div className="flex h-full flex-col">
       <div className="px-4 pt-5">
         <h1 className="text-lg font-extrabold text-[var(--color-navy)]">갑판 광장</h1>
+      </div>
+
+      <div className="mx-4 mt-2 flex justify-between gap-1">
+        {DECK_SHORTCUTS.map((s) => (
+          <Link
+            key={s.href}
+            href={s.href}
+            className="flex flex-1 flex-col items-center gap-0.5 rounded-2xl bg-white/70 py-1.5 active:scale-95"
+          >
+            <GameIcon name={s.icon} size={30} />
+            <span className="whitespace-nowrap text-[9.5px] font-bold text-[var(--color-navy)]">{s.label}</span>
+          </Link>
+        ))}
       </div>
 
       <div className="relative mx-4 mt-3 h-44 shrink-0 overflow-hidden rounded-[24px] border-2 border-white shadow-[0_6px_20px_rgba(36,54,90,0.10)]">

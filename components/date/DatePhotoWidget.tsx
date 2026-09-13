@@ -12,10 +12,48 @@ import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { DateSpotLocation } from "@/lib/domain/constants";
 import type { DatePhotoRow } from "@/lib/game/datePhotoData";
 
-// RewardPopup과 동일한 장식 프레임(모서리만 그림, 가운데는 투명)을 "인증샷" 테두리로
-// 재사용한다 — public/images/ui/reward_popup_frame.png 실측 가로:세로 비율.
-const FRAME_SRC = "/images/ui/reward_popup_frame.png";
-const FRAME_ASPECT = 480 / 853;
+function PhotoComposition({
+  bgId,
+  haenyeoAppearance,
+  haenamAppearance,
+  haenyeoName,
+  haenamName,
+  charSize,
+  showNames,
+}: {
+  bgId: string;
+  haenyeoAppearance: CharacterAppearance;
+  haenamAppearance: CharacterAppearance;
+  haenyeoName: string;
+  haenamName: string;
+  charSize: number;
+  showNames: boolean;
+}) {
+  return (
+    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[18px]">
+      <Image src={`/images/backgrounds/${bgId}.jpg`} alt="" fill unoptimized style={{ objectFit: "cover" }} />
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-center gap-1 pb-1">
+        <div className="flex flex-col items-center">
+          <CharacterSprite appearance={haenyeoAppearance} kind="haenyeo" size={charSize} />
+          {showNames && (
+            <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[var(--color-navy)]">
+              {haenyeoName}
+            </p>
+          )}
+        </div>
+        <Image src="/images/home/deco-heart.png" alt="" aria-hidden width={623} height={490} unoptimized className="mb-3 w-4" style={{ height: "auto" }} />
+        <div className="flex flex-col items-center">
+          <CharacterSprite appearance={haenamAppearance} kind="haenam" size={charSize} />
+          {showNames && (
+            <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[var(--color-navy)]">
+              {haenamName}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function DatePhotoWidget({
   locations,
@@ -39,6 +77,8 @@ export function DatePhotoWidget({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(!!todayPhoto);
+
+  const selectedLabel = locations.find((l) => l.key === bgId)?.label ?? "";
 
   async function handleSave() {
     if (submitting || saved) return;
@@ -79,25 +119,16 @@ export function DatePhotoWidget({
         ))}
       </div>
 
-      <div className="relative mx-auto w-full max-w-[300px]" style={{ aspectRatio: FRAME_ASPECT }}>
-        <Image src={`/images/backgrounds/${bgId}.jpg`} alt="" fill unoptimized style={{ objectFit: "cover" }} className="rounded-[18px]" />
-        <Image src={FRAME_SRC} alt="" fill unoptimized className="pointer-events-none object-contain" />
-        <div className="absolute inset-x-0 bottom-[10%] z-10 flex items-end justify-center gap-1.5">
-          <div className="flex flex-col items-center">
-            <CharacterSprite appearance={haenyeoAppearance} kind="haenyeo" size={78} />
-            <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[var(--color-navy)]">
-              {haenyeoName}
-            </p>
-          </div>
-          <Image src="/images/home/deco-heart.png" alt="" aria-hidden width={623} height={490} unoptimized className="mb-6 w-4" style={{ height: "auto" }} />
-          <div className="flex flex-col items-center">
-            <CharacterSprite appearance={haenamAppearance} kind="haenam" size={78} />
-            <p className="mt-1 whitespace-nowrap rounded-full bg-white/90 px-2 py-0.5 text-[10px] font-bold text-[var(--color-navy)]">
-              {haenamName}
-            </p>
-          </div>
-        </div>
-      </div>
+      <PhotoComposition
+        bgId={bgId}
+        haenyeoAppearance={haenyeoAppearance}
+        haenamAppearance={haenamAppearance}
+        haenyeoName={haenyeoName}
+        haenamName={haenamName}
+        charSize={110}
+        showNames
+      />
+      <p className="text-center text-[12px] font-bold text-[var(--color-navy-soft)]">{selectedLabel}에서 찍은 우리의 모습이에요</p>
 
       <div className="flex flex-col items-center gap-2">
         {saved ? (
@@ -120,14 +151,20 @@ export function DatePhotoWidget({
             <GameIcon name="camera" size={20} />
             우리의 데이트 앨범
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             {recentPhotos.map((p) => {
               const loc = locations.find((l) => l.key === p.bgId);
               return (
                 <Card key={p.id} className="flex flex-col items-center gap-1 !p-1.5">
-                  <div className="relative aspect-square w-full overflow-hidden rounded-lg">
-                    <Image src={`/images/backgrounds/${p.bgId}.jpg`} alt="" fill unoptimized style={{ objectFit: "cover" }} />
-                  </div>
+                  <PhotoComposition
+                    bgId={p.bgId}
+                    haenyeoAppearance={haenyeoAppearance}
+                    haenamAppearance={haenamAppearance}
+                    haenyeoName={haenyeoName}
+                    haenamName={haenamName}
+                    charSize={56}
+                    showNames={false}
+                  />
                   <span className="text-[10px] font-bold text-[var(--color-navy-soft)]">{loc?.label ?? p.bgId}</span>
                   <span className="text-[9px] text-[var(--color-navy-soft)]">{relativeTimeKorean(p.createdAt)}</span>
                 </Card>

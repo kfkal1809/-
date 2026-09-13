@@ -18,11 +18,42 @@ export default async function MarriagePage() {
           unoptimized
           style={{ width: "100%", height: "auto" }}
         />
+        {/* 원본 이미지는 빈칸만 그려져 있는 정적 그림이라, 실제 캐릭터 이름/관계 상태/커플링
+            정보를 좌표에 맞춰 텍스트로 겹쳐 그린다(좌표는 700x933 원본 기준 실측). */}
+        <div className="absolute inset-0">
+          <FieldText topPct={28.9} label={data.haenyeoName} />
+          <FieldText topPct={35.4} label={data.haenamName} />
+          {data.relationStatus && (
+            <span
+              className="absolute text-[13px] font-extrabold text-[var(--color-coral)]"
+              style={{
+                top: "41.6%",
+                left: data.relationStatus === "dating" ? "43.3%" : data.relationStatus === "engaged" ? "60.4%" : "77.7%",
+                transform: "translate(-50%, -50%)",
+              }}
+            >
+              ✓
+            </span>
+          )}
+          <FieldText topPct={47.7} label={data.ringName} />
+        </div>
       </div>
 
       <div className="w-full max-w-[320px]">
         <MarriageFlow data={data} />
       </div>
     </div>
+  );
+}
+
+function FieldText({ topPct, label }: { topPct: number; label: string | null }) {
+  if (!label) return null;
+  return (
+    <span
+      className="absolute overflow-hidden text-ellipsis whitespace-nowrap text-[13px] font-bold text-[var(--color-navy)]"
+      style={{ top: `${topPct}%`, left: "41.5%", width: "45%", transform: "translateY(-50%)" }}
+    >
+      {label}
+    </span>
   );
 }
