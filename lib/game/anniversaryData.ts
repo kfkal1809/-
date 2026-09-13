@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { daysSinceKstDate, kstDateString } from "@/lib/game/kst";
+import { daysSinceKstDate, daysUntilNextAnnualDate } from "@/lib/game/kst";
 
 export interface AnniversaryData {
   datingStartedAt: string | null;
@@ -16,22 +16,6 @@ const DEMO: AnniversaryData = {
   marriedDays: null,
   daysUntilNextAnniversary: null,
 };
-
-// dateStr(월/일)과 같은 날짜의 올해(이미 지났으면 내년) 기념일까지 남은 일수.
-// formatKoreanDate와 같은 이유로 Date 로컬 getter를 거치지 않고 문자열에서 바로 월/일을 뽑는다.
-function daysUntilNextOccurrence(dateStr: string): number {
-  const today = kstDateString();
-  const [, m, d] = dateStr.split("-").map(Number);
-  const [ty, tm, td] = today.split("-").map(Number);
-
-  let year = ty;
-  const alreadyPassedThisYear = tm > m || (tm === m && td > d);
-  if (alreadyPassedThisYear) year += 1;
-
-  const target = new Date(`${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T00:00:00+09:00`);
-  const now = new Date(`${today}T00:00:00+09:00`);
-  return Math.round((target.getTime() - now.getTime()) / 86400000);
-}
 
 export async function getAnniversaryData(): Promise<AnniversaryData> {
   try {
@@ -58,7 +42,7 @@ export async function getAnniversaryData(): Promise<AnniversaryData> {
       weddingAnniversaryAt,
       datingDays: datingStartedAt ? daysSinceKstDate(datingStartedAt) : null,
       marriedDays: weddingAnniversaryAt ? daysSinceKstDate(weddingAnniversaryAt) : null,
-      daysUntilNextAnniversary: weddingAnniversaryAt ? daysUntilNextOccurrence(weddingAnniversaryAt) : null,
+      daysUntilNextAnniversary: weddingAnniversaryAt ? daysUntilNextAnnualDate(weddingAnniversaryAt) : null,
     };
   } catch {
     return DEMO;
