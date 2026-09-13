@@ -10,6 +10,8 @@ const DATE_MENU = [
   { href: "/date/stamps", label: "데이트 스탬프판", icon: "trophy" as const },
   { href: "/date/diary", label: "커플 한 줄 일기", icon: "diary" as const },
   { href: "/date/fortune", label: "오늘의 운세", icon: "fortune" as const },
+  { href: "/date/bucket-list", label: "커플 버킷리스트", icon: "clipboard" as const },
+  { href: "/date/history", label: "지난 기록 다시보기", icon: "book" as const },
 ];
 
 export default async function DatePage() {
