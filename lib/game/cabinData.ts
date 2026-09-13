@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCharacterNicknames } from "@/lib/game/household";
 import { haenyeoPreset, haenamDeckPreset } from "@/lib/domain/characterPresets";
 import type { CharacterAppearance } from "@/lib/domain/characterPresets";
 import type { CharacterKind, ChildGender, ChildStage } from "@/lib/domain/types";
@@ -116,12 +117,17 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
         .eq("space_id", space.id),
       supabase
         .from("guestbook_entries")
-        .select("id, body, created_at, profiles(nickname)")
+        .select("id, body, created_at, author_user_id")
         .eq("cabin_space_id", space.id)
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(5),
     ]);
+
+    const guestbookNicknames = await getCharacterNicknames(
+      supabase,
+      Array.from(new Set((guestbookRows ?? []).map((g) => g.author_user_id)))
+    );
 
     return {
       isDemo: false,
@@ -156,10 +162,12 @@ export async function getCabinData(targetHouseholdId?: string): Promise<CabinDat
           facing: metadata?.facing ?? null,
         };
       }),
-      guestbook: (guestbookRows ?? []).map((g) => {
-        const profile = Array.isArray(g.profiles) ? g.profiles[0] : g.profiles;
-        return { id: g.id, authorNickname: profile?.nickname ?? "익명", body: g.body, createdAt: g.created_at };
-      }),
+      guestbook: (guestbookRows ?? []).map((g) => ({
+        id: g.id,
+        authorNickname: guestbookNicknames[g.author_user_id] ?? "익명",
+        body: g.body,
+        createdAt: g.created_at,
+      })),
     };
   } catch {
     return DEMO;

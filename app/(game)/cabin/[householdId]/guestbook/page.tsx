@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { trySupabase } from "@/lib/supabase/safeQuery";
 import { getCabinData } from "@/lib/game/cabinData";
+import { getCharacterNicknames } from "@/lib/game/household";
 import { GuestbookForm } from "@/components/cabin/GuestbookForm";
 import { Card } from "@/components/ui/Card";
 import { EMPTY_STATE_COPY } from "@/lib/domain/constants";
@@ -21,15 +22,22 @@ export default async function GuestbookPage({ params }: PageProps<"/cabin/[house
         const supabase = await createClient();
         const { data } = await supabase
           .from("guestbook_entries")
-          .select("id, body, created_at, profiles(nickname)")
+          .select("id, body, created_at, author_user_id")
           .eq("cabin_space_id", cabin.spaceId!)
           .is("deleted_at", null)
           .order("created_at", { ascending: false });
 
-        return (data ?? []).map((g) => {
-          const profile = Array.isArray(g.profiles) ? g.profiles[0] : g.profiles;
-          return { id: g.id, authorNickname: profile?.nickname ?? "익명", body: g.body, createdAt: g.created_at };
-        });
+        const nicknames = await getCharacterNicknames(
+          supabase,
+          Array.from(new Set((data ?? []).map((g) => g.author_user_id)))
+        );
+
+        return (data ?? []).map((g) => ({
+          id: g.id,
+          authorNickname: nicknames[g.author_user_id] ?? "익명",
+          body: g.body,
+          createdAt: g.created_at,
+        }));
       }, [] as GuestbookEntry[])
     : [];
 
