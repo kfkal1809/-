@@ -1,32 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/Card";
 import { WORK_TAP_TARGET } from "@/lib/domain/constants";
 
+// 예전엔 태스크 하나를 무작위로 골라 그것만 4번 탭하게 했다 — "다양한 알바를 하고 싶다"는
+// 요청으로, 이제 태스크 전체를 작은 버튼으로 나열해서 원하는 걸 직접 골라 탭할 수 있게
+// 한다. 실제로는 여전히 하루 1회만 성공한다(store_work_logs unique(store_id,user_id,
+// work_date) 게이트는 그대로) — 어떤 버튼을 눌러도 그 하나만 완료되면 나머지는 잠긴다.
 export function StoreWorkWidget({ storeSlug, tasks }: { storeSlug: string; tasks: string[] }) {
   const router = useRouter();
-  // 서버 렌더링 시점엔 항상 첫 번째 task로 고정해두고, 마운트 후(클라이언트에서만)
-  // 무작위로 골라야 한다 — 서버/클라이언트가 각자 다른 난수로 다른 문구를 렌더링하면
-  // React hydration mismatch가 나서 트리 전체가 버려지고 다시 렌더링된다.
-  const [task, setTask] = useState(tasks[0]);
-  useEffect(() => {
-    // 마운트 후 1회만 무작위로 바꾼다 — 캐스케이딩 렌더 경고 대상인 "매 렌더마다 갱신"이
-    // 아니라 hydration을 깨지 않기 위해 의도적으로 초기값(tasks[0])을 유지했다가 딱 한 번만
-    // 클라이언트에서 바꾸는 것이다.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTask(tasks[Math.floor(Math.random() * tasks.length)]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const [activeTask, setActiveTask] = useState<string | null>(null);
   const [taps, setTaps] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<{ reward: number; propReward: { name: string } | null } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleTap() {
+  async function handleTap(task: string) {
     if (submitting || result) return;
-    const nextTaps = taps + 1;
+
+    const nextTaps = activeTask === task ? taps + 1 : 1;
+    setActiveTask(task);
     setTaps(nextTaps);
     if (nextTaps < WORK_TAP_TARGET) return;
 
@@ -44,6 +39,7 @@ export function StoreWorkWidget({ storeSlug, tasks }: { storeSlug: string; tasks
       router.refresh();
     } catch (e) {
       setError(e instanceof Error && e.message === "already_worked_today" ? "오늘은 이미 알바를 했어요." : "알바에 실패했어요.");
+      setActiveTask(null);
       setTaps(0);
     } finally {
       setSubmitting(false);
@@ -52,8 +48,7 @@ export function StoreWorkWidget({ storeSlug, tasks }: { storeSlug: string; tasks
 
   return (
     <Card className="flex flex-col items-center gap-2 !p-4 text-center">
-      <p className="text-[13px] font-bold text-[var(--color-navy-soft)]">오늘의 알바</p>
-      <p className="text-[16px] font-extrabold text-[var(--color-navy)]">{task}</p>
+      <p className="text-[13px] font-bold text-[var(--color-navy-soft)]">오늘의 알바 — 하고 싶은 일을 골라 탭해보세요</p>
 
       {result ? (
         <div>
@@ -61,13 +56,24 @@ export function StoreWorkWidget({ storeSlug, tasks }: { storeSlug: string; tasks
           {result.propReward && <p className="text-[12px] text-[var(--color-navy-soft)]">보너스: {result.propReward.name}</p>}
         </div>
       ) : (
-        <button
-          onClick={handleTap}
-          disabled={submitting}
-          className="mt-1 rounded-full bg-[var(--color-coral)] px-6 py-2.5 text-[14px] font-bold text-white active:scale-95"
-        >
-          {submitting ? "처리 중..." : `탭하기 (${taps}/${WORK_TAP_TARGET})`}
-        </button>
+        <div className="grid w-full grid-cols-3 gap-1.5">
+          {tasks.map((task) => {
+            const isActive = activeTask === task;
+            return (
+              <button
+                key={task}
+                onClick={() => handleTap(task)}
+                disabled={submitting}
+                className={`rounded-xl px-2 py-2 text-[11px] font-bold leading-tight active:scale-95 disabled:opacity-60 ${
+                  isActive ? "bg-[var(--color-coral)] text-white" : "bg-[var(--color-cream)] text-[var(--color-navy)]"
+                }`}
+              >
+                {task}
+                {isActive && ` (${taps}/${WORK_TAP_TARGET})`}
+              </button>
+            );
+          })}
+        </div>
       )}
       {error && <p className="text-[12px] font-bold text-[var(--color-danger)]">{error}</p>}
     </Card>
