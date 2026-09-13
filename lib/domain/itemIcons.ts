@@ -38,6 +38,21 @@ const TRANSPARENT_CUTOUT_SKUS = new Set([
   "bonppuri_wedding_bouquet",
   "bonppuri_premium_bouquet",
   "bonppuri_season_deco",
+  // 낚시 획득물 중 그림이 비어 있던 11종 — 전용 원화가 없어 같은 종/계열의 기존 원화를
+  // mix-blend-mode:color와 동일한 방식(명암은 유지, 색상만 교체)으로 재채색해서 채웠다
+  // (scripts 없이 1회성 스크립트로 생성, public/images/items_transparent/에 저장).
+  // fish_mackerel_school만 원화 그대로 재사용(고등어떼=고등어와 동일 종), 나머지는 재채색.
+  "fish_anchovy_school",
+  "fish_mackerel_school",
+  "fish_glitter_scad",
+  "fish_starry_pufferfish",
+  "fish_moonlight_squid",
+  "fish_pink_octopus",
+  "fish_wave_tuna",
+  "fish_golden_anchovy",
+  "fish_rare_species",
+  "legend_signoff_doc",
+  "legend_ship_souvenir",
 ]);
 
 // item_catalog.sku → public/images/items/<sku>.png 로 실제 일러스트가 있는 아이템만 등록.
@@ -77,6 +92,17 @@ export const ITEM_ICON_SKUS = new Set([
   "fish_crab",
   "lost_mug",
   "lost_boarding_pass",
+  "fish_anchovy_school",
+  "fish_mackerel_school",
+  "fish_glitter_scad",
+  "fish_starry_pufferfish",
+  "fish_moonlight_squid",
+  "fish_pink_octopus",
+  "fish_wave_tuna",
+  "fish_golden_anchovy",
+  "fish_rare_species",
+  "legend_signoff_doc",
+  "legend_ship_souvenir",
   "child_outfit_hoodie",
   "child_outfit_overalls",
   "child_outfit_dress",
