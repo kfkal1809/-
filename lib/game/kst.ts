@@ -30,6 +30,23 @@ export function kstWeekString(date: Date = new Date()): string {
   return `${isoYear}-W${String(weekNum).padStart(2, "0")}`;
 }
 
+// dateStr(월/일)과 같은 날짜의 올해(이미 지났으면 내년) 기념일까지 남은 일수 — 결혼기념일/
+// 생일 D-day 카운트다운에 공용으로 쓴다. formatKoreanDate와 같은 이유로 Date 로컬 getter를
+// 거치지 않고 문자열에서 바로 월/일을 뽑는다.
+export function daysUntilNextAnnualDate(dateStr: string, now: Date = new Date()): number {
+  const today = kstDateString(now);
+  const [, m, d] = dateStr.split("-").map(Number);
+  const [ty, tm, td] = today.split("-").map(Number);
+
+  let year = ty;
+  const alreadyPassedThisYear = tm > m || (tm === m && td > d);
+  if (alreadyPassedThisYear) year += 1;
+
+  const target = new Date(`${year}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}T00:00:00+09:00`);
+  const todayStart = new Date(`${today}T00:00:00+09:00`);
+  return Math.round((target.getTime() - todayStart.getTime()) / 86400000);
+}
+
 // "2026년 8월 16일" 형식으로 표시 (승선확인증 등 인쇄용 문구에 사용).
 // dateStr(YYYY-MM-DD)은 이미 KST 기준 날짜이므로, Date 객체의 로컬 getter를 거치지 않고
 // 문자열에서 바로 값을 뽑는다 — 서버가 UTC로 도는 배포 환경(Vercel 기본값)에서

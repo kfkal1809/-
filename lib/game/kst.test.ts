@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { kstDateString, daysSinceKstDate, formatKoreanDate, kstWeekString } from "@/lib/game/kst";
+import { kstDateString, daysSinceKstDate, formatKoreanDate, kstWeekString, daysUntilNextAnnualDate } from "@/lib/game/kst";
 
 describe("kstDateString", () => {
   it("KST 자정 직전 UTC 시각도 다음 날(KST 기준)로 반환한다", () => {
@@ -38,6 +38,27 @@ describe("formatKoreanDate", () => {
   it("YYYY년 M월 D일 형식으로 변환한다 (0 패딩 없음)", () => {
     expect(formatKoreanDate("2026-08-05")).toBe("2026년 8월 5일");
     expect(formatKoreanDate("2026-12-25")).toBe("2026년 12월 25일");
+  });
+});
+
+describe("daysUntilNextAnnualDate", () => {
+  // 기준 시각: 2026-09-13 14:00 KST (2026-09-13T05:00:00Z)
+  const now = new Date("2026-09-13T05:00:00.000Z");
+
+  it("오늘이 기념일이면 0을 반환한다", () => {
+    expect(daysUntilNextAnnualDate("2020-09-13", now)).toBe(0);
+  });
+
+  it("올해 안 남은 날짜는 그대로 남은 일수를 반환한다", () => {
+    expect(daysUntilNextAnnualDate("2020-12-25", now)).toBe(103);
+  });
+
+  it("올해 이미 지난 날짜는 내년으로 넘겨서 계산한다", () => {
+    expect(daysUntilNextAnnualDate("2020-01-01", now)).toBe(110);
+  });
+
+  it("연도와 무관하게 월/일만 본다", () => {
+    expect(daysUntilNextAnnualDate("1999-09-14", now)).toBe(1);
   });
 });
 

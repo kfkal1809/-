@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getVoyagePageData } from "@/lib/game/voyageData";
 import { getAnniversaryData } from "@/lib/game/anniversaryData";
+import { getBirthdayData } from "@/lib/game/birthdayData";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { Card } from "@/components/ui/Card";
 import { GameIcon } from "@/components/icons/GameIcon";
@@ -8,7 +9,7 @@ import { CountryTimeDiff } from "@/components/voyage/CountryTimeDiff";
 import { formatKoreanDate } from "@/lib/game/kst";
 
 export default async function VoyagePage() {
-  const [data, anniversary] = await Promise.all([getVoyagePageData(), getAnniversaryData()]);
+  const [data, anniversary, birthday] = await Promise.all([getVoyagePageData(), getAnniversaryData(), getBirthdayData()]);
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">
@@ -54,6 +55,25 @@ export default async function VoyagePage() {
           className="rounded-full bg-[var(--color-navy)] py-2.5 text-center text-[14px] font-bold text-white"
         >
           기념일 수정하기
+        </Link>
+      </Card>
+
+      <Card tone="cream" className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <GameIcon name="gift" size={28} />
+          <p className="text-[15px] font-extrabold text-[var(--color-navy)]">생일</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <BirthdayStat label={birthday.haenyeo ? `해녀 ${birthday.haenyeo.nickname}` : "해녀"} info={birthday.haenyeo} />
+          <BirthdayStat label={birthday.haenam ? `해남 ${birthday.haenam.nickname}` : "해남"} info={birthday.haenam} />
+        </div>
+
+        <Link
+          href="/voyage/birthday-edit"
+          className="rounded-full bg-[var(--color-navy)] py-2.5 text-center text-[14px] font-bold text-white"
+        >
+          생일 수정하기
         </Link>
       </Card>
 
@@ -106,6 +126,22 @@ export default async function VoyagePage() {
           )}
         </Card>
       ))}
+    </div>
+  );
+}
+
+function BirthdayStat({ label, info }: { label: string; info: { birthday: string | null; daysUntilNext: number | null } | null }) {
+  return (
+    <div className="rounded-2xl bg-[var(--color-sky)] py-2.5">
+      <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">{label}</p>
+      <p className="text-[17px] font-extrabold text-[var(--color-coral)]">
+        {info?.daysUntilNext !== null && info?.daysUntilNext !== undefined
+          ? info.daysUntilNext === 0
+            ? "오늘!"
+            : `D-${info.daysUntilNext}`
+          : "미등록"}
+      </p>
+      {info?.birthday && <p className="mt-0.5 text-[10px] text-[var(--color-navy-soft)]">{formatKoreanDate(info.birthday)}</p>}
     </div>
   );
 }
