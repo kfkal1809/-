@@ -1,15 +1,61 @@
 import Link from "next/link";
 import { getVoyagePageData } from "@/lib/game/voyageData";
+import { getAnniversaryData } from "@/lib/game/anniversaryData";
 import { CharacterSprite } from "@/components/character/CharacterSprite";
 import { Card } from "@/components/ui/Card";
+import { GameIcon } from "@/components/icons/GameIcon";
 import { CountryTimeDiff } from "@/components/voyage/CountryTimeDiff";
+import { formatKoreanDate } from "@/lib/game/kst";
 
 export default async function VoyagePage() {
-  const data = await getVoyagePageData();
+  const [data, anniversary] = await Promise.all([getVoyagePageData(), getAnniversaryData()]);
 
   return (
     <div className="flex flex-col gap-4 px-4 pt-5">
       <h1 className="text-lg font-extrabold text-[var(--color-navy)]">항해일지</h1>
+
+      <Card tone="cream" className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <GameIcon name="heart" size={28} />
+          <p className="text-[15px] font-extrabold text-[var(--color-navy)]">우리 커플 기념일</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="rounded-2xl bg-[var(--color-sky)] py-2.5">
+            <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">연애</p>
+            <p className="text-[17px] font-extrabold text-[var(--color-coral)]">
+              {anniversary.datingDays !== null ? `D+${anniversary.datingDays}` : "미등록"}
+            </p>
+            {anniversary.datingStartedAt && (
+              <p className="mt-0.5 text-[10px] text-[var(--color-navy-soft)]">{formatKoreanDate(anniversary.datingStartedAt)}</p>
+            )}
+          </div>
+          <div className="rounded-2xl bg-[var(--color-sky)] py-2.5">
+            <p className="text-[11px] font-bold text-[var(--color-navy-soft)]">결혼</p>
+            <p className="text-[17px] font-extrabold text-[var(--color-tab-active)]">
+              {anniversary.marriedDays !== null ? `D+${anniversary.marriedDays}` : "미등록"}
+            </p>
+            {anniversary.weddingAnniversaryAt && (
+              <p className="mt-0.5 text-[10px] text-[var(--color-navy-soft)]">{formatKoreanDate(anniversary.weddingAnniversaryAt)}</p>
+            )}
+          </div>
+        </div>
+
+        {anniversary.daysUntilNextAnniversary !== null && (
+          <p className="text-center text-[12px] font-bold text-[var(--color-navy-soft)]">
+            {anniversary.daysUntilNextAnniversary === 0
+              ? "오늘이 결혼기념일이에요!"
+              : `다음 결혼기념일까지 D-${anniversary.daysUntilNextAnniversary}`}
+          </p>
+        )}
+
+        <Link
+          href="/voyage/anniversary-edit"
+          className="rounded-full bg-[var(--color-navy)] py-2.5 text-center text-[14px] font-bold text-white"
+        >
+          기념일 수정하기
+        </Link>
+      </Card>
 
       {data.voyages.length === 0 && (
         <Card tone="cream" className="text-center text-[14px] text-[var(--color-navy-soft)]">
