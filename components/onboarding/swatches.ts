@@ -15,11 +15,16 @@ export const CHILD_OUTFIT_SWATCHES = ["#ffc9a8", "#a7d8c9", "#f2b8c6", "#cfe6ff"
 
 // 의상 컬러 스와치를 고르면 실사 일러스트에서는 색만 물드는 게 아니라 실제로 다른 디자인의
 // 정규화된 전신 의상 스프라이트로 바뀐다(각 색상에 어울리는 의상을 하나씩 배정) — CharacterFullBody 참고.
+// 2026-09-14 버그 수정: 여기 적혀있던 haenyeo_outfit_NN(번호만) 키들은 MASTER 파이프라인이
+// haenyeo_custom_outfit_NN으로 이름을 바꾸면서(위 haenyeoMasterOutfitSrc 주석 참고) 전부
+// "존재하지 않는 키"가 됐다 — 의상 컬러를 뭘 골라도 haenyeoMasterOutfitSrc()가 항상 null을
+// 반환해서 캐릭터가 늘 이너웨어(속옷)만 입은 채로 보이던 원인이었다. 실제로 존재하는
+// haenyeo_custom_outfit_NN(HAENYEO_OUTFIT_VALID_KEYS) 중 스와치 색상과 가장 가까운 걸로 교체.
 export const HAENYEO_OUTFIT_ASSET_BY_SWATCH: Record<string, string> = {
-  "#7fa8dd": "haenyeo_outfit_02",
-  "#9cc9ef": "haenyeo_outfit_17",
-  "#a7d8c9": "haenyeo_outfit_04",
-  "#f2b8c6": "haenyeo_outfit_19",
+  "#7fa8dd": "haenyeo_custom_outfit_15",
+  "#9cc9ef": "haenyeo_custom_outfit_18",
+  "#a7d8c9": "haenyeo_custom_outfit_06",
+  "#f2b8c6": "haenyeo_custom_outfit_19",
 };
 export const HAENAM_DECK_OUTFIT_ASSET_BY_SWATCH: Record<string, string> = {
   "#2c3f66": "haenam_deck_outfit_04",
