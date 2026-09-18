@@ -17,7 +17,11 @@ export const ITEM_APPEARANCE_PATCH: Record<string, Partial<CharacterAppearance>>
   haenyeo_outfit_overalls: { outfit: "haenyeo_overalls", outfitAssetKey: "haenyeo_outfit_02" },
   haenyeo_outfit_dress: { outfit: "dress", outfitColor: "#f2b8c6", outfitAssetKey: "haenyeo_dress_02" },
   haenyeo_outfit_sweatshirt: { outfit: "sweatshirt", outfitColor: "#e9d9c3", outfitAssetKey: "haenyeo_outfit_06" },
-  haenyeo_outfit_pajama: { outfit: "pajama", outfitColor: "#cfe0ff", outfitAssetKey: "haenyeo_outfit_19" },
+  // 2026-09-18 버그 수정: haenyeo_outfit_19는 잠옷이 아니라 체크 치마+가방 그림이다(실측
+  // 확인) — 실제 잠옷(별무늬, 토끼 슬리퍼) 그림은 09번인데 그동안 판매되지 않는
+  // haenyeo_outfit_pink_bear(seed.sql에 없음) 키에만 연결돼 있어서 아무도 볼 수 없었다.
+  // "기본 지급" 스타터 상품인 이 SKU가 실제로는 전혀 다른 옷을 보여주고 있었으므로 바로잡는다.
+  haenyeo_outfit_pajama: { outfit: "pajama", outfitColor: "#cfe0ff", outfitAssetKey: "haenyeo_outfit_09" },
   // 해녀 헤어
   haenyeo_hair_wave: { hairStyle: "wave" },
   haenyeo_hair_pony: { hairStyle: "pony" },
