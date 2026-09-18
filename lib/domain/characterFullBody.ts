@@ -671,14 +671,27 @@ export function haenyeoMasterSkinMaskSrc(): string {
 // 파이프라인 산출물은 haenyeo_custom_outfit_NN.png로 저장하고, 이 목록도 그 이름을 쓴다 —
 // 기존 haenyeo_outfit_NN(번호만 있는) 키는 이제 어떤 목록에도 없으므로 항상 "없음"으로
 // 처리돼 대체 없이 생략된다(기존 SKU가 새 그림을 입는 사고 방지).
-export const HAENYEO_OUTFIT_AVAILABLE_KEYS = new Set(
-  ["06", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"].map(
+//
+// 2026-09-18 사용자 지적("해녀캐릭터는 니가 만들지 말고 내가 깃허브에 넣어놓은 해녀 기본
+// 체형을 사용해줘", 모든 화면에서 재현) 조사 결과: MASTER 캔버스 확정(커밋 bdfaeda) 때
+// public/images/character/outfit_full/haenyeo_outfit_01~20.png(20종)·haenyeo_dress_01~09.png
+// (9종) — 전부 사용자가 그 전부터 이미 GitHub에 올려둔 실제 원화 — 가 새 파이프라인으로
+// 옮겨지지 않고 방치돼 있었다. 그런데 itemAppearance.ts의 SKU 절반 이상(기본 멜빵바지
+// haenyeo_outfit_overalls 포함)과 characterPresets.ts의 haenyeoPreset() 기본값은 여전히
+// 이 번호형 키를 참조하고 있어서, 그 옷들을 착용한 캐릭터는 항상 의상 레이어 없이(이너웨어만)
+// 렌더링됐다 — HaenyeoMasterSprite가 kind="haenyeo"의 유일한 렌더 경로라 예외 없이 모든
+// 화면에서 재현됐다. scripts/asset-tools/build_haenyeo_legacy_outfits.py로 위 29종을 같은
+// MASTER 캔버스(441x906, NECK_Y=503)로 옮겨 haenyeo_outfit_NN.png/haenyeo_dress_NN.png
+// 그대로 산출했다(신규 14종과 이름 공간이 겹치지 않아 별도 이관 없이 안전) — 그래서 이
+// 번호형 키들을 다시 AVAILABLE로 등록한다(더 이상 MISSING 아님).
+export const HAENYEO_OUTFIT_AVAILABLE_KEYS = new Set([
+  ...["06", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20"].map(
     (n) => `haenyeo_custom_outfit_${n}`
-  )
-);
-export const HAENYEO_OUTFIT_MISSING_KEYS = new Set(
-  ["01", "02", "03", "04", "05", "07"].map((n) => `haenyeo_custom_outfit_${n}`)
-);
+  ),
+  ...Array.from({ length: 20 }, (_, i) => `haenyeo_outfit_${String(i + 1).padStart(2, "0")}`),
+  ...Array.from({ length: 9 }, (_, i) => `haenyeo_dress_${String(i + 1).padStart(2, "0")}`),
+]);
+export const HAENYEO_OUTFIT_MISSING_KEYS = new Set<string>();
 // 파일은 존재하지만(AVAILABLE) 원본 자체가 깨져 있어(HAENYEO_OUTFIT_INVALID_KEYS 참고) 정상
 // 상품으로 쓸 수 없는 것까지 제외한, 실제로 "검수 통과"한 목록. QA 그리드·옷가게 후보는
 // 전부 이 목록만 써야 한다.
