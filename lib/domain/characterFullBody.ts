@@ -642,9 +642,19 @@ export function haenyeoResolveHairIdx(idx: string | null): string | null {
 // 17(베레모가 머리가 아니라 목/가슴 위치에 그려짐) — 전부 design-assets 원본 파일
 // 자체의 결함이다(내 파이프라인이 만든 게 아니라 업로드된 raw PNG를 그대로 열어서
 // 확인함). 재업로드 전까지 실제 존재하는 목록(AVAILABLE)에서도 별도로 걸러낸다.
-export const HAENYEO_OUTFIT_INVALID_KEYS = new Set(
-  ["08", "14", "17"].map((n) => `haenyeo_custom_outfit_${n}`)
-);
+//
+// 2026-09-18: build_haenyeo_legacy_outfits.py로 옮긴 29종 중 outfit_09(잠옷)·dress_05
+// (분홍 원피스)는 remove_skin()이 옷감을 피부로 오인해 지워버린 결과물이었다 — 실측 확인:
+// 이 두 원화는 옷감 색(HSV hue 5~9°)이 이 캐릭터 시트 자체의 피부색(hue 9°대)과 채도·명도
+// 까지 겹쳐서 색만으로는 피부/옷감을 구분할 수 없다(다른 27종은 hue 차이가 15°+ 나서
+// 정상 분리됨). 억지로 자동 보정하면 다리에 분홍 얼룩이 남는 깨진 그림이 그대로 나가므로,
+// 재작업 전까지는 이 두 번호도 결함 목록에 같이 넣어 "의상 없음(이너웨어만)"으로 되돌린다
+// (사용자가 원본 그대로 놔둬도 깨진 옷보다는 낫다는 기존 정책과 동일 — 08/14/17 참고).
+export const HAENYEO_OUTFIT_INVALID_KEYS = new Set([
+  ...["08", "14", "17"].map((n) => `haenyeo_custom_outfit_${n}`),
+  "haenyeo_outfit_09",
+  "haenyeo_dress_05",
+]);
 
 // 헤어를 쓰지 않을 때(민머리)는 원본 MASTER 몸을, 헤어를 쓸 때는 그 헤어 전용으로 미리 구운
 // 변형(민머리 정수리 외곽선이 두피 위 얇은 링만큼 지워진 버전 — build_haenyeo_master_canvas.py의
@@ -705,9 +715,13 @@ export const HAENYEO_OUTFIT_VALID_KEYS = new Set(
 // 아예 렌더링하지 않는다.
 // design-assets에는 항상 haenyeo_outfit_NN.png(번호만)로 업로드된다 — 로그에는 실제
 // 업로드 파일명을 보여준다(custom_ 접두사는 상품/렌더링 키 전용, 업로드 파일명이 아님).
+// haenyeo_dress_NN/haenyeo_outfit_NN(구버전 번호형 키)은 outfit_full/ 쪽 원본 파일명과
+// 이미 동일하므로 그대로 쓴다 — custom_ 접두사가 붙은 키만 접두사를 뗀다.
 function haenyeoOutfitSourceFileName(outfitAssetKey: string): string {
   const num = outfitAssetKey.match(/(\d{2})$/)?.[1];
-  return num ? `haenyeo_outfit_${num}.png` : `${outfitAssetKey}.png`;
+  if (!num) return `${outfitAssetKey}.png`;
+  if (outfitAssetKey.startsWith("haenyeo_custom_outfit_")) return `haenyeo_outfit_${num}.png`;
+  return `${outfitAssetKey}.png`;
 }
 
 export function haenyeoMasterOutfitSrc(outfitAssetKey: string): string | null {
