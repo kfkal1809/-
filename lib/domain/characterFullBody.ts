@@ -644,17 +644,16 @@ export function haenyeoResolveHairIdx(idx: string | null): string | null {
 // 확인함). 재업로드 전까지 실제 존재하는 목록(AVAILABLE)에서도 별도로 걸러낸다.
 //
 // 2026-09-18: build_haenyeo_legacy_outfits.py로 옮긴 29종 중 outfit_09(잠옷)·dress_05
-// (분홍 원피스)는 remove_skin()이 옷감을 피부로 오인해 지워버린 결과물이었다 — 실측 확인:
-// 이 두 원화는 옷감 색(HSV hue 5~9°)이 이 캐릭터 시트 자체의 피부색(hue 9°대)과 채도·명도
-// 까지 겹쳐서 색만으로는 피부/옷감을 구분할 수 없다(다른 27종은 hue 차이가 15°+ 나서
-// 정상 분리됨). 억지로 자동 보정하면 다리에 분홍 얼룩이 남는 깨진 그림이 그대로 나가므로,
-// 재작업 전까지는 이 두 번호도 결함 목록에 같이 넣어 "의상 없음(이너웨어만)"으로 되돌린다
-// (사용자가 원본 그대로 놔둬도 깨진 옷보다는 낫다는 기존 정책과 동일 — 08/14/17 참고).
-export const HAENYEO_OUTFIT_INVALID_KEYS = new Set([
-  ...["08", "14", "17"].map((n) => `haenyeo_custom_outfit_${n}`),
-  "haenyeo_outfit_09",
-  "haenyeo_dress_05",
-]);
+// (분홍 원피스)는 처음엔 remove_skin()이 옷감을 피부로 오인해 지워버려 다리/몸통에 분홍
+// 얼룩이 남는 깨진 결과물이었다(옷감 HSV hue 5~9°가 이 두 원화 자체의 피부색과 채도·명도
+// 까지 겹쳐서 색만으로 구분 불가 — 다른 27종은 hue 차이가 15°+ 나서 정상 분리됨). 잠시
+// 이 목록에 넣어 "의상 없음(이너웨어만)"으로 되돌렸었지만, 두 원화 다 롱팬츠/롱스커트라
+// 애초에 중앙(가슴~다리)에 노출된 진짜 피부가 없다는 점을 이용해 remove_skin의 스킨 후보
+// 검색에서 중앙 열을 통째로 빼는 방식(exclude_center, 스크립트 참고)으로 정상 렌더링되게
+// 고쳤다 — 그래서 다시 뺐다(더 이상 INVALID 아님).
+export const HAENYEO_OUTFIT_INVALID_KEYS = new Set(
+  ["08", "14", "17"].map((n) => `haenyeo_custom_outfit_${n}`)
+);
 
 // 헤어를 쓰지 않을 때(민머리)는 원본 MASTER 몸을, 헤어를 쓸 때는 그 헤어 전용으로 미리 구운
 // 변형(민머리 정수리 외곽선이 두피 위 얇은 링만큼 지워진 버전 — build_haenyeo_master_canvas.py의

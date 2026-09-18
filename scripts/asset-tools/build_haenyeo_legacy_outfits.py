@@ -54,11 +54,24 @@ SKIN_MIN_COMPONENT_SIZE = 400
 SKIN_DILATE_ITER = 2
 
 
-def remove_skin(im: Image.Image):
+# 2026-09-18: outfit_09(잠옷)·dress_05(분홍 원피스)는 색만으로 피부/옷감을 구분할 수
+# 없었다(옷감 HSV hue 5~9도가 이 두 원화 자체의 피부색 hue와 채도·명도까지 겹침) — 결과물
+# 다리/몸통에 분홍 얼룩이 남는 진짜 깨진 그림이 나왔다(한때 HAENYEO_OUTFIT_INVALID_KEYS로
+# 되돌렸었음). 두 원화 다 롱팬츠/롱스커트라 원래 중앙 열(가슴~다리)에 노출된 진짜 피부가
+# 전혀 없다는 점(진짜 피부는 좌우로 뻗은 팔/손뿐)을 이용해, 가운데 열을 스킨 제거 후보에서
+# 통째로 빼는 것으로 색 충돌 없이 해결했다 — 반바지/짧은 치마처럼 중앙 하단에 실제 맨다리가
+# 있는 옷에는 이 예외를 쓰면 안 된다(진짜 다리 피부가 안 지워져 MASTER 다리와 겹쳐 보임).
+NO_CENTER_LEG_EXPOSURE_KEYS = {"haenyeo_outfit_09", "haenyeo_dress_05"}
+CENTER_EXCLUDE_X = (140, 280)
+
+
+def remove_skin(im: Image.Image, exclude_center: bool = False):
     arr = np.array(im.convert("RGBA")).astype(int)
     r, g, b, a = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2], arr[:, :, 3]
     dist = np.sqrt((r - SKIN_REF[0]) ** 2 + (g - SKIN_REF[1]) ** 2 + (b - SKIN_REF[2]) ** 2)
     candidate = (a > 10) & (dist < SKIN_DIST_THRESHOLD)
+    if exclude_center:
+        candidate[:, CENTER_EXCLUDE_X[0]:CENTER_EXCLUDE_X[1]] = False
 
     labeled, num = ndimage.label(candidate)
     if num > 0:
@@ -89,7 +102,7 @@ def build_one(name: str):
         print(f"  {name}: [수동 확인] 예상 밖 캔버스 폭 {im.size} != {OLD_CANVAS_W} — 건너뜀")
         return None
 
-    no_skin, skin_px = remove_skin(im)
+    no_skin, skin_px = remove_skin(im, exclude_center=name in NO_CENTER_LEG_EXPOSURE_KEYS)
     alpha = np.array(no_skin)[:, :, 3]
     ys = np.where(alpha.max(axis=1) > 20)[0]
     if len(ys) == 0:
