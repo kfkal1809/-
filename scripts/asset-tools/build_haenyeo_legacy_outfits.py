@@ -12,12 +12,20 @@
 생략되고 이너웨어(속옷)만 보이는 채로 렌더링돼왔다(모든 화면 — HaenyeoMasterSprite가
 kind="haenyeo"의 유일한 렌더 경로라서 예외 없음).
 
-이 스크립트는 build_haenyeo_master_canvas.py의 remove_skin()을 그대로 재사용해 예전
-outfit_full 캔버스(420x512, alpha 상단=NECK_Y=140 — 20+9종 전부 실측 확인)에서 새
-MASTER 캔버스(441x906, NECK_Y=503, CENTER_X=219.5)로 등방(가로세로 동일 비율) 스케일 +
-목선 정렬 이동만 적용한다(신규 14종 파이프라인과 달리 레이어별 보정 없음 — 여기도 없음).
-산출물 파일명은 원래 번호(haenyeo_outfit_NN.png/haenyeo_dress_NN.png)를 그대로 써서
-기존 SKU/프리셋 키가 별도 수정 없이 그대로 유효해지도록 한다.
+이 스크립트는 예전 outfit_full 캔버스(420x512, alpha 상단=NECK_Y=140 — 20+9종 전부
+실측 확인)에서 새 MASTER 캔버스(441x906, NECK_Y=503, CENTER_X=219.5)로 등방(가로세로
+동일 비율) 스케일 + 목선 정렬 이동만 적용한다(신규 14종 파이프라인과 달리 레이어별 보정
+없음 — 여기도 없음). 산출물 파일명은 원래 번호(haenyeo_outfit_NN.png/haenyeo_dress_NN.png)
+를 그대로 써서 기존 SKU/프리셋 키가 별도 수정 없이 그대로 유효해지도록 한다.
+
+2026-09-19 사용자 지시로 remove_skin(원화에 같이 그려진 손/팔/다리 피부를 지워 MASTER
+몸의 손/팔/다리가 대신 비치게 하던 단계) 완전히 제거함 — "옷을 모든 부분을 절대 투명하게
+만들지마"(원본 색감 그대로, 일부라도 지우지 말라는 요청). 옷감-피부 색이 겹치는 원화에서
+옷감까지 지워지는 사고(outfit_09/dress_05)가 이 단계 자체에서 나왔던 것도 있어, 이제
+원본 픽셀을 그대로(알파도 원본 그대로, 리사이즈 경계만 sharpen) 스케일·이동만 해서 쓴다.
+그 결과 이 29종은 자기 몸에 원래 그려져 있던 손/팔/다리(고정 피부톤)를 그대로 입고
+나온다 — MASTER 몸 쪽 손/팔/다리는 이 옷 밑에 가려진다(피부톤 슬라이더가 이 부위엔 안
+먹지만, 같은 원화 시트에서 나온 색이라 눈에 띄게 안 맞지는 않는다).
 
 사용법:
     python3 scripts/asset-tools/build_haenyeo_legacy_outfits.py
@@ -27,7 +35,6 @@ import os
 
 import numpy as np
 from PIL import Image
-from scipy import ndimage
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CHAR_DIR = os.path.join(ROOT, "public", "images", "character")
@@ -48,44 +55,6 @@ TARGET_SPAN = SOLE_Y - NECK_Y  # 373
 OLD_CANVAS_W = 420
 OLD_NECK_Y = 140
 
-SKIN_REF = np.array([253, 225, 207])
-SKIN_DIST_THRESHOLD = 30
-SKIN_MIN_COMPONENT_SIZE = 400
-SKIN_DILATE_ITER = 2
-
-
-# 2026-09-18: outfit_09(잠옷)·dress_05(분홍 원피스)는 색만으로 피부/옷감을 구분할 수
-# 없었다(옷감 HSV hue 5~9도가 이 두 원화 자체의 피부색 hue와 채도·명도까지 겹침) — 결과물
-# 다리/몸통에 분홍 얼룩이 남는 진짜 깨진 그림이 나왔다(한때 HAENYEO_OUTFIT_INVALID_KEYS로
-# 되돌렸었음). 두 원화 다 롱팬츠/롱스커트라 원래 중앙 열(가슴~다리)에 노출된 진짜 피부가
-# 전혀 없다는 점(진짜 피부는 좌우로 뻗은 팔/손뿐)을 이용해, 가운데 열을 스킨 제거 후보에서
-# 통째로 빼는 것으로 색 충돌 없이 해결했다 — 반바지/짧은 치마처럼 중앙 하단에 실제 맨다리가
-# 있는 옷에는 이 예외를 쓰면 안 된다(진짜 다리 피부가 안 지워져 MASTER 다리와 겹쳐 보임).
-NO_CENTER_LEG_EXPOSURE_KEYS = {"haenyeo_outfit_09", "haenyeo_dress_05"}
-CENTER_EXCLUDE_X = (140, 280)
-
-
-def remove_skin(im: Image.Image, exclude_center: bool = False):
-    arr = np.array(im.convert("RGBA")).astype(int)
-    r, g, b, a = arr[:, :, 0], arr[:, :, 1], arr[:, :, 2], arr[:, :, 3]
-    dist = np.sqrt((r - SKIN_REF[0]) ** 2 + (g - SKIN_REF[1]) ** 2 + (b - SKIN_REF[2]) ** 2)
-    candidate = (a > 10) & (dist < SKIN_DIST_THRESHOLD)
-    if exclude_center:
-        candidate[:, CENTER_EXCLUDE_X[0]:CENTER_EXCLUDE_X[1]] = False
-
-    labeled, num = ndimage.label(candidate)
-    if num > 0:
-        sizes = ndimage.sum(candidate, labeled, range(1, num + 1))
-        keep_labels = [i + 1 for i, s in enumerate(sizes) if s > SKIN_MIN_COMPONENT_SIZE]
-        skin_mask = np.isin(labeled, keep_labels)
-    else:
-        skin_mask = candidate
-
-    skin_mask = ndimage.binary_dilation(skin_mask, iterations=SKIN_DILATE_ITER)
-    out = arr.copy()
-    out[skin_mask, 3] = 0
-    return Image.fromarray(out.astype(np.uint8), "RGBA"), int(skin_mask.sum())
-
 
 def sharpen_alpha(im: Image.Image, threshold: int = 90) -> Image.Image:
     arr = np.array(im).astype(np.float32)
@@ -102,11 +71,10 @@ def build_one(name: str):
         print(f"  {name}: [수동 확인] 예상 밖 캔버스 폭 {im.size} != {OLD_CANVAS_W} — 건너뜀")
         return None
 
-    no_skin, skin_px = remove_skin(im, exclude_center=name in NO_CENTER_LEG_EXPOSURE_KEYS)
-    alpha = np.array(no_skin)[:, :, 3]
+    alpha = np.array(im)[:, :, 3]
     ys = np.where(alpha.max(axis=1) > 20)[0]
     if len(ys) == 0:
-        print(f"  {name}: [수동 확인] 스킨 제거 후 알파가 전부 비어있음 — 건너뜀")
+        print(f"  {name}: [수동 확인] 알파가 전부 비어있음 — 건너뜀")
         return None
     sole_y = int(ys.max())
     old_span = sole_y - OLD_NECK_Y
@@ -117,7 +85,10 @@ def build_one(name: str):
     scale = TARGET_SPAN / old_span
     new_w = max(1, round(im.width * scale))
     new_h = max(1, round(im.height * scale))
-    resized = sharpen_alpha(no_skin.resize((new_w, new_h), Image.LANCZOS), threshold=40)
+    # 원본 픽셀(색·알파 전부)을 그대로 스케일만 한다 — sharpen_alpha는 리사이즈가 만드는
+    # 가장자리 반투명 페더만 다듬을 뿐, 이미 불투명한 옷감 내부는 threshold(40) 밑으로
+    # 내려가지 않으니 절대 지워지지 않는다.
+    resized = sharpen_alpha(im.resize((new_w, new_h), Image.LANCZOS), threshold=40)
 
     paste_x = round(CENTER_X - (OLD_CANVAS_W / 2) * scale)
     paste_y = round(NECK_Y - OLD_NECK_Y * scale)
@@ -127,7 +98,7 @@ def build_one(name: str):
 
     out_path = os.path.join(OUT_DIR, f"{name}.png")
     canvas.save(out_path)
-    print(f"  {name}: scale={scale:.4f} skin_px={skin_px} -> {os.path.relpath(out_path, ROOT)}")
+    print(f"  {name}: scale={scale:.4f} -> {os.path.relpath(out_path, ROOT)}")
     return out_path
 
 
