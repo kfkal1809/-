@@ -55,6 +55,26 @@ TARGET_SPAN = SOLE_Y - NECK_Y  # 373
 OLD_CANVAS_W = 420
 OLD_NECK_Y = 140
 
+# 2026-09-19 사용자 지적: 가로 정렬을 손(스팬 전체) 기준으로 하면 한쪽 손에 든 가방/바구니
+# 때문에 실루엣 전체 중심이 옷 쪽으로 안 쏠리고 가방 쪽으로 쏠려서, 옷(몸통~치마) 자체는
+# 살짝 밀린 것처럼 보일 수 있다 — "신발 말고 옷을 위주로 맞춰야" 한다는 지시. 그래서 가로
+# 위치는 더 이상 OLD_CANVAS_W/2(고정 420 가정) 하나로 퉁치지 않고, 파일마다 실제 몸통~치마
+# 구간(목 바로 아래 y=160부터 다리 시작 전 y=400까지, 가방이 거의 안 걸리는 중앙 열
+# x=120~300만)의 각 행 알파 중심을 평균 내서 그 옷의 "진짜" 가로 중심을 구해 쓴다.
+GARMENT_BAND_Y = (160, 400)
+GARMENT_BAND_X = (120, 300)
+
+
+def measure_garment_center_x(im: Image.Image) -> float:
+    alpha = np.array(im)[:, :, 3] > 20
+    band = alpha[GARMENT_BAND_Y[0]:GARMENT_BAND_Y[1], GARMENT_BAND_X[0]:GARMENT_BAND_X[1]]
+    centers = []
+    for row in band:
+        xs = np.where(row)[0]
+        if len(xs):
+            centers.append((xs.min() + xs.max()) / 2 + GARMENT_BAND_X[0])
+    return float(np.mean(centers)) if centers else OLD_CANVAS_W / 2
+
 
 def sharpen_alpha(im: Image.Image, threshold: int = 90) -> Image.Image:
     arr = np.array(im).astype(np.float32)
@@ -90,7 +110,8 @@ def build_one(name: str):
     # 내려가지 않으니 절대 지워지지 않는다.
     resized = sharpen_alpha(im.resize((new_w, new_h), Image.LANCZOS), threshold=40)
 
-    paste_x = round(CENTER_X - (OLD_CANVAS_W / 2) * scale)
+    garment_center_x = measure_garment_center_x(im)
+    paste_x = round(CENTER_X - garment_center_x * scale)
     paste_y = round(NECK_Y - OLD_NECK_Y * scale)
 
     canvas = Image.new("RGBA", (CANVAS_W, CANVAS_H), (0, 0, 0, 0))
@@ -98,7 +119,11 @@ def build_one(name: str):
 
     out_path = os.path.join(OUT_DIR, f"{name}.png")
     canvas.save(out_path)
-    print(f"  {name}: scale={scale:.4f} -> {os.path.relpath(out_path, ROOT)}")
+    print(
+        f"  {name}: scale={scale:.4f} garment_center_x={garment_center_x:.1f} "
+        f"(기존 가정 {OLD_CANVAS_W / 2}, 차이 {garment_center_x - OLD_CANVAS_W / 2:+.1f}) "
+        f"-> {os.path.relpath(out_path, ROOT)}"
+    )
     return out_path
 
 
